@@ -17,12 +17,12 @@ export const BUSINESS = {
   state: "Tamil Nadu",
   postalCode: "600055",
   country: "IN",
-  lat: 13.1067,
-  lng: 80.1015,
+  lat: 13.1987642,
+  lng: 80.0896457,
   hours: "9:00 AM – 9:00 PM",
   mapQuery: "Sarathi Nagar, Morai Village, Avadi, Chennai 600055, Tamil Nadu",
   mapEmbed:
-    "https://maps.google.com/maps?q=Morai+Village,+Avadi,+Chennai+600055&ll=13.1067,80.1015&z=14&hl=en&output=embed",
+    "https://maps.google.com/maps?q=13.1987642,80.0896457&z=16&hl=en&output=embed",
   minOrderTN: 3000,
   minOrderOther: 5000,
   apkUrl:

@@ -2,7 +2,7 @@ import { SectionHead } from "./SectionHead";
 import { BUSINESS } from "@/lib/constants";
 
 export function MapSection() {
-  const mapQuery = encodeURIComponent(BUSINESS.mapQuery);
+  const coords = `${BUSINESS.lat},${BUSINESS.lng}`;
   return (
     <section id="map" className="bg-white px-4 py-14">
       <div className="mx-auto max-w-5xl">
@@ -35,7 +35,7 @@ export function MapSection() {
           </div>
           <div className="flex flex-wrap gap-3 md:justify-end">
             <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${mapQuery}`}
+              href={`https://www.google.com/maps/dir/?api=1&destination=${coords}`}
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-lg bg-primary px-5 py-3 text-sm font-bold text-white transition hover:brightness-110"
@@ -43,7 +43,7 @@ export function MapSection() {
               🧭 Get Directions
             </a>
             <a
-              href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`}
+              href={`https://www.google.com/maps/search/?api=1&query=${coords}`}
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-lg border-2 border-primary bg-yellow px-5 py-3 text-sm font-bold text-black transition hover:brightness-105"
