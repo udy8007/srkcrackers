@@ -66,6 +66,9 @@ function run(cmd, env = process.env) {
 }
 
 run("npx prisma generate");
-run("npx prisma migrate deploy", migrateEnv);
+// `db push` (not `migrate deploy`) syncs the schema to whatever state the DB is
+// in — it creates our app tables even when the DB already has unrelated tables
+// (e.g. Neon Auth) and no Prisma migration history. Additive + idempotent.
+run("npx prisma db push --skip-generate --accept-data-loss", migrateEnv);
 run("npx prisma db seed", migrateEnv);
 run("npx next build");
