@@ -1,0 +1,58 @@
+import { SectionHead } from "./SectionHead";
+import { BUSINESS } from "@/lib/constants";
+
+export function MapSection() {
+  const mapQuery = encodeURIComponent(BUSINESS.mapQuery);
+  return (
+    <section id="map" className="bg-white px-4 py-14">
+      <div className="mx-auto max-w-5xl">
+        <SectionHead
+          title="Find Us — Avadi, Tiruvallur"
+          subtitle={`${BUSINESS.name} · Mogai Village, Avadi Taluk, Tiruvallur District, Tamil Nadu`}
+        />
+        <div className="overflow-hidden rounded-2xl border border-line shadow-sm">
+          <iframe
+            title={`${BUSINESS.name} — Avadi, Tiruvallur District, Tamil Nadu`}
+            src={BUSINESS.mapEmbed}
+            className="h-[320px] w-full border-0 sm:h-[400px]"
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        </div>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2 md:items-center">
+          <div className="text-sm leading-relaxed text-ink">
+            <strong className="block text-primary">{BUSINESS.name}</strong>
+            📍 <strong>{BUSINESS.mapQuery}</strong>
+            <br />
+            Survey No 280/79, Door No 45, Mogai Village, Avadi Taluk
+            <br />
+            📞{" "}
+            <a href={`tel:${BUSINESS.phone}`} className="font-bold text-primary">
+              {BUSINESS.phoneDisplay}
+            </a>
+          </div>
+          <div className="flex flex-wrap gap-3 md:justify-end">
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${mapQuery}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-lg bg-primary px-5 py-3 text-sm font-bold text-white transition hover:brightness-110"
+            >
+              🧭 Get Directions
+            </a>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-lg border-2 border-primary bg-yellow px-5 py-3 text-sm font-bold text-black transition hover:brightness-105"
+            >
+              🗺️ Open in Google Maps
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

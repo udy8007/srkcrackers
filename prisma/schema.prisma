@@ -1,0 +1,133 @@
+// SRK Crackers — Prisma schema
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum OrderStatus {
+  PLACED
+  PAYMENT_UPLOADED
+  VERIFYING
+  CONFIRMED
+  PROCESSING
+  DISPATCHED
+  DELIVERED
+  CANCELLED
+}
+
+enum UserRole {
+  ADMIN
+  STAFF
+}
+
+/// Admin/staff accounts for the dashboard (credentials login).
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  role         UserRole @default(ADMIN)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+/// Product categories (One Sound, Flower Pots, Rockets, ...).
+model Category {
+  id        String    @id @default(cuid())
+  key       String    @unique
+  label     String
+  sortOrder Int       @default(0)
+  active    Boolean   @default(true)
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+/// Individual crackers products.
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  slug        String      @unique
+  pack        String
+  price       Int // discounted sale price (INR, whole rupees)
+  mrp         Int // maximum retail price (INR, whole rupees)
+  imageUrl    String
+  description String
+  active      Boolean     @default(true)
+  sortOrder   Int         @default(0)
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([categoryId])
+}
+
+/// A customer order (enquiry) placed from the storefront.
+model Order {
+  id                String               @id @default(cuid())
+  orderNumber       String               @unique // SRK-YYYYMMDD-XXXX
+  // Customer details
+  customerName      String
+  phone             String
+  altPhone          String?
+  email             String?
+  address           String
+  city              String
+  state             String
+  pincode           String
+  notes             String?
+  // Payment
+  paymentMethod     String               @default("UPI")
+  upiId             String?
+  paymentScreenshot String? // base64 data URL — swap for object storage (Vercel Blob / Cloudinary) in production
+  // Totals
+  subtotal          Int
+  total             Int
+  status            OrderStatus          @default(VERIFYING)
+  items             OrderItem[]
+  statusHistory     OrderStatusHistory[]
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  @@index([phone])
+  @@index([status])
+  @@index([createdAt])
+}
+
+/// Line items of an order (product snapshot kept for historical accuracy).
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  name      String
+  pack      String
+  price     Int
+  qty       Int
+  amount    Int
+
+  @@index([orderId])
+}
+
+/// Timeline of status changes for an order.
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    OrderStatus
+  label     String
+  note      String?
+  createdAt DateTime    @default(now())
+
+  @@index([orderId])
+}

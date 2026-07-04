@@ -1,0 +1,2766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SRK Crackers — Best Crackers Shop | Sivakasi Quality Online</title>
+  <meta name="description" content="SRK Crackers — Licensed dealer in Mogai, Avadi, Tiruvallur. 80% discount on Sivakasi crackers. Call 98419 16899.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #A8007D;
+      --primary-dark: #8D0269;
+      --yellow: #ffcb00;
+      --yellow-light: rgba(255, 203, 0, 0.08);
+      --orange: #FFAB00;
+      --white: #ffffff;
+      --bg: #f8f8f8;
+      --text: #333333;
+      --text-muted: #666666;
+      --border: #e5e5e5;
+      --green: #2DA815;
+      --red: #cf2e2e;
+      --green-wa: #25d366;
+      --radius: 8px;
+      --transition: 0.25s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding-bottom: 80px;
+    }
+
+    /* TOP BAR */
+    .top-bar {
+      background: var(--primary);
+      color: #fff;
+      font-size: 0.8rem;
+      padding: 0.45rem 1rem;
+      text-align: center;
+    }
+    .top-bar a { color: var(--yellow); text-decoration: none; font-weight: 600; }
+
+    /* HEADER */
+    header {
+      background: var(--primary);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 12px rgba(168,0,125,0.3);
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.45rem;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      text-decoration: none;
+      color: #fff;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--yellow);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+    .logo-text h1 {
+      font-family: 'Jost', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .logo-text span { font-size: 0.68rem; opacity: 0.9; }
+
+    nav {
+      display: flex;
+      flex: 1;
+      justify-content: center;
+      gap: 0.15rem;
+      min-width: 0;
+    }
+    nav a {
+      color: rgba(255,255,255,0.9);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 0.45rem 0.85rem;
+      border-radius: 6px;
+      transition: var(--transition);
+    }
+    nav a:hover, nav a.active { background: rgba(255,255,255,0.15); color: #fff; }
+
+    .header-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      min-width: 44px;
+      height: 44px;
+      padding: 0 0.75rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      flex-shrink: 0;
+      border: none;
+      line-height: 1;
+      transition: var(--transition);
+    }
+    .header-btn:hover { filter: brightness(1.05); }
+
+    .cart-badge {
+      background: var(--yellow);
+      color: var(--primary-dark);
+    }
+    .cart-badge .cart-label { white-space: nowrap; }
+
+    .apk-btn {
+      background: #fff;
+      color: var(--primary-dark);
+      border: 2px solid var(--yellow);
+      padding: 0 0.75rem;
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+    .apk-btn:hover {
+      background: var(--yellow);
+      color: #000;
+    }
+
+    .menu-toggle {
+      display: none;
+      background: var(--yellow);
+      color: var(--primary-dark);
+      width: 44px;
+      min-width: 44px;
+      padding: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .hamburger {
+      width: 20px;
+      height: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+    .hamburger span {
+      display: block;
+      width: 100%;
+      height: 2.5px;
+      background: currentColor;
+      border-radius: 2px;
+    }
+    .mobile-nav {
+      display: none;
+      background: var(--primary-dark);
+      padding: 0.75rem 1rem;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .mobile-nav.open { display: flex; }
+    .mobile-nav a {
+      color: #fff;
+      text-decoration: none;
+      padding: 0.6rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    /* MARQUEE BANNERS */
+    .marquee-bar {
+      overflow: hidden;
+      white-space: nowrap;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .marquee-bar--yellow {
+      background: var(--yellow);
+      color: #000;
+      font-weight: 700;
+      font-size: 0.88rem;
+      padding: 0.55rem 0;
+      border-bottom: 2px solid var(--orange);
+    }
+    .marquee-bar--primary {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 0.5rem 0;
+    }
+    .marquee-bar--primary .marquee-item { color: #fff; }
+    .marquee-bar--primary .marquee-item strong { color: var(--yellow); }
+
+    .marquee-viewport {
+      overflow: hidden;
+      flex: 1;
+      mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+      -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+    }
+    .marquee-track {
+      display: inline-flex;
+      width: max-content;
+      animation: marquee-scroll 35s linear infinite;
+    }
+    .marquee-bar--primary .marquee-track {
+      animation: marquee-scroll 40s linear infinite reverse;
+    }
+    .marquee-track:hover { animation-play-state: paused; }
+
+    .marquee-group {
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .marquee-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0 2rem;
+      white-space: nowrap;
+    }
+    .marquee-item a {
+      color: inherit;
+      text-decoration: underline;
+      font-weight: 700;
+    }
+    .marquee-bar--yellow .marquee-item a { color: var(--primary-dark); }
+    .marquee-dot {
+      color: var(--primary);
+      font-size: 0.7rem;
+      opacity: 0.7;
+    }
+    .marquee-bar--primary .marquee-dot { color: var(--yellow); }
+
+    .marquee-label {
+      flex-shrink: 0;
+      padding: 0 0.85rem;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      z-index: 2;
+    }
+    .marquee-bar--yellow .marquee-label {
+      background: var(--primary);
+      color: var(--yellow);
+      align-self: stretch;
+      display: flex;
+      align-items: center;
+    }
+    .marquee-bar--primary .marquee-label {
+      background: var(--yellow);
+      color: var(--primary-dark);
+      align-self: stretch;
+      display: flex;
+      align-items: center;
+    }
+
+    @keyframes marquee-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .marquee-track { animation: none; flex-wrap: wrap; width: 100%; justify-content: center; }
+      .marquee-viewport { mask-image: none; -webkit-mask-image: none; }
+      .marquee-group:last-child { display: none; }
+    }
+
+    /* BANNERS (legacy - unused) */
+    .offers-bar {
+      background: var(--yellow);
+      color: #000;
+      text-align: center;
+      padding: 0.65rem 1rem;
+      font-weight: 700;
+      font-size: 0.88rem;
+    }
+    .min-order {
+      background: var(--primary);
+      color: #fff;
+      text-align: center;
+      padding: 0.6rem 1rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+
+    /* HERO */
+    .hero {
+      background: var(--white);
+      padding: 2.5rem 1rem;
+      text-align: center;
+      border-bottom: 3px solid var(--yellow);
+    }
+    .hero h2 {
+      font-family: 'Jost', sans-serif;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 0.75rem;
+    }
+    .hero p {
+      color: var(--text-muted);
+      max-width: 650px;
+      margin: 0 auto 1.25rem;
+      font-size: 0.95rem;
+    }
+    .hero-btns { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.7rem 1.4rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: var(--transition);
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-yellow { background: var(--yellow); color: #000; }
+    .btn-yellow:hover { filter: brightness(1.05); }
+
+    /* LICENSE */
+    .license-section {
+      padding: 2.5rem 0;
+      background: var(--bg);
+      border-top: 3px solid var(--yellow);
+    }
+    .section-head {
+      text-align: center;
+      margin-bottom: 1.75rem;
+    }
+    .section-head h3 {
+      font-family: 'Jost', sans-serif;
+      font-size: 1.6rem;
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .section-head p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.35rem; }
+
+    .license-card {
+      background: var(--white);
+      border: 2px solid var(--yellow);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    .license-top {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding-bottom: 1rem;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid var(--yellow-light);
+    }
+    .license-seal {
+      width: 56px;
+      height: 56px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .license-top h4 { font-family: 'Jost', sans-serif; color: var(--primary); font-size: 1.2rem; }
+    .license-top p { font-size: 0.82rem; color: var(--text-muted); }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.6rem;
+    }
+    .info-item {
+      display: flex;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      padding: 0.35rem 0;
+    }
+    .info-label {
+      font-weight: 600;
+      color: var(--primary);
+      min-width: 120px;
+      flex-shrink: 0;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+    .license-note {
+      margin-top: 1rem;
+      padding: 0.85rem 1rem;
+      background: #fff8e1;
+      border-left: 4px solid var(--orange);
+      font-size: 0.82rem;
+      color: #555;
+    }
+    .phone-box {
+      margin-top: 1rem;
+      text-align: center;
+      padding: 1rem;
+      background: var(--yellow-light);
+      border-radius: var(--radius);
+    }
+    .phone-box a {
+      color: var(--primary);
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    /* PRODUCTS ACCORDION */
+    .products-section { padding: 2rem 0 3rem; }
+    .search-wrap {
+      max-width: 420px;
+      margin: 0 auto 1.25rem;
+      position: relative;
+    }
+    .search-wrap input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 2.5rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      background: var(--white);
+    }
+    .search-wrap input:focus { border-color: var(--primary); }
+    .search-wrap span {
+      position: absolute;
+      left: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    .accordion {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .accordion-item {
+      background: var(--white);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      border: 1px solid var(--border);
+    }
+    .accordion-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-align: left;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .accordion-header:hover { background: var(--primary-dark); }
+    .accordion-header.open { border-bottom: 2px solid var(--yellow); }
+    .accordion-title {
+      flex: 1;
+      min-width: 0;
+      line-height: 1.3;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: left;
+    }
+    .accordion-right {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+    .accordion-meta {
+      font-size: 0.72rem;
+      font-weight: 500;
+      opacity: 0.9;
+      white-space: nowrap;
+    }
+    .accordion-chevron {
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      background: var(--yellow);
+      color: var(--primary-dark);
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      transition: transform 0.3s ease, background 0.2s ease;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    .accordion-chevron::before { content: "▼"; }
+    .accordion-header.open .accordion-chevron {
+      transform: rotate(180deg);
+      background: #fff;
+    }
+
+    .accordion-panel {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+    .accordion-panel.open { max-height: 5000px; }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+    .products-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      color: rgba(0,0,0,0.8);
+    }
+    .products-table thead th {
+      background: var(--yellow);
+      color: #000;
+      font-weight: 700;
+      padding: 0.85rem 0.75rem;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .products-table thead th:nth-child(3),
+    .products-table thead th:nth-child(4),
+    .products-table thead th:nth-child(5) { text-align: center; }
+
+    .category-row td {
+      display: none;
+    }
+
+    .prod-img {
+      width: 55px;
+      height: 55px;
+      object-fit: contain;
+      border-radius: 6px;
+      background: #fff;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: transform var(--transition);
+      padding: 2px;
+    }
+    .prod-img:hover { transform: scale(1.08); }
+    .prod-name {
+      font-weight: 600;
+      color: var(--primary-dark);
+      display: block;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .prod-name:hover { text-decoration: underline; }
+    .prod-pack { font-size: 0.75rem; color: var(--text-muted); }
+    .prod-detail-hint {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+    .prod-detail-hint span { color: var(--primary); font-weight: 600; }
+
+    .price-mrp {
+      text-decoration: line-through;
+      color: var(--red);
+      font-size: 0.82rem;
+      display: block;
+    }
+    .price-sale {
+      color: var(--green);
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .qty-cell { text-align: center; white-space: nowrap; }
+    .qty-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px;
+    }
+    .qty-btn {
+      width: 30px;
+      height: 30px;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      font-size: 1.1rem;
+      cursor: pointer;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      transition: var(--transition);
+    }
+    .qty-btn:hover { background: var(--primary-dark); }
+    .qty-num {
+      min-width: 28px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .amount-cell {
+      text-align: center;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .products-table tbody tr {
+      border-bottom: 1px solid var(--border);
+    }
+    .products-table tbody tr:nth-child(odd) {
+      background: var(--yellow-light);
+    }
+    .products-table tbody tr:hover {
+      background: rgba(168,0,125,0.04);
+    }
+    .products-table td { padding: 0.65rem 0.75rem; vertical-align: middle; }
+
+    .no-products-msg {
+      text-align: center;
+      padding: 2.5rem;
+      color: var(--text-muted);
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+
+    /* PRODUCT DETAIL MODAL */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 3000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .modal-overlay.open { opacity: 1; visibility: visible; }
+
+    .product-modal {
+      background: var(--white);
+      border-radius: 12px;
+      max-width: 480px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      transform: translateY(30px) scale(0.96);
+      transition: transform 0.35s ease;
+    }
+    .modal-overlay.open .product-modal {
+      transform: translateY(0) scale(1);
+    }
+    .modal-close {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 1.25rem;
+      cursor: pointer;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    .modal-img-wrap {
+      position: relative;
+      background: linear-gradient(135deg, var(--yellow-light), #fff);
+      padding: 1.5rem;
+      text-align: center;
+      border-bottom: 3px solid var(--yellow);
+    }
+    .modal-img {
+      max-width: 220px;
+      max-height: 220px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: #fff;
+      padding: 6px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    .modal-body { padding: 1.25rem 1.5rem 1.5rem; }
+    .modal-cat {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.35rem;
+    }
+    .modal-body h4 {
+      font-family: 'Jost', sans-serif;
+      font-size: 1.25rem;
+      color: #222;
+      margin-bottom: 0.35rem;
+      line-height: 1.3;
+    }
+    .modal-pack {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    .modal-prices {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .modal-mrp {
+      text-decoration: line-through;
+      color: var(--red);
+      font-size: 0.95rem;
+    }
+    .modal-sale {
+      color: var(--green);
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    .modal-discount {
+      background: var(--yellow);
+      color: #000;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+    .modal-desc {
+      background: var(--bg);
+      border-left: 4px solid var(--primary);
+      padding: 0.85rem 1rem;
+      font-size: 0.88rem;
+      color: #444;
+      line-height: 1.65;
+      margin-bottom: 1.25rem;
+      border-radius: 0 8px 8px 0;
+    }
+    .modal-desc-title {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      margin-bottom: 0.35rem;
+    }
+    .modal-qty-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .modal-qty-row label { font-weight: 600; font-size: 0.9rem; }
+    .modal-amount {
+      text-align: right;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    .modal-amount strong {
+      display: block;
+      font-size: 1.15rem;
+      color: var(--primary);
+    }
+
+    /* STICKY FOOTER BAR */
+    .sticky-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--yellow);
+      z-index: 2000;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+      flex-wrap: wrap;
+    }
+    .sticky-total {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #000;
+    }
+    .sticky-total span { font-size: 1.35rem; color: var(--primary); }
+    .submit-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(168,0,125,0.35);
+      transition: var(--transition);
+    }
+    .submit-btn:hover { background: var(--primary-dark); }
+    .submit-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ORDER CHECKOUT MODAL */
+    .order-modal {
+      background: var(--white);
+      border-radius: 12px;
+      max-width: 520px;
+      width: 100%;
+      max-height: 92vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      transform: translateY(30px) scale(0.96);
+      transition: transform 0.35s ease;
+    }
+    .modal-overlay.open .order-modal {
+      transform: translateY(0) scale(1);
+    }
+    .order-modal-head {
+      background: var(--primary);
+      color: #fff;
+      padding: 1rem 1.25rem;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    .order-modal-head h3 {
+      font-family: 'Jost', sans-serif;
+      font-size: 1.15rem;
+      margin-bottom: 0.65rem;
+    }
+    .order-steps {
+      display: flex;
+      gap: 0.35rem;
+    }
+    .order-step-dot {
+      flex: 1;
+      text-align: center;
+      font-size: 0.62rem;
+      font-weight: 600;
+      opacity: 0.55;
+      line-height: 1.2;
+    }
+    .order-step-dot span {
+      display: block;
+      width: 22px;
+      height: 22px;
+      margin: 0 auto 0.2rem;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      line-height: 22px;
+      font-size: 0.72rem;
+    }
+    .order-step-dot.active { opacity: 1; }
+    .order-step-dot.active span { background: var(--yellow); color: var(--primary-dark); }
+    .order-step-dot.done span { background: var(--green); color: #fff; }
+    .order-modal-body { padding: 1.15rem 1.25rem 1.25rem; }
+    .order-pane { display: none; }
+    .order-pane.active { display: block; }
+    .order-summary {
+      background: var(--yellow-light);
+      border: 1px solid var(--yellow);
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      font-size: 0.82rem;
+    }
+    .order-summary strong { color: var(--primary); font-size: 1rem; }
+    .form-grid {
+      display: grid;
+      gap: 0.75rem;
+    }
+    .form-field label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+    }
+    .form-field label .req { color: var(--red); }
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      outline: none;
+    }
+    .form-field input:focus,
+    .form-field select:focus,
+    .form-field textarea:focus { border-color: var(--primary); }
+    .form-field textarea { resize: vertical; min-height: 70px; }
+    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .gpay-box {
+      text-align: center;
+      background: linear-gradient(135deg, #f0fdf4, #fff);
+      border: 2px solid #34a853;
+      border-radius: 12px;
+      padding: 1.25rem 1rem;
+      margin-bottom: 1rem;
+    }
+    .gpay-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-weight: 700;
+      color: #34a853;
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+    }
+    .gpay-qr {
+      width: 200px;
+      height: 200px;
+      border-radius: 10px;
+      border: 3px solid #fff;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      margin: 0 auto 0.75rem;
+      display: block;
+      background: #fff;
+    }
+    .gpay-upi {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.35rem;
+    }
+    .gpay-amt {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .gpay-note {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.65rem;
+      line-height: 1.45;
+    }
+    .upload-zone {
+      border: 2px dashed var(--primary);
+      border-radius: 10px;
+      padding: 1.25rem 1rem;
+      text-align: center;
+      background: var(--yellow-light);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .upload-zone:hover { background: rgba(255,203,0,0.15); }
+    .upload-zone input { display: none; }
+    .upload-zone p { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem; }
+    .screenshot-preview {
+      margin-top: 0.85rem;
+      text-align: center;
+    }
+    .screenshot-preview img {
+      max-width: 100%;
+      max-height: 180px;
+      border-radius: 8px;
+      border: 2px solid var(--border);
+    }
+    .order-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    .order-actions .btn { flex: 1; min-width: 120px; justify-content: center; border: none; cursor: pointer; }
+    .order-success {
+      text-align: center;
+      padding: 0.5rem 0;
+    }
+    .order-success-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--green);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      margin: 0 auto 0.85rem;
+    }
+    .order-id-box {
+      background: var(--yellow-light);
+      border: 2px dashed var(--primary);
+      border-radius: 8px;
+      padding: 0.85rem;
+      margin: 1rem 0;
+      font-family: monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: 1px;
+    }
+    .order-success p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+
+    /* TRACK ORDER */
+    .track-section {
+      padding: 2.5rem 0;
+      background: var(--bg);
+      border-top: 3px solid var(--primary);
+    }
+    .track-card {
+      max-width: 560px;
+      margin: 0 auto;
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      border: 1px solid var(--border);
+    }
+    .track-form {
+      display: grid;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .track-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .track-btn:hover { background: var(--primary-dark); }
+    .track-result { display: none; }
+    .track-result.show { display: block; }
+    .track-order-id {
+      font-family: monospace;
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 1rem;
+      margin-bottom: 0.35rem;
+    }
+    .track-status-badge {
+      display: inline-block;
+      background: var(--yellow);
+      color: #000;
+      padding: 0.3rem 0.75rem;
+      border-radius: 50px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    .track-timeline {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .track-timeline li {
+      position: relative;
+      padding-left: 1.75rem;
+      padding-bottom: 1.1rem;
+      font-size: 0.85rem;
+    }
+    .track-timeline li:last-child { padding-bottom: 0; }
+    .track-timeline li::before {
+      content: '';
+      position: absolute;
+      left: 6px;
+      top: 6px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+    .track-timeline li::after {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 18px;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+    .track-timeline li:last-child::after { display: none; }
+    .track-timeline li.done::before { background: var(--green); }
+    .track-timeline li.current::before { background: var(--primary); box-shadow: 0 0 0 3px rgba(168,0,125,0.25); }
+    .track-timeline li.done { color: var(--text); }
+    .track-timeline li.current { font-weight: 700; color: var(--primary); }
+    .track-timeline li.pending { color: var(--text-muted); }
+    .track-timeline .tl-time { font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 0.15rem; }
+    .track-not-found {
+      text-align: center;
+      color: var(--red);
+      font-size: 0.88rem;
+      padding: 1rem;
+      display: none;
+    }
+    .track-not-found.show { display: block; }
+    @media (max-width: 600px) {
+      .form-row-2 { grid-template-columns: 1fr; }
+      .order-modal { max-height: 95vh; }
+    }
+
+    /* HOW TO ORDER */
+    .how-section {
+      padding: 2.5rem 0;
+      background: var(--white);
+      border-top: 3px solid var(--yellow);
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .step {
+      text-align: center;
+      padding: 1.25rem;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      transition: var(--transition);
+    }
+    .step:hover { border-color: var(--primary); }
+    .step-num {
+      width: 40px;
+      height: 40px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      margin: 0 auto 0.75rem;
+    }
+    .step h4 { font-size: 0.95rem; margin-bottom: 0.35rem; color: var(--primary); }
+    .step p { font-size: 0.8rem; color: var(--text-muted); }
+
+    /* GOOGLE MAP */
+    .map-section {
+      padding: 2.5rem 0;
+      background: var(--white);
+      border-top: 3px solid var(--yellow);
+    }
+    .map-wrap {
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+      border: 2px solid var(--border);
+      line-height: 0;
+    }
+    .map-wrap iframe {
+      width: 100%;
+      height: 380px;
+      border: 0;
+      display: block;
+    }
+    .map-info {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+      padding: 1rem 1.25rem;
+      background: var(--yellow-light);
+      border-radius: var(--radius);
+      border-left: 4px solid var(--primary);
+    }
+    .map-info .map-directions-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .map-address {
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.65;
+    }
+    .map-address strong {
+      display: block;
+      color: var(--primary);
+      font-family: 'Jost', sans-serif;
+      font-size: 1.05rem;
+      margin-bottom: 0.35rem;
+    }
+    .map-directions {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--primary);
+      color: #fff;
+      padding: 0.65rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: var(--transition);
+    }
+    .map-directions:hover { background: var(--primary-dark); }
+
+    /* FOOTER */
+    footer {
+      background: var(--primary);
+      color: rgba(255,255,255,0.9);
+      padding: 2.5rem 0 1.5rem;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    .footer-grid h4, .footer-grid h5 {
+      font-family: 'Jost', sans-serif;
+      color: var(--yellow);
+      margin-bottom: 0.75rem;
+    }
+    .footer-grid p, .footer-grid li { font-size: 0.85rem; line-height: 1.7; }
+    .footer-grid ul { list-style: none; }
+    .footer-grid a { color: rgba(255,255,255,0.85); text-decoration: none; }
+    .footer-grid a:hover { color: var(--yellow); }
+    .footer-bottom {
+      text-align: center;
+      padding-top: 1.25rem;
+      border-top: 1px solid rgba(255,255,255,0.2);
+      font-size: 0.78rem;
+      opacity: 0.85;
+    }
+    .legal-note {
+      background: rgba(0,0,0,0.15);
+      padding: 1rem;
+      border-radius: var(--radius);
+      font-size: 0.78rem;
+      margin-top: 1rem;
+      line-height: 1.6;
+    }
+
+    .wa-float {
+      position: fixed;
+      bottom: 5.5rem;
+      right: 1.25rem;
+      z-index: 1500;
+      width: 54px;
+      height: 54px;
+      background: var(--green-wa);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      box-shadow: 0 4px 20px rgba(37,211,102,0.5);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+    .wa-float:hover { transform: scale(1.08); }
+
+    /* CHATBOT */
+    .chatbot-wrap {
+      position: fixed;
+      bottom: 5.5rem;
+      left: 1.25rem;
+      z-index: 1600;
+      font-family: 'Poppins', sans-serif;
+    }
+    .chat-panel {
+      position: absolute;
+      bottom: 64px;
+      left: 0;
+      width: min(340px, calc(100vw - 2rem));
+      height: 420px;
+      background: var(--white);
+      border-radius: 16px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.22);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 2px solid var(--yellow);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(16px) scale(0.96);
+      transition: all 0.3s ease;
+    }
+    .chat-panel.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+    }
+    .chat-header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+      padding: 0.85rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .chat-header-info {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+    .chat-avatar {
+      width: 38px;
+      height: 38px;
+      background: var(--yellow);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+    .chat-header h4 {
+      font-family: 'Jost', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .chat-header span {
+      font-size: 0.68rem;
+      opacity: 0.9;
+    }
+    .chat-close {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: #fff;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      background: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .chat-msg {
+      max-width: 88%;
+      padding: 0.6rem 0.85rem;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      word-wrap: break-word;
+    }
+    .chat-msg.bot {
+      background: var(--white);
+      color: var(--text);
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      border-left: 3px solid var(--primary);
+    }
+    .chat-msg.user {
+      background: var(--primary);
+      color: #fff;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    .chat-msg.typing {
+      color: var(--text-muted);
+      font-style: italic;
+      background: transparent;
+      box-shadow: none;
+      border: none;
+      padding: 0.25rem 0;
+    }
+    .chat-quick {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--white);
+      border-top: 1px solid var(--border);
+    }
+    .chat-quick button {
+      background: var(--yellow-light);
+      border: 1px solid var(--yellow);
+      color: var(--primary-dark);
+      padding: 0.35rem 0.65rem;
+      border-radius: 50px;
+      font-family: inherit;
+      font-size: 0.68rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .chat-quick button:hover {
+      background: var(--yellow);
+    }
+    .chat-input-row {
+      display: flex;
+      gap: 0.4rem;
+      padding: 0.65rem 0.75rem;
+      background: var(--white);
+      border-top: 1px solid var(--border);
+    }
+    .chat-input-row input {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 0.55rem 1rem;
+      font-family: inherit;
+      font-size: 0.82rem;
+      outline: none;
+    }
+    .chat-input-row input:focus { border-color: var(--primary); }
+    .chat-send {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1rem;
+      flex-shrink: 0;
+      transition: var(--transition);
+    }
+    .chat-send:hover { background: var(--primary-dark); }
+    .chat-toggle {
+      width: 54px;
+      height: 54px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border: 3px solid var(--yellow);
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.5rem;
+      box-shadow: 0 4px 20px rgba(168,0,125,0.45);
+      transition: var(--transition);
+      position: relative;
+    }
+    .chat-toggle:hover { transform: scale(1.08); }
+    .chat-badge-dot {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 14px;
+      height: 14px;
+      background: var(--green);
+      border: 2px solid #fff;
+      border-radius: 50%;
+      animation: chat-pulse 2s infinite;
+    }
+    @keyframes chat-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 5.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--primary);
+      color: #fff;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      z-index: 3000;
+      opacity: 0;
+      transition: all 0.35s ease;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    @media (max-width: 900px) {
+      nav { display: none; }
+      .menu-toggle { display: inline-flex; }
+      .header-right .apk-btn { display: none; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .header-inner { padding: 0.6rem 0.75rem; gap: 0.35rem; }
+      .header-right { gap: 0.35rem; }
+    }
+    @media (max-width: 600px) {
+      .hero { padding: 1.15rem 1rem 0.85rem; }
+      .hero h2 { font-size: 1.3rem; margin-bottom: 0.45rem; }
+      .hero p { font-size: 0.82rem; margin-bottom: 0.75rem; line-height: 1.45; }
+      .hero-btns { gap: 0.5rem; }
+      .hero-btns .btn { padding: 0.6rem 1rem; font-size: 0.82rem; }
+      .hero-btns .btn-outline { display: none; }
+      .products-section { padding: 1.25rem 0 2rem; }
+      .section-head h3 { font-size: 1.05rem; }
+      .section-head p { font-size: 0.78rem; }
+      .logo-text span { display: none; }
+      .logo-text h1 { font-size: 0.95rem; }
+      .logo-icon { width: 36px; height: 36px; font-size: 1.1rem; }
+      .cart-badge { padding: 0 0.55rem; min-width: 40px; height: 40px; font-size: 0.8rem; }
+      .cart-badge .cart-label { display: none; }
+      .menu-toggle { width: 40px; min-width: 40px; height: 40px; }
+      .accordion-header {
+        padding: 0.7rem 0.6rem;
+        gap: 0.4rem;
+      }
+      .accordion-title { font-size: 0.72rem; }
+      .accordion-meta { display: none; }
+      .accordion-chevron { width: 34px; height: 34px; min-width: 34px; }
+      .products-table { font-size: 0.78rem; }
+      .prod-img { width: 42px; height: 42px; }
+      .map-wrap iframe { height: 280px; }
+      .map-info { flex-direction: column; align-items: flex-start; }
+      .sticky-bar { flex-direction: column; text-align: center; }
+      .submit-btn { width: 100%; }
+      .qty-btn { width: 26px; height: 26px; font-size: 1rem; }
+      body { padding-bottom: 120px; }
+      .chat-panel { height: min(420px, 55vh); }
+      .chatbot-wrap { bottom: 5rem; right: 1rem; left: auto; }
+      .wa-float { bottom: calc(5rem + 62px); right: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    📞 Order Now: <a href="tel:9841916899">98419 16899</a> &nbsp;|&nbsp; Licensed Dealer — Mogai, Avadi, Tiruvallur
+  </div>
+
+  <header>
+    <div class="header-inner">
+      <a href="#" class="logo">
+        <div class="logo-icon">🎆</div>
+        <div class="logo-text">
+          <h1>SRK Crackers</h1>
+          <span>Licensed Fireworks Dealer</span>
+        </div>
+      </a>
+      <nav>
+        <a href="#home" class="active">Home</a>
+        <a href="#about">About</a>
+        <a href="#products">Quick Order</a>
+        <a href="#how">How to Order</a>
+        <a href="#track">Track Order</a>
+        <a href="#map">Location</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <div class="header-right">
+        <button type="button" class="header-btn cart-badge" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">
+          <span class="cart-label">Cart </span><span id="cartCount">0</span>
+        </button>
+        <button type="button" class="header-btn apk-btn" onclick="downloadApk()" title="Download SRK Crackers App">
+          <span class="apk-label">Download APK</span>
+        </button>
+        <button type="button" class="header-btn menu-toggle" onclick="toggleMenu()" aria-label="Open menu">
+          <span class="hamburger" aria-hidden="true"><span></span><span></span><span></span></span>
+        </button>
+      </div>
+    </div>
+    <div class="mobile-nav" id="mobileNav">
+      <a href="#home" onclick="toggleMenu()">Home</a>
+      <a href="#about" onclick="toggleMenu()">About</a>
+      <a href="#products" onclick="toggleMenu()">Quick Order</a>
+      <a href="#how" onclick="toggleMenu()">How to Order</a>
+      <a href="#track" onclick="toggleMenu()">Track Order</a>
+      <a href="#map" onclick="toggleMenu()">Location</a>
+      <a href="#contact" onclick="toggleMenu()">Contact</a>
+      <a href="#" onclick="downloadApk(); toggleMenu(); return false;">📲 Download APK</a>
+    </div>
+  </header>
+
+  <div class="marquee-bar marquee-bar--yellow" aria-label="Offers announcement">
+    <span class="marquee-label">🔥 Offer</span>
+    <div class="marquee-viewport">
+      <div class="marquee-track">
+        <div class="marquee-group">
+          <span class="marquee-item">🎇 Diwali Special — Flat <strong>80% OFF</strong> on All Crackers!</span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">🎆 Premium Sivakasi Quality Crackers</span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">📞 Order Now: <a href="tel:9841916899">98419 16899</a></span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">✅ Licensed Dealer — SRK Crackers, Mogai, Avadi</span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">🚚 Delivery Available — Tamil Nadu &amp; All India</span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">💬 Submit Order via WhatsApp — Quick &amp; Easy!</span>
+          <span class="marquee-dot">★</span>
+        </div>
+        <div class="marquee-group" aria-hidden="true">
+          <span class="marquee-item">🎇 Diwali Special — Flat <strong>80% OFF</strong> on All Crackers!</span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">🎆 Premium Sivakasi Quality Crackers</span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">📞 Order Now: <a href="tel:9841916899">98419 16899</a></span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">✅ Licensed Dealer — SRK Crackers, Mogai, Avadi</span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">🚚 Delivery Available — Tamil Nadu &amp; All India</span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">💬 Submit Order via WhatsApp — Quick &amp; Easy!</span>
+          <span class="marquee-dot">★</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="marquee-bar marquee-bar--primary" aria-label="Minimum order announcement">
+    <span class="marquee-label">📢 Info</span>
+    <div class="marquee-viewport">
+      <div class="marquee-track">
+        <div class="marquee-group">
+          <span class="marquee-item">⚡ Minimum Order — Tamil Nadu &amp; PY: <strong>₹3000</strong></span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">⚡ Other States Minimum Order: <strong>₹5000</strong></span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">🏛️ Govt. Licensed Fireworks Dealer — 100 KGS Capacity</span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">📍 Survey No 280/79, Door No 45, Mogai, Avadi, Tiruvallur</span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">⏰ We confirm your order within 2 hours by phone call</span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">🎁 Best Price — Wholesale Rates Direct from Sivakasi</span>
+          <span class="marquee-dot">★</span>
+        </div>
+        <div class="marquee-group" aria-hidden="true">
+          <span class="marquee-item">⚡ Minimum Order — Tamil Nadu &amp; PY: <strong>₹3000</strong></span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">⚡ Other States Minimum Order: <strong>₹5000</strong></span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">🏛️ Govt. Licensed Fireworks Dealer — 100 KGS Capacity</span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">📍 Survey No 280/79, Door No 45, Mogai, Avadi, Tiruvallur</span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">⏰ We confirm your order within 2 hours by phone call</span>
+          <span class="marquee-dot">★</span>
+          <span class="marquee-item">🎁 Best Price — Wholesale Rates Direct from Sivakasi</span>
+          <span class="marquee-dot">★</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="hero" id="home">
+    <div class="container">
+      <h2>Best Crackers Shop — SRK Crackers</h2>
+      <p>Premium Sivakasi quality crackers from licensed dealer SRK Crackers, Mogai, Avadi. Select products below, get your estimate and submit order via WhatsApp.</p>
+      <div class="hero-btns">
+        <a href="#products" class="btn btn-primary">🛍️ Quick Order</a>
+        <button type="button" class="btn btn-yellow" onclick="downloadApk()">📲 Download APK</button>
+        <a href="tel:9841916899" class="btn btn-outline" style="background:#fff;border:2px solid var(--primary);color:var(--primary)">📞 98419 16899</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="products-section" id="products">
+    <div class="container">
+      <div class="section-head">
+        <h3>Crackers Price List — 80% Discount</h3>
+        <p>Select a category to expand · Tap product name or image for full description</p>
+      </div>
+      <div class="search-wrap">
+        <span>🔍</span>
+        <input type="text" id="searchInput" placeholder="Search crackers..." oninput="renderProducts()">
+      </div>
+      <div class="accordion" id="productsAccordion"></div>
+      <div class="no-products-msg" id="noProducts" style="display:none">No products found. Try a different search.</div>
+    </div>
+  </section>
+
+  <section class="how-section" id="how">
+    <div class="container">
+      <div class="section-head">
+        <h3>How to Order</h3>
+        <p>Simple 4-step ordering process</p>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><h4>Select Products</h4><p>Open category · add quantity · check total in bottom bar</p></div>
+        <div class="step"><div class="step-num">2</div><h4>Your Details</h4><p>Fill name, phone, address when you click Place Order</p></div>
+        <div class="step"><div class="step-num">3</div><h4>Pay via GPay</h4><p>Scan dummy QR code · pay exact amount shown</p></div>
+        <div class="step"><div class="step-num">4</div><h4>Share Screenshot</h4><p>Upload payment screenshot · share on WhatsApp · track order status</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="track-section" id="track">
+    <div class="container">
+      <div class="section-head">
+        <h3>Track Your Order</h3>
+        <p>Enter your Order ID and registered mobile number</p>
+      </div>
+      <div class="track-card">
+        <div class="track-form">
+          <div class="form-field">
+            <label>Order ID <span class="req">*</span></label>
+            <input type="text" id="trackOrderId" placeholder="e.g. SRK-20260618-A3F2" autocomplete="off">
+          </div>
+          <div class="form-field">
+            <label>Mobile Number <span class="req">*</span></label>
+            <input type="tel" id="trackPhone" placeholder="10-digit mobile used while ordering" maxlength="10">
+          </div>
+          <button type="button" class="track-btn" onclick="trackOrder()">Track Order</button>
+        </div>
+        <div class="track-not-found" id="trackNotFound">Order not found. Please check Order ID and mobile number.</div>
+        <div class="track-result" id="trackResult">
+          <div class="track-order-id" id="trackResultId"></div>
+          <span class="track-status-badge" id="trackStatusBadge"></span>
+          <ul class="track-timeline" id="trackTimeline"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="license-section" id="about">
+    <div class="container">
+      <div class="section-head">
+        <h3>Licensed Dealer Information</h3>
+        <p>Government approved fireworks retailer</p>
+      </div>
+      <div class="license-card">
+        <div class="license-top">
+          <div class="license-seal">🏛️</div>
+          <div>
+            <h4>SRK CRACKERS</h4>
+            <p>Survey No 280/79, Door No 45, Mogai Village, Avadi Taluk, Tiruvallur District</p>
+          </div>
+        </div>
+        <div class="info-grid">
+          <div class="info-item"><span class="info-label">Name of Licence</span><span>SRK CRACKERS</span></div>
+          <div class="info-item"><span class="info-label">Survey No</span><span>280/79</span></div>
+          <div class="info-item"><span class="info-label">Door No</span><span>45</span></div>
+          <div class="info-item"><span class="info-label">Licence No</span><span>—</span></div>
+          <div class="info-item"><span class="info-label">Village</span><span>MOGAI</span></div>
+          <div class="info-item"><span class="info-label">Taluk</span><span>AVADI</span></div>
+          <div class="info-item"><span class="info-label">District</span><span>TIRUVALLUR</span></div>
+          <div class="info-item"><span class="info-label">Valid Up To</span><span>—</span></div>
+          <div class="info-item"><span class="info-label">Capacity</span><span>100 KGS OF FIREWORKS</span></div>
+          <div class="info-item"><span class="info-label">Working</span><span>500 KGS OF CELLULOID / NITRATION</span></div>
+        </div>
+        <div class="license-note">⚠️ Fireworks for adult use only. Burst in open areas. Follow all safety guidelines.</div>
+        <div class="phone-box">📞 Call to Order: <a href="tel:9841916899">98419 16899</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="map-section" id="map">
+    <div class="container">
+      <div class="section-head">
+        <h3>Find Us — Avadi, Tiruvallur</h3>
+        <p>SRK Crackers · Mogai Village, Avadi Taluk, Tiruvallur District, Tamil Nadu</p>
+      </div>
+      <div class="map-wrap">
+        <iframe
+          title="SRK Crackers — Avadi, Tiruvallur District, Tamil Nadu"
+          src="https://maps.google.com/maps?q=Avadi,+Tiruvallur+District,+Tamil+Nadu,+India&ll=13.1067,80.1015&z=14&hl=en&output=embed"
+          allowfullscreen=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+      </div>
+      <div class="map-info">
+        <div class="map-address">
+          <strong>SRK CRACKERS</strong>
+          📍 <strong>Avadi, Tiruvallur District, Tamil Nadu, India</strong><br>
+          Survey No 280/79, Door No 45, Mogai Village, Avadi Taluk<br>
+          📞 <a href="tel:9841916899" style="color:var(--primary);font-weight:700">98419 16899</a>
+        </div>
+        <div class="map-directions-wrap">
+        <a class="map-directions" href="https://www.google.com/maps/dir/?api=1&destination=Avadi,+Tiruvallur+District,+Tamil+Nadu,+India" target="_blank" rel="noopener noreferrer">
+          🧭 Get Directions to Avadi, Tiruvallur
+        </a>
+        <a class="map-directions" href="https://www.google.com/maps/search/?api=1&query=Avadi,+Tiruvallur+District,+Tamil+Nadu,+India" target="_blank" rel="noopener noreferrer" style="background:var(--yellow);color:#000;border:2px solid var(--primary)">
+          🗺️ Open in Google Maps
+        </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer id="contact">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <h4>SRK Crackers</h4>
+          <p>Your trusted licensed fireworks dealer in Mogai, Avadi, Tiruvallur. Premium Sivakasi quality crackers at wholesale prices with safe delivery.</p>
+          <p style="margin-top:0.5rem">📍 Survey No 280/79, Door No 45, Mogai Village, Avadi Taluk, Tiruvallur District, Tamil Nadu</p>
+        </div>
+        <div>
+          <h5>Quick Links</h5>
+          <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#products">Quick Order</a></li>
+            <li><a href="#how">How to Order</a></li>
+            <li><a href="#track">Track Order</a></li>
+            <li><a href="#map">Location / Map</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5>Contact</h5>
+          <ul>
+            <li><a href="tel:9841916899">📞 98419 16899</a></li>
+            <li><a href="https://wa.me/919841916899" target="_blank">💬 WhatsApp</a></li>
+            <li><a href="#" onclick="downloadApk(); return false;">📲 Download APK</a></li>
+            <li>🕐 9:00 AM – 9:00 PM</li>
+          </ul>
+        </div>
+      </div>
+      <div class="legal-note">
+        As per 2018 Supreme Court Order, online sale of firecrackers is not permitted. Select products to see your estimate and submit enquiry. We will contact you within 2 hours to confirm your order by phone. SRK Crackers follows 100% legal &amp; statutory compliances.
+      </div>
+      <div class="footer-bottom">
+        <p>© 2026 SRK Crackers. All Rights Reserved. | Licensed Fireworks Dealer | Mogai, Avadi, Tiruvallur</p>
+      </div>
+    </div>
+  </footer>
+
+  <div class="sticky-bar">
+    <div class="sticky-total">Grand Total: <span id="grandTotal">₹0</span></div>
+    <button class="submit-btn" id="submitBtn" onclick="openOrderModal()" disabled>Place Order</button>
+  </div>
+
+  <a href="https://wa.me/919841916899?text=Hi%20SRK%20Crackers%2C%20I%20want%20to%20place%20an%20order." class="wa-float" target="_blank" aria-label="WhatsApp">💬</a>
+
+  <!-- DUMMY CHATBOT -->
+  <div class="chatbot-wrap" id="chatbotWrap">
+    <div class="chat-panel" id="chatPanel">
+      <div class="chat-header">
+        <div class="chat-header-info">
+          <div class="chat-avatar">🎆</div>
+          <div>
+            <h4>SRK Crackers Bot</h4>
+            <span>● Online — Demo Assistant</span>
+          </div>
+        </div>
+        <button class="chat-close" onclick="toggleChat()" aria-label="Close chat">✕</button>
+      </div>
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-quick" id="chatQuick">
+        <button type="button" onclick="sendQuick('Products')">🛍️ Products</button>
+        <button type="button" onclick="sendQuick('Order')">📦 How to Order</button>
+        <button type="button" onclick="sendQuick('Phone')">📞 Phone</button>
+        <button type="button" onclick="sendQuick('Address')">📍 Address</button>
+        <button type="button" onclick="sendQuick('Offer')">🎇 80% Offer</button>
+        <button type="button" onclick="sendQuick('Min order')">💰 Min Order</button>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="Type a message..." autocomplete="off"
+          onkeydown="if(event.key==='Enter')sendChatMsg()">
+        <button type="button" class="chat-send" onclick="sendChatMsg()" aria-label="Send">➤</button>
+      </div>
+    </div>
+    <button type="button" class="chat-toggle" id="chatToggle" onclick="toggleChat()" aria-label="Open chat">
+      💬
+      <span class="chat-badge-dot" id="chatDot"></span>
+    </button>
+  </div>
+
+  <div class="toast" id="toast">  </div>
+
+  <!-- ORDER CHECKOUT MODAL -->
+  <div class="modal-overlay" id="orderModal" onclick="closeOrderModal(event)">
+    <div class="order-modal" onclick="event.stopPropagation()">
+      <div class="order-modal-head">
+        <button class="modal-close" style="position:absolute;top:0.75rem;right:0.75rem;background:rgba(255,255,255,0.2)" onclick="closeOrderModal()" aria-label="Close">✕</button>
+        <h3>Complete Your Order</h3>
+        <div class="order-steps">
+          <div class="order-step-dot active" id="stepDot1"><span>1</span>Details</div>
+          <div class="order-step-dot" id="stepDot2"><span>2</span>Pay</div>
+          <div class="order-step-dot" id="stepDot3"><span>3</span>Screenshot</div>
+          <div class="order-step-dot" id="stepDot4"><span>4</span>Done</div>
+        </div>
+      </div>
+      <div class="order-modal-body">
+        <div class="order-summary" id="orderSummary"></div>
+
+        <!-- Step 1: Customer Details -->
+        <div class="order-pane active" id="orderPane1">
+          <div class="form-grid">
+            <div class="form-field">
+              <label>Full Name <span class="req">*</span></label>
+              <input type="text" id="custName" placeholder="Your full name" required>
+            </div>
+            <div class="form-row-2">
+              <div class="form-field">
+                <label>Mobile <span class="req">*</span></label>
+                <input type="tel" id="custPhone" placeholder="10-digit number" maxlength="10" required>
+              </div>
+              <div class="form-field">
+                <label>Alternate Phone</label>
+                <input type="tel" id="custAltPhone" placeholder="Optional" maxlength="10">
+              </div>
+            </div>
+            <div class="form-field">
+              <label>Email</label>
+              <input type="email" id="custEmail" placeholder="Optional — for order updates">
+            </div>
+            <div class="form-field">
+              <label>Delivery Address <span class="req">*</span></label>
+              <textarea id="custAddress" placeholder="Door no, street, landmark" required></textarea>
+            </div>
+            <div class="form-row-2">
+              <div class="form-field">
+                <label>City / Town <span class="req">*</span></label>
+                <input type="text" id="custCity" placeholder="City" required>
+              </div>
+              <div class="form-field">
+                <label>State <span class="req">*</span></label>
+                <select id="custState" required>
+                  <option value="">Select state</option>
+                  <option value="Tamil Nadu" selected>Tamil Nadu</option>
+                  <option value="Puducherry">Puducherry</option>
+                  <option value="Andhra Pradesh">Andhra Pradesh</option>
+                  <option value="Karnataka">Karnataka</option>
+                  <option value="Kerala">Kerala</option>
+                  <option value="Other">Other State</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-field">
+              <label>Pincode <span class="req">*</span></label>
+              <input type="text" id="custPincode" placeholder="6-digit pincode" maxlength="6" required>
+            </div>
+            <div class="form-field">
+              <label>Order Notes</label>
+              <textarea id="custNotes" placeholder="Delivery instructions (optional)"></textarea>
+            </div>
+          </div>
+          <div class="order-actions">
+            <button type="button" class="btn btn-primary" onclick="orderNextStep(2)">Continue to Payment →</button>
+          </div>
+        </div>
+
+        <!-- Step 2: GPay QR -->
+        <div class="order-pane" id="orderPane2">
+          <div class="gpay-box">
+            <div class="gpay-logo">📱 Google Pay</div>
+            <img class="gpay-qr" id="gpayQr" src="" alt="GPay QR Code">
+            <div class="gpay-upi">UPI: <strong id="gpayUpi">srkcrackers@okaxis</strong></div>
+            <div class="gpay-amt" id="gpayAmount">₹0</div>
+            <p class="gpay-note">Scan with Google Pay / PhonePe / Paytm · Pay the <b>exact amount</b> shown above · Then upload payment screenshot in next step</p>
+          </div>
+          <div class="order-actions">
+            <button type="button" class="btn btn-outline" style="background:#fff;border:2px solid var(--border);color:var(--text)" onclick="orderNextStep(1)">← Back</button>
+            <button type="button" class="btn btn-primary" onclick="orderNextStep(3)">I Have Paid → Upload Screenshot</button>
+          </div>
+        </div>
+
+        <!-- Step 3: Payment Screenshot -->
+        <div class="order-pane" id="orderPane3">
+          <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.85rem;line-height:1.5">Upload your <b>GPay / UPI payment screenshot</b>. We verify within 2 hours and confirm your order.</p>
+          <label class="upload-zone" id="uploadZone">
+            <input type="file" id="paymentScreenshot" accept="image/*" onchange="previewPaymentScreenshot(event)">
+            <div style="font-size:2rem">📷</div>
+            <strong>Tap to upload payment screenshot</strong>
+            <p>JPG, PNG · Max 5 MB</p>
+          </label>
+          <div class="screenshot-preview" id="screenshotPreview" style="display:none">
+            <img id="screenshotImg" src="" alt="Payment screenshot preview">
+            <p style="font-size:0.78rem;color:var(--green);margin-top:0.5rem;font-weight:600">✓ Screenshot uploaded</p>
+          </div>
+          <div class="order-actions" style="margin-top:1rem">
+            <button type="button" class="btn btn-outline" style="background:#fff;border:2px solid var(--border);color:var(--text)" onclick="orderNextStep(2)">← Back</button>
+            <button type="button" class="btn btn-yellow" id="shareWaBtn" onclick="sharePaymentWhatsApp()" disabled>Share on WhatsApp</button>
+            <button type="button" class="btn btn-primary" id="confirmOrderBtn" onclick="confirmOrder()" disabled>Confirm Order ✓</button>
+          </div>
+        </div>
+
+        <!-- Step 4: Success -->
+        <div class="order-pane" id="orderPane4">
+          <div class="order-success">
+            <div class="order-success-icon">✓</div>
+            <h4 style="color:var(--primary);font-family:Jost,sans-serif;margin-bottom:0.5rem">Order Submitted!</h4>
+            <p>Your order has been received. Save your Order ID to track status.</p>
+            <div class="order-id-box" id="successOrderId">SRK-000000-0000</div>
+            <p>We will verify your payment and call you within <b>2 hours</b> to confirm delivery.</p>
+            <div class="order-actions" style="justify-content:center;margin-top:1.25rem">
+              <button type="button" class="btn btn-primary" onclick="shareOrderWhatsApp()">Send Order on WhatsApp</button>
+              <button type="button" class="btn btn-yellow" onclick="goToTrack()">Track Order</button>
+              <button type="button" class="btn btn-outline" style="background:#fff;border:2px solid var(--border);color:var(--text)" onclick="closeOrderModal()">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCT DETAIL MODAL -->
+  <div class="modal-overlay" id="productModal" onclick="closeProductModal(event)">
+    <div class="product-modal" onclick="event.stopPropagation()">
+      <div class="modal-img-wrap">
+        <button class="modal-close" onclick="closeProductModal()" aria-label="Close">✕</button>
+        <img class="modal-img" id="modalImg" src="" alt="">
+      </div>
+      <div class="modal-body">
+        <div class="modal-cat" id="modalCat"></div>
+        <h4 id="modalName"></h4>
+        <div class="modal-pack" id="modalPack"></div>
+        <div class="modal-prices">
+          <span class="modal-mrp" id="modalMrp"></span>
+          <span class="modal-sale" id="modalSale"></span>
+          <span class="modal-discount">80% OFF</span>
+        </div>
+        <div class="modal-desc">
+          <div class="modal-desc-title">Product Description</div>
+          <div id="modalDesc"></div>
+        </div>
+        <div class="modal-qty-row">
+          <label>Quantity</label>
+          <div class="qty-wrap">
+            <button class="qty-btn" id="modalQtyMinus" aria-label="Decrease">−</button>
+            <span class="qty-num" id="modalQty">0</span>
+            <button class="qty-btn" id="modalQtyPlus" aria-label="Increase">+</button>
+          </div>
+          <div class="modal-amount">
+            Line Amount
+            <strong id="modalAmount">₹0</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* Demo APK — replace with your real app URL when published on Play Store / hosting */
+    const DUMMY_APK_URL = "https://github.com/appium/appium/raw/master/packages/appium/sample-code/apps/ApiDemos-debug.apk";
+
+    function downloadApk() {
+      const a = document.createElement("a");
+      a.href = DUMMY_APK_URL;
+      a.download = "SRK-Crackers.apk";
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast("Downloading SRK Crackers App (demo APK)...");
+    }
+
+    const IMG_BASE = "https://jallikattucrackers.in/wp-content/uploads";
+    const img = (path) => IMG_BASE + path;
+
+    /* Real Sivakasi cracker product pack photos */
+    const IMG = {
+      kuruvi: img("/2023/10/678.webp"),
+      lakshmi35: img("/2023/10/679.webp"),
+      lakshmi4: img("/2023/10/680.webp"),
+      sound2: img("/2023/10/596.webp"),
+      hulkMega: img("/2023/10/762.webp"),
+      flowerS: img("/2023/10/840.webp"),
+      flowerB: img("/2024/05/703.webp"),
+      flowerSp: img("/2023/10/541.webp"),
+      flowerAsoka: img("/2025/08/832.webp"),
+      flowerDlx: img("/2025/05/594.webp"),
+      rocketC: img("/2023/10/773.webp"),
+      rocketW: img("/2023/10/460.webp"),
+      rocketM: img("/2025/07/799.webp"),
+      chakkar: img("/2023/10/454.webp"),
+      chakkarSp: img("/2025/10/01.webp"),
+      chakkarDlx: img("/2025/10/03.webp"),
+      bomb: img("/2023/10/537.webp"),
+      paper14: img("/2023/10/480.webp"),
+      paper12: img("/2023/10/484.webp"),
+      paper1kg: img("/2023/10/481.webp"),
+      wala1k: img("/2024/07/593.webp"),
+      wala2k: img("/2023/10/499.webp"),
+      wala5k: img("/2023/10/500.webp"),
+      spark12: img("/2023/10/694.webp"),
+      spark15: img("/2023/10/696.webp"),
+      spark15c: img("/2023/10/701.webp"),
+      twinkle: img("/2024/09/669.jpg"),
+      sky1: img("/2023/10/686.webp"),
+      sky2: img("/2023/10/684.webp"),
+      sky30: img("/2024/07/603.webp"),
+      fallback: img("/2023/10/678.webp")
+    };
+
+    const CATEGORIES = [
+      { key: "sound", label: "ONE SOUND CRACKERS (80% DIS)" },
+      { key: "flower", label: "FLOWER POTS (80% DIS)" },
+      { key: "rocket", label: "ROCKET NOVELTIES (80% DIS)" },
+      { key: "chakkar", label: "CHAKKARS (80% DIS)" },
+      { key: "bomb", label: "BOMB NOVELTIES (80% DIS)" },
+      { key: "garland", label: "WALA CRACKERS (80% DIS)" },
+      { key: "sparkler", label: "PREMIUM SPARKLERS (80% DIS)" },
+      { key: "sky", label: "SKY DISPLAY (80% DIS)" }
+    ];
+
+    const PRODUCTS = [
+      { id: 1, cat: "sound", name: "2.75″ Kuruvi Crackers", pack: "1 pkt (5 pcs)", price: 7, mrp: 35, img: IMG.kuruvi, desc: "Classic Kuruvi sound crackers — loud single burst. Ideal for kids and family celebrations. 5 pieces per packet." },
+      { id: 2, cat: "sound", name: "3.5″ Lakshmi Crackers", pack: "1 pkt (5 pcs)", price: 12, mrp: 60, img: IMG.lakshmi35, desc: "Traditional Lakshmi brand crackers with sharp sound. Premium quality Sivakasi manufacture. 5 pcs per packet." },
+      { id: 3, cat: "sound", name: "4″ Lakshmi Crackers", pack: "1 pkt (5 pcs)", price: 18, mrp: 90, img: IMG.lakshmi4, desc: "Bigger 4 inch Lakshmi crackers for louder celebration. Long-lasting burn with clear sound. 5 pcs per packet." },
+      { id: 4, cat: "sound", name: "2 Sound Crackers", pack: "1 pkt (5 pcs)", price: 30, mrp: 150, img: IMG.sound2, desc: "Double sound crackers — two consecutive blasts per cracker. Very popular for Diwali night. 5 pcs per packet." },
+      { id: 5, cat: "sound", name: "4″ Hulk Mega Deluxe", pack: "1 pkt (5 pcs)", price: 29, mrp: 145, img: IMG.hulkMega, desc: "Mega deluxe sound crackers with extra loud burst. Hulk series premium quality. 5 pcs per packet." },
+      { id: 6, cat: "flower", name: "Flower Pot Small", pack: "1 box (10 pcs)", price: 50, mrp: 250, img: IMG.flowerS, desc: "Small flower pot fountain — colourful sparks shoot upward for 45–60 seconds. Safe for terrace use. 10 pcs per box." },
+      { id: 7, cat: "flower", name: "Flower Pot Big", pack: "1 box (10 pcs)", price: 75, mrp: 375, img: IMG.flowerB, desc: "Big flower pot with taller fountain effect and multi-colour display. Longer burning time. 10 pcs per box." },
+      { id: 8, cat: "flower", name: "Flower Pot Special", pack: "1 box (10 pcs)", price: 90, mrp: 450, img: IMG.flowerSp, desc: "Special edition flower pot with enhanced colour mix — gold, silver and red sparks. 10 pcs per box." },
+      { id: 9, cat: "flower", name: "Flower Pot Asoka", pack: "1 box (10 pcs)", price: 120, mrp: 600, img: IMG.flowerAsoka, desc: "Asoka brand premium flower pot — bright golden fountain with crackling effect at the end. 10 pcs per box." },
+      { id: 10, cat: "flower", name: "Flower Pots Deluxe", pack: "1 box (5 pcs)", price: 170, mrp: 850, img: IMG.flowerDlx, desc: "Deluxe large flower pot — maximum height fountain with rich colour display. Premium Sivakasi quality. 5 pcs per box." },
+      { id: 11, cat: "rocket", name: "Colour Rocket", pack: "1 box (10 pcs)", price: 65, mrp: 325, img: IMG.rocketC, desc: "Colour rockets that shoot high with trailing coloured sparks. Great visual effect. 10 rockets per box." },
+      { id: 12, cat: "rocket", name: "Whistling Rocket", pack: "1 box (10 pcs)", price: 150, mrp: 750, img: IMG.rocketW, desc: "Whistling sound rockets — flies high with loud whistle before burst. Kids favourite. 10 pcs per box." },
+      { id: 13, cat: "rocket", name: "Musical Rocket", pack: "1 box (10 pcs)", price: 140, mrp: 700, img: IMG.rocketM, desc: "Musical tone rockets with pleasant sound on ascent. Multi-colour tail effect. 10 pcs per box." },
+      { id: 14, cat: "chakkar", name: "Ground Chakkar Asoka", pack: "1 box (10 pcs)", price: 48, mrp: 240, img: IMG.chakkar, desc: "Ground spinner chakkar — spins fast with golden sparks in circular pattern. 10 pcs per box." },
+      { id: 15, cat: "chakkar", name: "Ground Chakkar Special", pack: "1 box (10 pcs)", price: 90, mrp: 450, img: IMG.chakkarSp, desc: "Special chakkar with multi-colour spinning display. Longer spin duration. 10 pcs per box." },
+      { id: 16, cat: "chakkar", name: "Ground Chakkar Deluxe", pack: "1 box (10 pcs)", price: 140, mrp: 700, img: IMG.chakkarDlx, desc: "Deluxe ground chakkar — widest spin diameter with crackling sparks. Premium quality. 10 pcs per box." },
+      { id: 17, cat: "bomb", name: "King of King Bomb", pack: "1 box (10 pcs)", price: 99, mrp: 495, img: IMG.bomb, desc: "Extra loud atom bomb crackers — deep thunder sound. For open ground use only. 10 pcs per box." },
+      { id: 18, cat: "bomb", name: "1/4 kg Paper Bomb", pack: "1 pcs", price: 50, mrp: 250, img: IMG.paper14, desc: "Quarter kg paper bomb — single loud blast wrapped in paper. Use in wide open area. 1 piece." },
+      { id: 19, cat: "bomb", name: "1/2 kg Paper Bomb", pack: "1 pcs", price: 100, mrp: 500, img: IMG.paper12, desc: "Half kg paper bomb — powerful single explosion. Adult supervision required. 1 piece." },
+      { id: 20, cat: "bomb", name: "1 kg Paper Bomb", pack: "1 pcs", price: 200, mrp: 1000, img: IMG.paper1kg, desc: "One kg mega paper bomb — maximum sound effect. Only for large open fields. 1 piece." },
+      { id: 21, cat: "garland", name: "1000 Wala Prime", pack: "1 box", price: 300, mrp: 1500, img: IMG.wala1k, desc: "1000 crackers garland (ladi) — continuous chain firing for extended celebration. Prime quality thread." },
+      { id: 22, cat: "garland", name: "2000 Wala Prime", pack: "1 box (1 pcs)", price: 600, mrp: 3000, img: IMG.wala2k, desc: "2000 wala garland ladi — long continuous burst sequence. Best for grand Diwali finale." },
+      { id: 23, cat: "garland", name: "5000 Wala Prime", pack: "1 box (1 pcs)", price: 1500, mrp: 7500, img: IMG.wala5k, desc: "5000 wala mega garland — longest continuous cracker chain. Premium Sivakasi manufacture." },
+      { id: 24, cat: "sparkler", name: "12cm Benz Electric", pack: "1 box (10 pcs)", price: 30, mrp: 150, img: IMG.spark12, desc: "12cm electric sparklers — golden sparks safe for children with adult supervision. 10 pcs per box." },
+      { id: 25, cat: "sparkler", name: "15cm Audi Electric", pack: "1 box (10 pcs)", price: 45, mrp: 225, img: IMG.spark15, desc: "15cm Audi electric sparklers — longer burn time with bright golden display. 10 pcs per box." },
+      { id: 26, cat: "sparkler", name: "15cm Audi Crackling", pack: "1 box (10 pcs)", price: 50, mrp: 250, img: IMG.spark15c, desc: "15cm crackling sparklers — golden sparks with crackling sound effect. 10 pcs per box." },
+      { id: 27, cat: "sparkler", name: "1½″ Twinkling Star", pack: "1 box (10 pcs)", price: 24, mrp: 120, img: IMG.twinkle, desc: "Twinkling star crackers — small sparkling bursts with pleasant sound. 10 pcs per box." },
+      { id: 28, cat: "sky", name: "2″ Sky Display", pack: "1 box (1 pcs)", price: 100, mrp: 500, img: IMG.sky2, desc: "2 inch aerial sky shot — shoots high and bursts with multi-colour display. Single piece box." },
+      { id: 29, cat: "sky", name: "1″ Chotta Sky Display", pack: "1 box (1 pcs)", price: 40, mrp: 200, img: IMG.sky1, desc: "Compact 1 inch sky display — mini aerial burst ideal for small celebrations. Single piece." },
+      { id: 30, cat: "sky", name: "30 Multi Color Shot Ultra", pack: "1 box (1 pcs)", price: 450, mrp: 2250, img: IMG.sky30, desc: "30 multi-colour aerial shots — premium sky display with 30 sequential colour bursts. Show-stopper item." }
+    ];
+
+    let qtyMap = JSON.parse(localStorage.getItem('srkQty') || '{}');
+    let openCategories = JSON.parse(localStorage.getItem('srkOpenCats') || '{}');
+    let modalProductId = null;
+
+    function saveQty() { localStorage.setItem('srkQty', JSON.stringify(qtyMap)); }
+    function saveOpenCats() { localStorage.setItem('srkOpenCats', JSON.stringify(openCategories)); }
+
+    function getQty(id) { return qtyMap[id] || 0; }
+
+    function getCatLabel(key) {
+      return (CATEGORIES.find(c => c.key === key) || {}).label || key;
+    }
+
+    function isCategoryOpen(key, hasSearch) {
+      if (hasSearch) return true;
+      if (Object.prototype.hasOwnProperty.call(openCategories, key)) {
+        return !!openCategories[key];
+      }
+      return key === 'sound';
+    }
+
+    function toggleAccordion(key) {
+      openCategories[key] = !openCategories[key];
+      saveOpenCats();
+      renderProducts();
+    }
+
+    function formatPrice(n) { return '₹' + n.toLocaleString('en-IN'); }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    function changeQty(id, delta, e) {
+      if (e) e.stopPropagation();
+      const q = Math.max(0, getQty(id) + delta);
+      if (q === 0) delete qtyMap[id];
+      else qtyMap[id] = q;
+      saveQty();
+      renderProducts();
+      updateTotals();
+      if (modalProductId === id) updateModalQty();
+    }
+
+    function productRowHtml(p) {
+      const qty = getQty(p.id);
+      const amt = qty * p.price;
+      return `
+        <tr data-id="${p.id}">
+          <td>
+            <img class="prod-img" src="${p.img}" alt="${p.name}" loading="lazy"
+              onclick="openProductModal(${p.id})"
+              onerror="this.src='${IMG.fallback}'">
+          </td>
+          <td>
+            <span class="prod-name" onclick="openProductModal(${p.id})">${p.name}</span>
+            <span class="prod-pack">${p.pack}</span>
+            <div class="prod-detail-hint">👆 <span>Tap for details</span></div>
+          </td>
+          <td style="text-align:center">
+            <span class="price-mrp">${formatPrice(p.mrp)}</span>
+            <span class="price-sale">${formatPrice(p.price)}</span>
+          </td>
+          <td class="qty-cell">
+            <div class="qty-wrap">
+              <button class="qty-btn" onclick="changeQty(${p.id},1,event)" aria-label="Add">+</button>
+              <span class="qty-num">${qty}</span>
+              <button class="qty-btn" onclick="changeQty(${p.id},-1,event)" aria-label="Remove">−</button>
+            </div>
+          </td>
+          <td class="amount-cell">${formatPrice(amt)}</td>
+        </tr>`;
+    }
+
+    function renderProducts() {
+      const q = document.getElementById('searchInput').value.toLowerCase().trim();
+      const hasSearch = q.length > 0;
+      const filtered = hasSearch ? PRODUCTS.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.pack.toLowerCase().includes(q) ||
+        (p.desc && p.desc.toLowerCase().includes(q))
+      ) : PRODUCTS;
+
+      let html = '';
+      let anyVisible = false;
+
+      CATEGORIES.forEach(cat => {
+        const items = filtered.filter(p => p.cat === cat.key);
+        if (!items.length) return;
+        anyVisible = true;
+
+        const isOpen = isCategoryOpen(cat.key, hasSearch);
+        const catQty = items.reduce((s, p) => s + getQty(p.id), 0);
+
+        html += `
+          <div class="accordion-item">
+            <button type="button" class="accordion-header${isOpen ? ' open' : ''}"
+              onclick="toggleAccordion('${cat.key}')" aria-expanded="${isOpen}">
+              <span class="accordion-title">${cat.label}</span>
+              <span class="accordion-right">
+                <span class="accordion-meta">${items.length} items${catQty ? ' · ' + catQty + ' in cart' : ''}</span>
+                <span class="accordion-chevron" aria-hidden="true"></span>
+              </span>
+            </button>
+            <div class="accordion-panel${isOpen ? ' open' : ''}">
+              <div class="table-wrap">
+                <table class="products-table">
+                  <thead>
+                    <tr>
+                      <th>Image</th>
+                      <th>Products</th>
+                      <th>Price</th>
+                      <th>Qty</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>${items.map(productRowHtml).join('')}</tbody>
+                </table>
+              </div>
+            </div>
+          </div>`;
+      });
+
+      document.getElementById('productsAccordion').innerHTML = html;
+      document.getElementById('noProducts').style.display = anyVisible ? 'none' : 'block';
+    }
+
+    function openProductModal(id) {
+      const p = PRODUCTS.find(x => x.id === id);
+      if (!p) return;
+      modalProductId = id;
+      document.getElementById('modalImg').src = p.img;
+      document.getElementById('modalImg').onerror = function() { this.src = IMG.fallback; };
+      document.getElementById('modalCat').textContent = getCatLabel(p.cat);
+      document.getElementById('modalName').textContent = p.name;
+      document.getElementById('modalPack').textContent = p.pack;
+      document.getElementById('modalMrp').textContent = formatPrice(p.mrp);
+      document.getElementById('modalSale').textContent = formatPrice(p.price);
+      document.getElementById('modalDesc').textContent = p.desc || 'Premium Sivakasi quality cracker from SRK Crackers.';
+      updateModalQty();
+      document.getElementById('modalQtyMinus').onclick = (e) => changeQty(id, -1, e);
+      document.getElementById('modalQtyPlus').onclick = (e) => changeQty(id, 1, e);
+      document.getElementById('productModal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function updateModalQty() {
+      if (!modalProductId) return;
+      const p = PRODUCTS.find(x => x.id === modalProductId);
+      const qty = getQty(modalProductId);
+      document.getElementById('modalQty').textContent = qty;
+      document.getElementById('modalAmount').textContent = formatPrice(qty * p.price);
+    }
+
+    function closeProductModal(e) {
+      if (e && e.target !== document.getElementById('productModal')) return;
+      document.getElementById('productModal').classList.remove('open');
+      document.body.style.overflow = '';
+      modalProductId = null;
+    }
+
+    function updateTotals() {
+      let total = 0, count = 0;
+      PRODUCTS.forEach(p => {
+        const q = getQty(p.id);
+        total += q * p.price;
+        count += q;
+      });
+      document.getElementById('grandTotal').textContent = formatPrice(total);
+      document.getElementById('cartCount').textContent = count;
+      document.getElementById('submitBtn').disabled = count === 0;
+    }
+
+    const DUMMY_UPI_ID = 'srkcrackers@okaxis';
+    const ORDER_STATUSES = [
+      { key: 'placed', label: 'Order Placed' },
+      { key: 'payment_uploaded', label: 'Payment Screenshot Received' },
+      { key: 'verifying', label: 'Payment Verification' },
+      { key: 'confirmed', label: 'Order Confirmed' },
+      { key: 'processing', label: 'Processing & Packing' },
+      { key: 'dispatched', label: 'Dispatched' },
+      { key: 'delivered', label: 'Delivered' }
+    ];
+
+    let orderStep = 1;
+    let currentOrder = null;
+    let paymentScreenshotData = null;
+    let paymentScreenshotFile = null;
+
+    function getOrderItems() {
+      return PRODUCTS.filter(p => getQty(p.id) > 0).map(p => ({
+        id: p.id, name: p.name, pack: p.pack, qty: getQty(p.id),
+        price: p.price, amount: getQty(p.id) * p.price
+      }));
+    }
+
+    function getCartTotal() {
+      return getOrderItems().reduce((s, i) => s + i.amount, 0);
+    }
+
+    function generateOrderId() {
+      const d = new Date();
+      const date = d.getFullYear().toString() +
+        String(d.getMonth() + 1).padStart(2, '0') +
+        String(d.getDate()).padStart(2, '0');
+      const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+      return `SRK-${date}-${rand}`;
+    }
+
+    function getOrders() {
+      return JSON.parse(localStorage.getItem('srkOrders') || '[]');
+    }
+
+    function saveOrders(orders) {
+      localStorage.setItem('srkOrders', JSON.stringify(orders));
+    }
+
+    function openOrderModal() {
+      const items = getOrderItems();
+      if (!items.length) return;
+      orderStep = 1;
+      currentOrder = null;
+      paymentScreenshotData = null;
+      paymentScreenshotFile = null;
+      document.getElementById('paymentScreenshot').value = '';
+      document.getElementById('screenshotPreview').style.display = 'none';
+      document.getElementById('shareWaBtn').disabled = true;
+      document.getElementById('confirmOrderBtn').disabled = true;
+
+      const total = getCartTotal();
+      let summary = '<strong>Order Summary</strong><br>';
+      items.forEach(i => { summary += `${i.name} × ${i.qty} = ${formatPrice(i.amount)}<br>`; });
+      summary += `<br>Grand Total: <strong>${formatPrice(total)}</strong>`;
+      document.getElementById('orderSummary').innerHTML = summary;
+
+      document.getElementById('gpayAmount').textContent = formatPrice(total);
+      document.getElementById('gpayUpi').textContent = DUMMY_UPI_ID;
+      const upiLink = `upi://pay?pa=${DUMMY_UPI_ID}&pn=SRK%20Crackers&am=${total}&cu=INR`;
+      document.getElementById('gpayQr').src =
+        `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
+
+      showOrderStep(1);
+      document.getElementById('orderModal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeOrderModal(e) {
+      if (e && e.target !== document.getElementById('orderModal')) return;
+      document.getElementById('orderModal').classList.remove('open');
+      if (!document.getElementById('productModal').classList.contains('open')) {
+        document.body.style.overflow = '';
+      }
+    }
+
+    function showOrderStep(step) {
+      orderStep = step;
+      for (let i = 1; i <= 4; i++) {
+        document.getElementById('orderPane' + i).classList.toggle('active', i === step);
+        const dot = document.getElementById('stepDot' + i);
+        dot.classList.remove('active', 'done');
+        if (i < step) dot.classList.add('done');
+        else if (i === step) dot.classList.add('active');
+      }
+    }
+
+    function validateCustomerForm() {
+      const name = document.getElementById('custName').value.trim();
+      const phone = document.getElementById('custPhone').value.trim();
+      const address = document.getElementById('custAddress').value.trim();
+      const city = document.getElementById('custCity').value.trim();
+      const state = document.getElementById('custState').value;
+      const pincode = document.getElementById('custPincode').value.trim();
+
+      if (!name) { showToast('Please enter your name'); return false; }
+      if (!/^\d{10}$/.test(phone)) { showToast('Enter valid 10-digit mobile number'); return false; }
+      if (!address) { showToast('Please enter delivery address'); return false; }
+      if (!city) { showToast('Please enter city'); return false; }
+      if (!state) { showToast('Please select state'); return false; }
+      if (!/^\d{6}$/.test(pincode)) { showToast('Enter valid 6-digit pincode'); return false; }
+      return true;
+    }
+
+    function orderNextStep(step) {
+      if (step === 2 && !validateCustomerForm()) return;
+      showOrderStep(step);
+    }
+
+    function previewPaymentScreenshot(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        showToast('Please upload an image file');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('Image must be under 5 MB');
+        return;
+      }
+      paymentScreenshotFile = file;
+      compressImage(file, 800, 0.65, dataUrl => {
+        paymentScreenshotData = dataUrl;
+        document.getElementById('screenshotImg').src = dataUrl;
+        document.getElementById('screenshotPreview').style.display = 'block';
+        document.getElementById('shareWaBtn').disabled = false;
+        document.getElementById('confirmOrderBtn').disabled = false;
+        showToast('Payment screenshot uploaded!');
+      });
+    }
+
+    function compressImage(file, maxW, quality, cb) {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const scale = Math.min(1, maxW / img.width);
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          cb(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function buildCustomerData() {
+      return {
+        name: document.getElementById('custName').value.trim(),
+        phone: document.getElementById('custPhone').value.trim(),
+        altPhone: document.getElementById('custAltPhone').value.trim(),
+        email: document.getElementById('custEmail').value.trim(),
+        address: document.getElementById('custAddress').value.trim(),
+        city: document.getElementById('custCity').value.trim(),
+        state: document.getElementById('custState').value,
+        pincode: document.getElementById('custPincode').value.trim(),
+        notes: document.getElementById('custNotes').value.trim()
+      };
+    }
+
+    function confirmOrder() {
+      if (!paymentScreenshotData) {
+        showToast('Please upload payment screenshot first');
+        return;
+      }
+      const items = getOrderItems();
+      const total = getCartTotal();
+      const orderId = generateOrderId();
+      const now = new Date().toISOString();
+
+      currentOrder = {
+        id: orderId,
+        date: now,
+        customer: buildCustomerData(),
+        items,
+        total,
+        paymentScreenshot: paymentScreenshotData,
+        status: 'verifying',
+        statusHistory: [
+          { status: 'placed', label: 'Order Placed', time: now },
+          { status: 'payment_uploaded', label: 'Payment Screenshot Received', time: now },
+          { status: 'verifying', label: 'Payment Verification — In Progress', time: now }
+        ]
+      };
+
+      const orders = getOrders();
+      orders.unshift(currentOrder);
+      saveOrders(orders);
+
+      document.getElementById('successOrderId').textContent = orderId;
+      showOrderStep(4);
+      showToast('Order placed successfully!');
+    }
+
+    function buildOrderWhatsAppMsg(order, includeScreenshotNote) {
+      let msg = `🎆 *SRK CRACKERS - New Order*%0A%0A`;
+      msg += `*Order ID:* ${order.id}%0A`;
+      msg += `*Name:* ${order.customer.name}%0A`;
+      msg += `*Phone:* ${order.customer.phone}%0A`;
+      if (order.customer.altPhone) msg += `*Alt Phone:* ${order.customer.altPhone}%0A`;
+      if (order.customer.email) msg += `*Email:* ${order.customer.email}%0A`;
+      msg += `*Address:* ${order.customer.address}, ${order.customer.city}, ${order.customer.state} - ${order.customer.pincode}%0A`;
+      if (order.customer.notes) msg += `*Notes:* ${order.customer.notes}%0A`;
+      msg += `%0A*Items:*%0A`;
+      order.items.forEach(i => {
+        msg += `• ${i.name} × ${i.qty} = ₹${i.amount}%0A`;
+      });
+      msg += `%0A*Grand Total: ₹${order.total}*%0A`;
+      msg += `*Payment:* GPay / UPI (${DUMMY_UPI_ID})%0A`;
+      if (includeScreenshotNote) msg += `%0A📎 Payment screenshot attached separately.%0A`;
+      msg += `%0APlease confirm availability and delivery.%0A📍 Mogai, Avadi, Tiruvallur%0A📞 98419 16899`;
+      return msg;
+    }
+
+    function shareOrderWhatsApp() {
+      if (!currentOrder) return;
+      window.open(`https://wa.me/919841916899?text=${buildOrderWhatsAppMsg(currentOrder, !!paymentScreenshotData)}`, '_blank');
+      showToast('Opening WhatsApp with order details...');
+    }
+
+    async function sharePaymentWhatsApp() {
+      if (!paymentScreenshotFile && !paymentScreenshotData) {
+        showToast('Upload screenshot first');
+        return;
+      }
+      const phone = document.getElementById('custPhone').value.trim() || 'Customer';
+      const total = formatPrice(getCartTotal());
+      const text = `Payment screenshot for SRK Crackers order.\nAmount: ${total}\nPhone: ${phone}\nUPI: ${DUMMY_UPI_ID}`;
+
+      if (navigator.share && paymentScreenshotFile && navigator.canShare && navigator.canShare({ files: [paymentScreenshotFile] })) {
+        try {
+          await navigator.share({ files: [paymentScreenshotFile], text, title: 'SRK Crackers Payment' });
+          showToast('Shared on WhatsApp!');
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+        }
+      }
+
+      window.open(`https://wa.me/919841916899?text=${encodeURIComponent(text + '\n\nPlease attach your payment screenshot in this chat.')}`, '_blank');
+      showToast('Open WhatsApp and attach your payment screenshot');
+    }
+
+    function goToTrack() {
+      closeOrderModal();
+      if (currentOrder) {
+        document.getElementById('trackOrderId').value = currentOrder.id;
+        document.getElementById('trackPhone').value = currentOrder.customer.phone;
+        trackOrder();
+      }
+      document.getElementById('track').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function trackOrder() {
+      const orderId = document.getElementById('trackOrderId').value.trim().toUpperCase();
+      const phone = document.getElementById('trackPhone').value.trim();
+      const resultEl = document.getElementById('trackResult');
+      const notFoundEl = document.getElementById('trackNotFound');
+
+      resultEl.classList.remove('show');
+      notFoundEl.classList.remove('show');
+
+      if (!orderId || !/^\d{10}$/.test(phone)) {
+        showToast('Enter Order ID and 10-digit mobile number');
+        return;
+      }
+
+      const order = getOrders().find(o =>
+        o.id.toUpperCase() === orderId && o.customer.phone === phone
+      );
+
+      if (!order) {
+        notFoundEl.classList.add('show');
+        return;
+      }
+
+      document.getElementById('trackResultId').textContent = order.id;
+      const currentStatus = ORDER_STATUSES.find(s => s.key === order.status) || ORDER_STATUSES[2];
+      document.getElementById('trackStatusBadge').textContent = currentStatus.label;
+
+      const currentIdx = ORDER_STATUSES.findIndex(s => s.key === order.status);
+      const historyMap = {};
+      (order.statusHistory || []).forEach(h => { historyMap[h.status] = h.time; });
+
+      let timelineHtml = '';
+      ORDER_STATUSES.forEach((s, idx) => {
+        let cls = 'pending';
+        if (idx < currentIdx) cls = 'done';
+        else if (idx === currentIdx) cls = 'current';
+        const time = historyMap[s.key];
+        const timeStr = time ? new Date(time).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+        timelineHtml += `<li class="${cls}">${s.label}${timeStr ? `<span class="tl-time">${timeStr}</span>` : ''}</li>`;
+      });
+
+      document.getElementById('trackTimeline').innerHTML = timelineHtml;
+      resultEl.classList.add('show');
+    }
+
+    function submitOrder() {
+      openOrderModal();
+    }
+
+    function toggleMenu() {
+      document.getElementById('mobileNav').classList.toggle('open');
+    }
+
+    /* ── DUMMY CHATBOT ── */
+    let chatOpen = false;
+    let chatStarted = false;
+
+    const CHAT_REPLIES = [
+      { keys: ['hi', 'hello', 'hey', 'vanakkam', 'start'], reply: 'Vanakkam! 👋 Welcome to <b>SRK Crackers</b>. I can help with products, orders, offers & address. Tap a quick button below or type your question!' },
+      { keys: ['product', 'cracker', 'pattasu', 'list', 'price'], reply: '🛍️ We have Sparklers, Flower Pots, Rockets, Chakkar, Bombs, Garlands & Sky Shots — all at <b>80% OFF</b>! Scroll to <a href="#products" style="color:var(--primary)">Quick Order</a> to browse and add to cart.' },
+      { keys: ['order', 'buy', 'purchase', 'cart', 'how to'], reply: '📦 <b>How to Order:</b><br>1. Select products & quantity<br>2. Click <b>Place Order</b><br>3. Fill your details<br>4. Pay via GPay QR<br>5. Upload payment screenshot<br>6. Track at <a href="#track" style="color:var(--primary)">Track Order</a>' },
+      { keys: ['phone', 'call', 'contact', 'number', 'mobile'], reply: '📞 Call us: <b><a href="tel:9841916899" style="color:var(--primary)">98419 16899</a></b><br>🕐 9:00 AM – 9:00 PM (Diwali season)<br>💬 Or <a href="https://wa.me/919841916899" target="_blank" style="color:var(--primary)">WhatsApp</a> for orders!' },
+      { keys: ['address', 'location', 'map', 'where', 'place'], reply: '📍 <b>SRK CRACKERS</b><br>Avadi, Tiruvallur District, TN<br>Survey No 280/79, Door No 45<br>Mogai Village, Avadi Taluk<br><a href="#map" style="color:var(--primary)">View on Map →</a>' },
+      { keys: ['offer', 'discount', '80', 'diwali', 'sale'], reply: '🎇 <b>Diwali Special — Flat 80% OFF</b> on all crackers! Premium Sivakasi quality at wholesale rates. Minimum order applies.' },
+      { keys: ['min', 'minimum', 'order amount'], reply: '💰 <b>Minimum Order:</b><br>• Tamil Nadu & PY: <b>₹3000</b><br>• Other States: <b>₹5000</b><br>Transport charges paid by customer.' },
+      { keys: ['delivery', 'ship', 'transport', 'courier'], reply: '🚚 We deliver across Tamil Nadu & India via registered transport. Parcel sent to nearest hub. Call <b>98419 16899</b> for delivery details.' },
+      { keys: ['license', 'licence', 'legal', 'govt'], reply: '🏛️ <b>Licensed Dealer</b> — SRK CRACKERS<br>Capacity: 100 KGS Fireworks<br>Mogai, Avadi, Tiruvallur<br><a href="#about" style="color:var(--primary)">View licence info →</a>' },
+      { keys: ['time', 'hour', 'open', 'close', 'timing'], reply: '🕐 Shop timing: <b>9:00 AM – 9:00 PM</b><br>Open all days during Diwali season.' },
+      { keys: ['whatsapp', 'wa'], reply: '💬 After placing order, share payment screenshot on <a href="https://wa.me/919841916899" target="_blank" style="color:var(--primary)">WhatsApp</a>. Track order at <a href="#track" style="color:var(--primary)">Track Order</a> section!' },
+      { keys: ['track', 'tracking', 'status', 'order id'], reply: '📋 Track your order at <a href="#track" style="color:var(--primary)">Track Order</a> section. Enter your <b>Order ID</b> and registered mobile number.' },
+      { keys: ['pay', 'payment', 'gpay', 'upi', 'qr'], reply: '💳 Pay via <b>Google Pay / UPI</b> after filling order details. Scan the QR code shown · upload payment screenshot · we verify within 2 hours.' },
+      { keys: ['apk', 'app', 'download'], reply: '📲 Download our demo app — click <b>Download APK</b> button in the header or hero section!' },
+      { keys: ['thank', 'thanks'], reply: '🙏 Thank you for choosing SRK Crackers! Happy Diwali! 🎆' },
+      { keys: ['bye', 'goodbye'], reply: 'Goodbye! 👋 Call <b>98419 16899</b> anytime. Happy celebrations! 🎇' }
+    ];
+
+    function toggleChat() {
+      chatOpen = !chatOpen;
+      document.getElementById('chatPanel').classList.toggle('open', chatOpen);
+      document.getElementById('chatDot').style.display = chatOpen ? 'none' : 'block';
+      if (chatOpen && !chatStarted) {
+        chatStarted = true;
+        botReply('Vanakkam! 👋 I\'m the <b>SRK Crackers</b> demo assistant. Ask about products, orders, offers, address or phone number!');
+      }
+      if (chatOpen) setTimeout(() => document.getElementById('chatInput').focus(), 300);
+    }
+
+    function appendMsg(text, type) {
+      const box = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = 'chat-msg ' + type;
+      div.innerHTML = text;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function showTyping() {
+      const box = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = 'chat-msg typing';
+      div.id = 'chatTyping';
+      div.textContent = 'SRK Bot is typing...';
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function hideTyping() {
+      const t = document.getElementById('chatTyping');
+      if (t) t.remove();
+    }
+
+    function getBotReply(msg) {
+      const lower = msg.toLowerCase();
+      for (const item of CHAT_REPLIES) {
+        if (item.keys.some(k => lower.includes(k))) return item.reply;
+      }
+      return '🤔 Sorry, I didn\'t understand that. Try quick buttons below or call us at <b>98419 16899</b>. For orders use WhatsApp! 💬';
+    }
+
+    function botReply(text) {
+      showTyping();
+      setTimeout(() => {
+        hideTyping();
+        appendMsg(text, 'bot');
+      }, 600 + Math.random() * 500);
+    }
+
+    function sendQuick(text) {
+      if (!chatOpen) toggleChat();
+      appendMsg(text, 'user');
+      botReply(getBotReply(text));
+    }
+
+    function sendChatMsg() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+      if (!chatOpen) toggleChat();
+      input.value = '';
+      appendMsg(text, 'user');
+      botReply(getBotReply(text));
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeProductModal();
+        closeOrderModal();
+        if (chatOpen) toggleChat();
+      }
+    });
+
+    renderProducts();
+    updateTotals();
+  </script>
+</body>
+</html>

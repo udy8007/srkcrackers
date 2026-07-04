@@ -1,0 +1,159 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand palette */
+  --color-primary: #a8007d;
+  --color-primary-dark: #8d0269;
+  --color-yellow: #ffcb00;
+  --color-yellow-light: rgba(255, 203, 0, 0.08);
+  --color-orange: #ffab00;
+  --color-brandbg: #f8f8f8;
+  --color-ink: #333333;
+  --color-ink-muted: #666666;
+  --color-line: #e5e5e5;
+  --color-green: #2da815;
+  --color-red: #cf2e2e;
+  --color-whatsapp: #25d366;
+
+  /* Fonts (wired via next/font in layout.tsx) */
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+
+  /* Animations */
+  --animate-marquee: marquee 22s linear infinite;
+  --animate-marquee-slow: marquee 30s linear infinite;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-brandbg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+/* Thin, branded scrollbar for scrollable panels */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 999px;
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.5s ease both;
+}
+.animate-pop {
+  animation: pop 0.25s ease both;
+}
+
+@layer components {
+  .input {
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-line);
+    background: #fff;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(168, 0, 125, 0.15);
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    background: var(--color-primary);
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #fff;
+    transition: background-color 0.2s ease;
+  }
+  .btn-primary:hover {
+    background: var(--color-primary-dark);
+  }
+
+  .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-line);
+    background: #fff;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    transition: background-color 0.2s ease;
+  }
+  .btn-outline:hover {
+    background: var(--color-brandbg);
+  }
+
+  .btn-yellow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    background: var(--color-yellow);
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #000;
+    transition: filter 0.2s ease;
+  }
+  .btn-yellow:hover {
+    filter: brightness(1.05);
+  }
+}
+
+/* Pause marquee on hover */
+.marquee-track:hover {
+  animation-play-state: paused;
+}
