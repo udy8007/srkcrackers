@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { SectionHead } from "./SectionHead";
+import { SectionDecor } from "./FestiveDecor";
 import { useUI } from "@/store/ui";
 import { useToast } from "@/store/toast";
 import { ORDER_STATUSES } from "@/lib/constants";
@@ -68,7 +69,8 @@ export function TrackOrder() {
   const isCancelled = result?.status === "CANCELLED";
 
   return (
-    <section id="track" className="bg-brandbg px-4 py-14">
+    <section id="track" className="relative isolate overflow-hidden bg-brandbg px-4 py-14">
+      <SectionDecor variant="sparklers" />
       <div className="mx-auto max-w-2xl">
         <SectionHead
           title="Track Your Order"

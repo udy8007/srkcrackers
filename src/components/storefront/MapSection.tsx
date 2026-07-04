@@ -1,10 +1,12 @@
 import { SectionHead } from "./SectionHead";
+import { SectionDecor } from "./FestiveDecor";
 import { BUSINESS } from "@/lib/constants";
 
 export function MapSection() {
   const coords = `${BUSINESS.lat},${BUSINESS.lng}`;
   return (
-    <section id="map" className="bg-white px-4 py-14">
+    <section id="map" className="relative isolate overflow-hidden bg-white px-4 py-14">
+      <SectionDecor variant="crackers" />
       <div className="mx-auto max-w-5xl">
         <SectionHead
           title="Find Us — Avadi, Chennai"

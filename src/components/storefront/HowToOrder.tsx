@@ -1,4 +1,5 @@
 import { SectionHead } from "./SectionHead";
+import { SectionDecor } from "./FestiveDecor";
 
 const STEPS = [
   { num: 1, title: "Select Products", desc: "Open category · add quantity · check total in bottom bar" },
@@ -9,7 +10,8 @@ const STEPS = [
 
 export function HowToOrder() {
   return (
-    <section id="how" className="bg-white px-4 py-14">
+    <section id="how" className="relative isolate overflow-hidden bg-white px-4 py-14">
+      <SectionDecor variant="chakkars" />
       <div className="mx-auto max-w-6xl">
         <SectionHead title="How to Order" subtitle="Simple 4-step ordering process" />
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">

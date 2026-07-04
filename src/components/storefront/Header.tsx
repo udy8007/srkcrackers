@@ -61,19 +61,51 @@ export function Header() {
           <button
             type="button"
             onClick={() => scrollToId("products")}
+            aria-label="View cart"
             className="flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-lg bg-yellow px-3 text-[0.85rem] font-bold text-primary-dark transition hover:brightness-105"
           >
+            <svg
+              viewBox="0 0 24 24"
+              className="h-[18px] w-[18px]"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <circle cx="9" cy="20" r="1.6" />
+              <circle cx="18" cy="20" r="1.6" />
+              <path d="M2.5 3h2.2l2.2 12.2a1.6 1.6 0 0 0 1.6 1.3h8.5a1.6 1.6 0 0 0 1.6-1.3L20.5 7H6" />
+            </svg>
             <span className="hidden sm:inline">Cart</span>
-            <span>{count}</span>
+            <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1 text-[0.7rem] font-bold text-white">
+              {count}
+            </span>
           </button>
 
           <button
             type="button"
             onClick={handleApk}
             title="Download SRK Crackers App"
-            className="hidden h-11 items-center justify-center rounded-lg border-2 border-yellow bg-white px-3 text-[0.78rem] font-bold whitespace-nowrap text-primary-dark transition hover:bg-yellow hover:text-black sm:flex"
+            aria-label="Download SRK Crackers App"
+            className="hidden h-11 w-11 items-center justify-center rounded-lg border-2 border-yellow bg-white text-primary-dark transition hover:bg-yellow hover:text-black sm:flex"
           >
-            Download APK
+            <svg
+              viewBox="0 0 24 24"
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.9"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <rect x="6" y="2.5" width="12" height="19" rx="2.5" />
+              <path d="M12 7.5v5" />
+              <path d="M9.5 10.5 12 13l2.5-2.5" />
+              <path d="M10.5 18.5h3" />
+            </svg>
           </button>
 
           <button

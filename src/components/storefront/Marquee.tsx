@@ -53,6 +53,7 @@ function Marquee({
 export function MarqueeBars() {
   const offerItems: ReactNode[] = [
     <>🎇 Diwali Special — Flat <strong>80% OFF</strong> on All Crackers!</>,
+    <>🎁 <strong>FREE Postal Charge</strong> on Orders Above ₹1000!</>,
     <>🎆 Premium Sivakasi Quality Crackers</>,
     <>
       📞 Order Now:{" "}

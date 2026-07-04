@@ -1,23 +1,40 @@
 "use client";
 
-import { downloadApk } from "@/lib/client-actions";
-import { useToast } from "@/store/toast";
 import { BUSINESS } from "@/lib/constants";
+import { MarigoldGarland, Mandala, Diya, Sparkle } from "./FestiveDecor";
+import { PriceListButton } from "./PriceListButton";
 
 export function Hero() {
-  const showToast = useToast((state) => state.show);
-
   return (
     <section
       id="home"
-      className="hero-festive relative overflow-hidden border-b-[3px] border-yellow px-4 py-14 text-center"
+      className="hero-festive relative overflow-hidden border-b-[3px] border-yellow px-4 pb-14 pt-16 text-center"
     >
-      <div className="pointer-events-none absolute inset-0 select-none text-2xl opacity-40">
-        <span className="absolute left-[8%] top-6 animate-pop">🎆</span>
-        <span className="absolute right-[10%] top-10 animate-pop">🎇</span>
-        <span className="absolute left-[18%] bottom-6 animate-pop">✨</span>
-        <span className="absolute right-[16%] bottom-8 animate-pop">🎆</span>
-      </div>
+      <MarigoldGarland className="absolute inset-x-0 top-0 px-3" />
+
+      <Mandala className="animate-spin-slow pointer-events-none absolute -bottom-12 -left-12 h-40 w-40 text-primary/15 sm:h-52 sm:w-52" />
+      <Mandala className="animate-spin-slow-rev pointer-events-none absolute -right-12 top-10 h-32 w-32 text-orange/20 sm:h-44 sm:w-44" />
+
+      <Diya className="animate-float pointer-events-none absolute bottom-3 left-[6%] h-9 w-9 opacity-90 sm:h-11 sm:w-11" />
+      <Diya
+        className="animate-float pointer-events-none absolute bottom-4 right-[7%] h-9 w-9 opacity-90 sm:h-11 sm:w-11"
+        style={{ animationDelay: "1.2s" }}
+      />
+
+      <Sparkle className="animate-twinkle pointer-events-none absolute left-[12%] top-20 h-4 w-4 text-yellow" />
+      <Sparkle
+        className="animate-twinkle pointer-events-none absolute right-[14%] top-24 h-5 w-5 text-orange"
+        style={{ animationDelay: "0.8s" }}
+      />
+      <Sparkle
+        className="animate-twinkle pointer-events-none absolute left-[22%] bottom-16 h-3 w-3 text-gold"
+        style={{ animationDelay: "1.5s" }}
+      />
+      <Sparkle
+        className="animate-twinkle pointer-events-none absolute right-[24%] bottom-24 h-4 w-4 text-yellow"
+        style={{ animationDelay: "0.4s" }}
+      />
+
       <div className="relative mx-auto max-w-3xl">
         <span className="inline-flex items-center gap-1.5 rounded-full border border-yellow bg-yellow-light px-3 py-1 text-xs font-bold text-primary-dark">
           🎇 Diwali Special — Flat 80% OFF
@@ -33,16 +50,7 @@ export function Hero() {
           <a href="#products" className="btn-primary">
             🛍️ Quick Order
           </a>
-          <button
-            type="button"
-            onClick={() => {
-              downloadApk();
-              showToast("Downloading SRK Crackers App (demo APK)...");
-            }}
-            className="btn-yellow"
-          >
-            📲 Download APK
-          </button>
+          <PriceListButton className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-primary bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary hover:text-white" />
           <a
             href={`tel:${BUSINESS.phone}`}
             className="hidden items-center justify-center rounded-lg border-2 border-primary bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:brightness-105 sm:inline-flex"

@@ -1,11 +1,13 @@
 import Image from "next/image";
 import { BUSINESS } from "@/lib/constants";
 import { NAV_LINKS } from "./nav";
+import { SectionDecor } from "./FestiveDecor";
 
 export function Footer() {
   const year = new Date().getFullYear();
   return (
-    <footer id="contact" className="bg-primary-dark px-4 pt-14 pb-8 text-white">
+    <footer id="contact" className="relative isolate overflow-hidden bg-primary-dark px-4 pt-14 pb-8 text-white">
+      <SectionDecor variant="footer" />
       <div className="mx-auto max-w-6xl">
         <div className="grid gap-8 md:grid-cols-3">
           <div>
@@ -24,6 +26,7 @@ export function Footer() {
               quality crackers at wholesale prices with safe delivery.
             </p>
             <p className="mt-2 text-sm text-white/80">📍 {BUSINESS.addressLine}, Tamil Nadu</p>
+            <p className="mt-2 text-sm text-white/80">🧾 GST No: {BUSINESS.gstin}</p>
           </div>
 
           <div>
@@ -71,6 +74,52 @@ export function Footer() {
         <div className="mt-6 border-t border-white/10 pt-6 text-center text-xs text-white/60">
           © {year} {BUSINESS.name}. All Rights Reserved. | Licensed Fireworks Dealer | Morai, Avadi,
           Chennai
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-white/70">
+          <a
+            href="/admin/login"
+            className="inline-flex items-center gap-1.5 transition hover:text-yellow"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <rect x="4.5" y="10.5" width="15" height="10" rx="2.5" />
+              <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
+              <circle cx="12" cy="15.5" r="1.3" fill="currentColor" stroke="none" />
+            </svg>
+            Admin Portal
+          </a>
+
+          <a
+            href="https://myprofilev2.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 transition hover:text-yellow"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M14 4h6v6" />
+              <path d="M20 4 10 14" />
+              <path d="M18 13.5V19a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 19V8a1.5 1.5 0 0 1 1.5-1.5H11" />
+            </svg>
+            Powered by Illangovan
+          </a>
         </div>
       </div>
     </footer>

@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { SafeImage } from "@/components/SafeImage";
 import { SectionHead } from "./SectionHead";
+import { SectionDecor } from "./FestiveDecor";
+import { PriceListButton } from "./PriceListButton";
 import { useCatalog } from "./catalog-context";
 import { useCart } from "@/store/cart";
 import { useUI } from "@/store/ui";
@@ -112,12 +114,20 @@ export function ProductsSection() {
   const toggle = (key: string) => setOpenCats((prev) => ({ ...prev, [key]: !prev[key] }));
 
   return (
-    <section id="products" className="bg-brandbg px-4 py-14">
+    <section id="products" className="relative isolate overflow-hidden bg-brandbg px-4 py-14">
+      <SectionDecor variant="rockets" />
       <div className="mx-auto max-w-5xl">
         <SectionHead
           title="Crackers Price List — 80% Discount"
           subtitle="Select a category to expand · Tap product name or image for full description"
         />
+
+        <div className="mb-6 flex justify-center">
+          <PriceListButton
+            label="Download Price List (PDF)"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-dark px-6 py-3 text-sm font-bold text-white shadow-md transition hover:brightness-105"
+          />
+        </div>
 
         <div className="mx-auto mb-6 flex max-w-md items-center gap-2 rounded-full border border-line bg-white px-4 py-2.5 shadow-sm">
           <span className="text-ink-muted">🔍</span>

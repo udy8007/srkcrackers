@@ -1,9 +1,11 @@
 import { SectionHead } from "./SectionHead";
+import { SectionDecor } from "./FestiveDecor";
 import { BUSINESS, LICENSE_INFO } from "@/lib/constants";
 
 const INFO_ROWS: { label: string; value: string }[] = [
   { label: "Name of Licence", value: LICENSE_INFO.name },
   { label: "Licence No", value: LICENSE_INFO.licenceNo },
+  { label: "GST No", value: BUSINESS.gstin },
   { label: "Door No", value: LICENSE_INFO.doorNo },
   { label: "Nagar / Street", value: LICENSE_INFO.nagar },
   { label: "Village", value: LICENSE_INFO.village },
@@ -18,7 +20,8 @@ const INFO_ROWS: { label: string; value: string }[] = [
 
 export function LicenseInfo() {
   return (
-    <section id="about" className="bg-brandbg px-4 py-14">
+    <section id="about" className="relative isolate overflow-hidden bg-brandbg px-4 py-14">
+      <SectionDecor variant="pots" />
       <div className="mx-auto max-w-4xl">
         <SectionHead title="Licensed Dealer Information" subtitle="Government approved fireworks retailer" />
         <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-sm">

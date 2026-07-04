@@ -8,10 +8,12 @@ import { TopBar } from "./TopBar";
 import { Header } from "./Header";
 import { MarqueeBars } from "./Marquee";
 import { Hero } from "./Hero";
+import { Highlights } from "./Highlights";
 import { ProductsSection } from "./ProductsSection";
 import { HowToOrder } from "./HowToOrder";
 import { TrackOrder } from "./TrackOrder";
 import { LicenseInfo } from "./LicenseInfo";
+import { ShopShowcase } from "./ShopShowcase";
 import { MapSection } from "./MapSection";
 import { Footer } from "./Footer";
 import { StickyBar } from "./StickyBar";
@@ -19,6 +21,7 @@ import { CheckoutModal } from "./CheckoutModal";
 import { ProductModal } from "./ProductModal";
 import { Chatbot } from "./Chatbot";
 import { WhatsAppFloat } from "./WhatsAppFloat";
+import { ScrollReveal } from "./ScrollReveal";
 import { Toast } from "./Toast";
 
 export function Storefront({ categories }: { categories: CategoryWithProductsDTO[] }) {
@@ -46,15 +49,18 @@ export function Storefront({ categories }: { categories: CategoryWithProductsDTO
         <MarqueeBars />
         <main>
           <Hero />
+          <Highlights />
           <ProductsSection />
           <HowToOrder />
           <TrackOrder />
           <LicenseInfo />
+          <ShopShowcase />
           <MapSection />
         </main>
         <Footer />
       </div>
 
+      <ScrollReveal />
       <StickyBar />
       <WhatsAppFloat />
       <Chatbot />

@@ -9,6 +9,7 @@ export const BUSINESS = {
   phoneDisplay: "98419 16899",
   whatsapp: "919841916899",
   email: "srkcrackers@gmail.com",
+  gstin: "33BJBPR5461B2ZI",
   upiId: "srkcrackers@okaxis",
   addressLine: "No 45, Sarathi Nagar, Morai Village, Avadi, Chennai - 600055",
   street: "No 45, Sarathi Nagar, Morai Village",
