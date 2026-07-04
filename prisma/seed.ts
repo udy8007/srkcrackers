@@ -66,22 +66,33 @@ async function seedProducts() {
 
 async function seedAdmin() {
   const email = process.env.ADMIN_EMAIL ?? "admin@srkcrackers.com";
+  const existing = await prisma.adminUser.findUnique({ where: { email } });
+  if (existing) {
+    console.log(`↷ Admin already exists: ${email}`);
+    return;
+  }
   const password = process.env.ADMIN_PASSWORD ?? "Srk@Admin2026";
   const name = process.env.ADMIN_NAME ?? "SRK Admin";
   const passwordHash = await bcrypt.hash(password, 10);
 
-  await prisma.adminUser.upsert({
-    where: { email },
-    update: { name, passwordHash, role: "ADMIN" },
-    create: { email, name, passwordHash, role: "ADMIN" },
+  await prisma.adminUser.create({
+    data: { email, name, passwordHash, role: "ADMIN" },
   });
-  console.log(`✓ Admin user ready: ${email}`);
+  console.log(`✓ Admin user created: ${email}`);
 }
 
 async function main() {
   console.log("Seeding SRK Crackers database...");
-  await seedCategories();
-  await seedProducts();
+
+  // Only seed the catalog when empty so admin edits (prices, etc.) survive redeploys.
+  const existingProducts = await prisma.product.count();
+  if (existingProducts === 0) {
+    await seedCategories();
+    await seedProducts();
+  } else {
+    console.log(`↷ ${existingProducts} products already present — skipping catalog seed`);
+  }
+
   await seedAdmin();
   console.log("Seed complete.");
 }
