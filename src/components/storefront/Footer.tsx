@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { BUSINESS } from "@/lib/constants";
 import { NAV_LINKS } from "./nav";
 
@@ -8,7 +9,16 @@ export function Footer() {
       <div className="mx-auto max-w-6xl">
         <div className="grid gap-8 md:grid-cols-3">
           <div>
-            <h4 className="font-display text-xl font-bold">{BUSINESS.name}</h4>
+            <div className="flex items-center gap-3">
+              <Image
+                src="/logo.png"
+                alt={`${BUSINESS.name} logo`}
+                width={48}
+                height={48}
+                className="h-12 w-12 rounded-full ring-2 ring-yellow/60"
+              />
+              <h4 className="font-display text-xl font-bold">{BUSINESS.name}</h4>
+            </div>
             <p className="mt-3 text-sm text-white/80">
               Your trusted licensed fireworks dealer in Morai, Avadi, Chennai. Premium Sivakasi
               quality crackers at wholesale prices with safe delivery.

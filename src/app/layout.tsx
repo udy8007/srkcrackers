@@ -56,11 +56,20 @@ export const metadata: Metadata = {
     siteName: BUSINESS.name,
     locale: "en_IN",
     type: "website",
+    images: [
+      {
+        url: "/logo.png",
+        width: 1024,
+        height: 1024,
+        alt: `${BUSINESS.name} logo`,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
+    images: ["/logo.png"],
   },
   robots: {
     index: true,
@@ -88,6 +97,8 @@ const jsonLd = {
   name: BUSINESS.name,
   description: DESCRIPTION,
   url: SITE_URL,
+  image: `${SITE_URL}/logo.png`,
+  logo: `${SITE_URL}/logo.png`,
   telephone: `+91${BUSINESS.phone}`,
   email: BUSINESS.email,
   priceRange: "₹₹",
