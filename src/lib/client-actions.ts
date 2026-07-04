@@ -1,12 +1,10 @@
 import { BUSINESS } from "@/lib/constants";
 
-/** Trigger a download of the (demo) Android APK. */
+/** Trigger a download of the SRK Crackers Android APK (served from /public). */
 export function downloadApk() {
   const link = document.createElement("a");
   link.href = BUSINESS.apkUrl;
-  link.download = "SRK-Crackers.apk";
-  link.target = "_blank";
-  link.rel = "noopener noreferrer";
+  link.download = "srk-crackers.apk";
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

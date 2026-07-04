@@ -32,7 +32,7 @@ export const CHAT_REPLIES: ChatReply[] = [
   { keys: ["whatsapp", "wa"], reply: "💬 After placing order, share payment screenshot on <a href='https://wa.me/919841916899' target='_blank'>WhatsApp</a>. Track order at <a href='#track'>Track Order</a> section!" },
   { keys: ["track", "tracking", "status", "order id"], reply: "📋 Track your order at <a href='#track'>Track Order</a> section. Enter your <b>Order ID</b> and registered mobile number." },
   { keys: ["pay", "payment", "gpay", "upi", "qr"], reply: "💳 Pay via <b>Google Pay / UPI</b> after filling order details. Scan the QR code shown · upload payment screenshot · we verify within 2 hours." },
-  { keys: ["apk", "app", "download"], reply: "📲 Download our demo app — click <b>Download APK</b> button in the header or hero section!" },
+  { keys: ["apk", "app", "download"], reply: "📲 Download our Android app — click the <b>Download APK</b> icon in the header or mobile menu!" },
   { keys: ["thank", "thanks"], reply: "🙏 Thank you for choosing SRK Crackers! Happy Diwali! 🎆" },
   { keys: ["bye", "goodbye"], reply: "Goodbye! 👋 Call <b>98419 16899</b> anytime. Happy celebrations! 🎇" },
 ];

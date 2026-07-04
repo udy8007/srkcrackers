@@ -14,7 +14,7 @@ export default async function DashboardPage() {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
 
-  const [totalOrders, todayOrders, grouped, revenue, recent, totalVisits, todayVisits, recentVisits, cityGroups] =
+  const [totalOrders, todayOrders, grouped, revenue, recent, totalVisits, todayVisits, recentVisits, cityGroups, productCounts] =
     await Promise.all([
       prisma.order.count(),
       prisma.order.count({ where: { createdAt: { gte: startOfToday } } }),
@@ -51,6 +51,7 @@ export default async function DashboardPage() {
           _count: { _all: true },
         })
         .catch(() => []),
+      prisma.product.groupBy({ by: ["active"], _count: { _all: true } }),
     ]);
 
   const countByStatus = new Map(grouped.map((g) => [g.status, g._count._all]));
@@ -64,12 +65,15 @@ export default async function DashboardPage() {
     .sort((a, b) => b._count._all - a._count._all)
     .slice(0, 8);
 
+  const activeProducts = productCounts.find((p) => p.active)?._count._all ?? 0;
+  const hiddenProducts = productCounts.find((p) => !p.active)?._count._all ?? 0;
+
   const stats = [
     { label: "Total Orders", value: totalOrders, accent: "text-primary" },
     { label: "Orders Today", value: todayOrders, accent: "text-blue-600" },
     { label: "Pending Verification", value: pending, accent: "text-amber-600" },
     { label: "Revenue (net)", value: formatPrice(revenue._sum.total ?? 0), accent: "text-green" },
-    { label: "Total Visits", value: totalVisits, accent: "text-purple-600" },
+    { label: "Active Products", value: activeProducts, accent: "text-orange-600" },
     { label: "Visits Today", value: todayVisits, accent: "text-indigo-600" },
   ];
 
@@ -77,7 +81,14 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-2xl font-bold text-ink">Dashboard</h1>
-        <p className="text-sm text-ink-muted">Orders, revenue, and storefront visitor analytics</p>
+        <p className="text-sm text-ink-muted">Orders, catalog, and storefront analytics at a glance</p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <QuickLink href="/admin/orders?status=VERIFYING" label={`Review pending (${pending})`} />
+        <QuickLink href="/admin/products" label="Manage products" />
+        <QuickLink href="/admin/categories" label="Categories" />
+        <QuickLink href="/admin/analytics" label="Full analytics →" />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
@@ -91,8 +102,48 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-line bg-white shadow-sm">
+      <div className="grid gap-6 lg:grid-cols-3">
+        <section className="rounded-xl border border-line bg-white p-5 shadow-sm lg:col-span-1">
+          <h2 className="mb-4 font-display text-lg font-semibold text-ink">Order Status</h2>
+          <ul className="space-y-2">
+            {grouped
+              .sort((a, b) => b._count._all - a._count._all)
+              .map((g) => (
+                <li key={g.status} className="flex items-center justify-between text-sm">
+                  <Link
+                    href={`/admin/orders?status=${g.status}`}
+                    className="font-medium text-ink hover:text-primary"
+                  >
+                    {g.status.replace(/_/g, " ")}
+                  </Link>
+                  <span className="font-bold text-primary">{g._count._all}</span>
+                </li>
+              ))}
+            {grouped.length === 0 && (
+              <li className="text-sm text-ink-muted">No orders yet.</li>
+            )}
+          </ul>
+        </section>
+
+        <section className="rounded-xl border border-line bg-white p-5 shadow-sm lg:col-span-1">
+          <h2 className="mb-4 font-display text-lg font-semibold text-ink">Catalog</h2>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-ink-muted">Active products</span>
+              <span className="font-bold text-green">{activeProducts}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-ink-muted">Hidden products</span>
+              <span className="font-bold text-ink-muted">{hiddenProducts}</span>
+            </div>
+            <div className="flex justify-between border-t border-line pt-3">
+              <span className="text-ink-muted">Total visits</span>
+              <span className="font-bold text-purple-600">{totalVisits}</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-xl border border-line bg-white shadow-sm lg:col-span-1">
           <div className="border-b border-line px-5 py-4">
             <h2 className="font-display text-lg font-semibold text-ink">Top Visitor Cities</h2>
             <p className="text-xs text-ink-muted">Based on storefront visits (geo from hosting provider)</p>
@@ -122,9 +173,11 @@ export default async function DashboardPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
+      </div>
 
-        <div className="rounded-xl border border-line bg-white shadow-sm">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <section className="rounded-xl border border-line bg-white shadow-sm">
           <div className="border-b border-line px-5 py-4">
             <h2 className="font-display text-lg font-semibold text-ink">Recent Visits</h2>
             <p className="text-xs text-ink-muted">City and time of latest storefront visitors</p>
@@ -156,7 +209,7 @@ export default async function DashboardPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
       </div>
 
       <div className="rounded-xl border border-line bg-white shadow-sm">
@@ -208,5 +261,16 @@ export default async function DashboardPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function QuickLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="rounded-full border border-line bg-white px-4 py-1.5 text-xs font-semibold text-ink transition hover:border-primary hover:text-primary"
+    >
+      {label}
+    </Link>
   );
 }

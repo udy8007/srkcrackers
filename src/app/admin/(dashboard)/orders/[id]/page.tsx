@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { formatDateTime, formatPrice } from "@/lib/utils";
+import { OrderActions } from "./OrderActions";
 import { StatusUpdater } from "./StatusUpdater";
 
 export const dynamic = "force-dynamic";
@@ -31,6 +32,26 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         </div>
         <StatusBadge status={order.status} />
       </div>
+
+      <OrderActions
+        orderId={order.id}
+        orderNumber={order.orderNumber}
+        status={order.status}
+        customerName={order.customerName}
+        phone={order.phone}
+        address={order.address}
+        city={order.city}
+        state={order.state}
+        pincode={order.pincode}
+        total={order.total}
+        items={order.items.map((i) => ({
+          name: i.name,
+          pack: i.pack,
+          price: i.price,
+          qty: i.qty,
+          amount: i.amount,
+        }))}
+      />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">

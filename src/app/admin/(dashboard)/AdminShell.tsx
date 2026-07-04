@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -8,8 +8,10 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: "📊" },
-  { href: "/admin/orders", label: "Orders", icon: "📦" },
+  { href: "/admin/orders", label: "Orders", icon: "📦", badgeKey: "pending" as const },
   { href: "/admin/products", label: "Products", icon: "🎆" },
+  { href: "/admin/categories", label: "Categories", icon: "🏷️" },
+  { href: "/admin/analytics", label: "Analytics", icon: "📈" },
 ];
 
 export function AdminShell({
@@ -23,6 +25,16 @@ export function AdminShell({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [pendingOrders, setPendingOrders] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/admin/overview")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.orders?.pending != null) setPendingOrders(data.orders.pending);
+      })
+      .catch(() => {});
+  }, [pathname]);
 
   const isActive = (href: string) =>
     href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
@@ -82,7 +94,17 @@ export function AdminShell({
                 )}
               >
                 <span>{item.icon}</span>
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                {item.badgeKey === "pending" && pendingOrders > 0 && (
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[0.65rem] font-bold",
+                      isActive(item.href) ? "bg-white/25 text-white" : "bg-amber-100 text-amber-700",
+                    )}
+                  >
+                    {pendingOrders}
+                  </span>
+                )}
               </Link>
             ))}
           </nav>

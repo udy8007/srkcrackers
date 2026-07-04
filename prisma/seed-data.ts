@@ -1,5 +1,7 @@
 // SRK Crackers catalog — seeded into the database on deploy.
-// Images: local category illustrations (no third-party watermarks).
+// Images: real product pack photos (hosted locally under /products/photos/).
+
+import { PRODUCT_IMAGES } from "./product-images";
 
 export const CATEGORY_IMAGES: Record<string, string> = {
   sparklers: "/products/sparklers.svg",
@@ -43,7 +45,7 @@ function item(
     pack,
     price,
     mrp: price * 5,
-    image: CATEGORY_IMAGES[cat] ?? FALLBACK_IMAGE,
+    image: PRODUCT_IMAGES[name] ?? CATEGORY_IMAGES[cat] ?? FALLBACK_IMAGE,
     description,
   };
 }

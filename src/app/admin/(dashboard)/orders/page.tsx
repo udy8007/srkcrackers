@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { OrdersManager } from "./OrdersManager";
 
 export const metadata = {
@@ -5,5 +6,9 @@ export const metadata = {
 };
 
 export default function OrdersPage() {
-  return <OrdersManager />;
+  return (
+    <Suspense fallback={<p className="text-ink-muted">Loading orders...</p>}>
+      <OrdersManager />
+    </Suspense>
+  );
 }

@@ -13,7 +13,15 @@ export async function GET() {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
 
-  const [totalVisits, todayVisits, recentVisits, cityGroups] = await Promise.all([
+  const days: { date: string; count: number }[] = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(startOfToday);
+    d.setDate(d.getDate() - i);
+    days.push({ date: d.toISOString().slice(0, 10), count: 0 });
+  }
+  const rangeStart = new Date(days[0].date);
+
+  const [totalVisits, todayVisits, recentVisits, cityGroups, visitsInRange] = await Promise.all([
     prisma.siteVisit.count(),
     prisma.siteVisit.count({ where: { createdAt: { gte: startOfToday } } }),
     prisma.siteVisit.findMany({
@@ -33,7 +41,17 @@ export async function GET() {
       where: { city: { not: null } },
       _count: { _all: true },
     }),
+    prisma.siteVisit.findMany({
+      where: { createdAt: { gte: rangeStart } },
+      select: { createdAt: true },
+    }),
   ]);
+
+  for (const v of visitsInRange) {
+    const key = v.createdAt.toISOString().slice(0, 10);
+    const bucket = days.find((d) => d.date === key);
+    if (bucket) bucket.count++;
+  }
 
   const topCities = cityGroups
     .filter((g) => g.city)
@@ -49,5 +67,6 @@ export async function GET() {
     todayVisits,
     topCities,
     recentVisits,
+    dailyVisits: days,
   });
 }

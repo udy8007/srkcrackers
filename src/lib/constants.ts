@@ -26,8 +26,7 @@ export const BUSINESS = {
     "https://maps.google.com/maps?q=13.1987642,80.0896457&z=16&hl=en&output=embed",
   minOrderTN: 3000,
   minOrderOther: 5000,
-  apkUrl:
-    "https://github.com/appium/appium/raw/master/packages/appium/sample-code/apps/ApiDemos-debug.apk",
+  apkUrl: "/srk-crackers.apk",
 } as const;
 
 export const LICENSE_INFO = {

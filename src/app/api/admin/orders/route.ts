@@ -17,7 +17,9 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const statusParam = searchParams.get("status") ?? "";
   const q = searchParams.get("q")?.trim() ?? "";
-  const take = Math.min(Number(searchParams.get("take")) || 50, 100);
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+  const take = Math.min(Number(searchParams.get("take")) || 50, 200);
   const skip = Math.max(Number(searchParams.get("skip")) || 0, 0);
 
   const where: Prisma.OrderWhereInput = {};
@@ -30,6 +32,15 @@ export async function GET(request: NextRequest) {
       { phone: { contains: q } },
       { customerName: { contains: q, mode: "insensitive" } },
     ];
+  }
+  if (from || to) {
+    where.createdAt = {};
+    if (from) where.createdAt.gte = new Date(from);
+    if (to) {
+      const end = new Date(to);
+      end.setHours(23, 59, 59, 999);
+      where.createdAt.lte = end;
+    }
   }
 
   const [orders, total] = await Promise.all([
