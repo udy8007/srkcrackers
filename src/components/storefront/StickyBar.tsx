@@ -24,7 +24,7 @@ export function StickyBar() {
         type="button"
         onClick={openCheckout}
         disabled={disabled}
-        className="rounded-[10px] bg-primary px-8 py-3 text-base font-bold text-white shadow-[0_4px_15px_rgba(168,0,125,0.35)] transition enabled:hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-45 max-sm:w-full"
+        className="rounded-[10px] bg-gradient-to-r from-primary-bright via-primary to-primary-dark px-8 py-3 text-base font-bold text-white shadow-[0_4px_16px_rgba(214,40,40,0.45)] transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45 max-sm:w-full"
       >
         Place Order
       </button>

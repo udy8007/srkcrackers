@@ -23,7 +23,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-primary shadow-[0_2px_12px_rgba(168,0,125,0.3)]">
+    <header className="sticky top-0 z-50 bg-gradient-to-r from-primary-dark via-primary to-primary-dark shadow-[0_2px_14px_rgba(157,2,8,0.4)]">
       <div className="mx-auto flex max-w-6xl items-center gap-2 px-5 py-3">
         <a href="#home" className="flex min-w-0 items-center gap-2.5 overflow-hidden text-white">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-yellow text-2xl">

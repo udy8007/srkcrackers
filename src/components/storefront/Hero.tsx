@@ -8,9 +8,21 @@ export function Hero() {
   const showToast = useToast((state) => state.show);
 
   return (
-    <section id="home" className="border-b-[3px] border-yellow bg-white px-4 py-10 text-center">
-      <div className="mx-auto max-w-3xl">
-        <h2 className="font-display text-[clamp(1.6rem,4vw,2.4rem)] font-bold text-primary">
+    <section
+      id="home"
+      className="hero-festive relative overflow-hidden border-b-[3px] border-yellow px-4 py-14 text-center"
+    >
+      <div className="pointer-events-none absolute inset-0 select-none text-2xl opacity-40">
+        <span className="absolute left-[8%] top-6 animate-pop">🎆</span>
+        <span className="absolute right-[10%] top-10 animate-pop">🎇</span>
+        <span className="absolute left-[18%] bottom-6 animate-pop">✨</span>
+        <span className="absolute right-[16%] bottom-8 animate-pop">🎆</span>
+      </div>
+      <div className="relative mx-auto max-w-3xl">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-yellow bg-yellow-light px-3 py-1 text-xs font-bold text-primary-dark">
+          🎇 Diwali Special — Flat 80% OFF
+        </span>
+        <h2 className="text-festive mt-4 font-display text-[clamp(1.8rem,4.5vw,2.6rem)] font-extrabold leading-tight">
           Best Crackers Shop — {BUSINESS.name}
         </h2>
         <p className="mx-auto mt-3 max-w-[650px] text-sm text-ink-muted sm:text-[0.95rem]">
