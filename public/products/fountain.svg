@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <rect width="400" height="400" rx="24" fill="#fff8f2"/>
+  <rect x="16" y="16" width="368" height="368" rx="16" stroke="#ffc300" stroke-width="3" fill="none" opacity="0.5"/>
+  <ellipse cx="200" cy="310" rx="55" ry="18" fill="#6b5b5b" opacity="0.25"/>
+  <path d="M155 310 L165 220 L235 220 L245 310 Z" fill="#d62828"/>
+  <path d="M165 220 L175 180 L225 180 L235 220 Z" fill="#ef233c"/>
+  <ellipse cx="200" cy="178" rx="30" ry="8" fill="#9d0208"/>
+  <path d="M200 178 Q140 140 120 90" stroke="#ffd60a" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+  <path d="M200 178 Q260 140 280 90" stroke="#ffd60a" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+  <path d="M200 178 Q170 120 160 70" stroke="#ffb703" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+  <path d="M200 178 Q230 120 240 70" stroke="#ffb703" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+  <path d="M200 178 Q200 100 200 55" stroke="#f77f00" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <circle cx="120" cy="85" r="5" fill="#ffd60a"/>
+  <circle cx="280" cy="85" r="5" fill="#ffd60a"/>
+  <circle cx="160" cy="65" r="4" fill="#2da815"/>
+  <circle cx="240" cy="65" r="4" fill="#ef233c"/>
+  <circle cx="200" cy="50" r="6" fill="#ffb703"/>
+  <text x="200" y="365" text-anchor="middle" font-family="system-ui,sans-serif" font-size="22" font-weight="700" fill="#9d0208">FOUNTAIN</text>
+</svg>

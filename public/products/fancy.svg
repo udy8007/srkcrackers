@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <rect width="400" height="400" rx="24" fill="#fff8f2"/>
+  <rect x="16" y="16" width="368" height="368" rx="16" stroke="#ffc300" stroke-width="3" fill="none" opacity="0.5"/>
+  <rect x="175" y="280" width="50" height="70" rx="6" fill="#d62828"/>
+  <rect x="180" y="285" width="40" height="55" rx="4" fill="#ef233c"/>
+  <path d="M200 280 L200 120" stroke="#6b5b5b" stroke-width="4" stroke-linecap="round"/>
+  <path d="M200 120 L200 45" stroke="#9d0208" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="200" cy="40" r="14" fill="#ffd60a"/>
+  <circle cx="200" cy="85" r="22" fill="#ffb703" opacity="0.5"/>
+  <circle cx="175" cy="70" r="6" fill="#ef233c"/>
+  <circle cx="225" cy="75" r="5" fill="#2da815"/>
+  <circle cx="190" cy="55" r="4" fill="#ffd60a"/>
+  <circle cx="215" cy="95" r="5" fill="#f77f00"/>
+  <circle cx="185" cy="100" r="4" fill="#d62828"/>
+  <path d="M200 45 L200 20" stroke="#ffd60a" stroke-width="2" stroke-dasharray="4 4"/>
+  <text x="200" y="365" text-anchor="middle" font-family="system-ui,sans-serif" font-size="22" font-weight="700" fill="#9d0208">FANCY / SKY</text>
+</svg>

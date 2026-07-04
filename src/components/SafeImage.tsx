@@ -3,8 +3,7 @@
 import Image, { type ImageProps } from "next/image";
 import { useState } from "react";
 
-const DEFAULT_FALLBACK =
-  "https://jallikattucrackers.in/wp-content/uploads/2023/10/678.webp";
+const DEFAULT_FALLBACK = "/products/default.svg";
 
 type SafeImageProps = ImageProps & {
   fallbackSrc?: string;
