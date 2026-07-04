@@ -4,6 +4,7 @@ import { AdminShell } from "./AdminShell";
 
 export const metadata = {
   title: "Admin — SRK Crackers",
+  robots: { index: false, follow: false },
 };
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
