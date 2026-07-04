@@ -26,7 +26,7 @@ export function Hero() {
           Best Crackers Shop — {BUSINESS.name}
         </h2>
         <p className="mx-auto mt-3 max-w-[650px] text-sm text-ink-muted sm:text-[0.95rem]">
-          Premium Sivakasi quality crackers from licensed dealer {BUSINESS.name}, Mogai, Avadi.
+          Premium Sivakasi quality crackers from licensed dealer {BUSINESS.name}, Morai, Avadi.
           Select products below, get your estimate and submit order via WhatsApp.
         </p>
         <div className="mt-5 flex flex-wrap items-center justify-center gap-3">

@@ -7,12 +7,12 @@ export function MapSection() {
     <section id="map" className="bg-white px-4 py-14">
       <div className="mx-auto max-w-5xl">
         <SectionHead
-          title="Find Us — Avadi, Tiruvallur"
-          subtitle={`${BUSINESS.name} · Mogai Village, Avadi Taluk, Tiruvallur District, Tamil Nadu`}
+          title="Find Us — Avadi, Chennai"
+          subtitle={`${BUSINESS.name} · Morai Village, Avadi, Chennai - 600055, Tamil Nadu`}
         />
         <div className="overflow-hidden rounded-2xl border border-line shadow-sm">
           <iframe
-            title={`${BUSINESS.name} — Avadi, Tiruvallur District, Tamil Nadu`}
+            title={`${BUSINESS.name} — Avadi, Chennai, Tamil Nadu`}
             src={BUSINESS.mapEmbed}
             className="h-[320px] w-full border-0 sm:h-[400px]"
             allowFullScreen
@@ -26,7 +26,7 @@ export function MapSection() {
             <strong className="block text-primary">{BUSINESS.name}</strong>
             📍 <strong>{BUSINESS.mapQuery}</strong>
             <br />
-            Survey No 280/79, Door No 45, Mogai Village, Avadi Taluk
+            Govt. Licensed Fireworks Dealer · Licence No 10439/FL/NMSB/2026
             <br />
             📞{" "}
             <a href={`tel:${BUSINESS.phone}`} className="font-bold text-primary">

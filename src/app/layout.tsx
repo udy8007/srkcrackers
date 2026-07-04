@@ -19,7 +19,7 @@ const jost = Jost({
 
 const SITE_URL = BUSINESS.url;
 const TITLE = `${BUSINESS.name} — Best Crackers Shop | Sivakasi Quality Online`;
-const DESCRIPTION = `${BUSINESS.name} — Government licensed fireworks dealer in Mogai, Avadi, Tiruvallur. Buy premium Sivakasi crackers at up to 80% discount. Order online & pay via UPI. Call ${BUSINESS.phoneDisplay}.`;
+const DESCRIPTION = `${BUSINESS.name} — Government licensed fireworks dealer in Morai, Avadi, Chennai. Buy premium Sivakasi crackers at up to 80% discount. Order online & pay via UPI. Call ${BUSINESS.phoneDisplay}.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -33,6 +33,8 @@ export const metadata: Metadata = {
     "SRK Crackers",
     "Sivakasi crackers",
     "crackers shop Avadi",
+    "crackers shop Chennai",
+    "fireworks Avadi Chennai",
     "fireworks Tiruvallur",
     "Diwali crackers online",
     "crackers price list",

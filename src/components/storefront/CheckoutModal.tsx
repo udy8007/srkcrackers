@@ -119,7 +119,7 @@ export function CheckoutModal() {
       `*Payment:* GPay / UPI (${BUSINESS.upiId})`,
       "",
       "Please confirm availability and delivery.",
-      "📍 Mogai, Avadi, Tiruvallur",
+      "📍 Morai, Avadi, Chennai",
       `📞 ${BUSINESS.phoneDisplay}`,
     ];
     return lines.filter(Boolean).join("\n");

@@ -60,7 +60,7 @@ export function MarqueeBars() {
         {BUSINESS.phoneDisplay}
       </a>
     </>,
-    <>✅ Licensed Dealer — SRK Crackers, Mogai, Avadi</>,
+    <>✅ Licensed Dealer — SRK Crackers, Morai, Avadi</>,
     <>🚚 Delivery Available — Tamil Nadu &amp; All India</>,
     <>💬 Submit Order via WhatsApp — Quick &amp; Easy!</>,
   ];
@@ -69,7 +69,7 @@ export function MarqueeBars() {
     <>⚡ Minimum Order — Tamil Nadu &amp; PY: <strong>₹3000</strong></>,
     <>⚡ Other States Minimum Order: <strong>₹5000</strong></>,
     <>🏛️ Govt. Licensed Fireworks Dealer — 100 KGS Capacity</>,
-    <>📍 Survey No 280/79, Door No 45, Mogai, Avadi, Tiruvallur</>,
+    <>📍 No 45, Sarathi Nagar, Morai Village, Avadi, Chennai - 600055</>,
     <>⏰ We confirm your order within 2 hours by phone call</>,
     <>🎁 Best Price — Wholesale Rates Direct from Sivakasi</>,
   ];

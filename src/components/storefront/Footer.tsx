@@ -10,7 +10,7 @@ export function Footer() {
           <div>
             <h4 className="font-display text-xl font-bold">{BUSINESS.name}</h4>
             <p className="mt-3 text-sm text-white/80">
-              Your trusted licensed fireworks dealer in Mogai, Avadi, Tiruvallur. Premium Sivakasi
+              Your trusted licensed fireworks dealer in Morai, Avadi, Chennai. Premium Sivakasi
               quality crackers at wholesale prices with safe delivery.
             </p>
             <p className="mt-2 text-sm text-white/80">📍 {BUSINESS.addressLine}, Tamil Nadu</p>
@@ -59,8 +59,8 @@ export function Footer() {
         </div>
 
         <div className="mt-6 border-t border-white/10 pt-6 text-center text-xs text-white/60">
-          © {year} {BUSINESS.name}. All Rights Reserved. | Licensed Fireworks Dealer | Mogai, Avadi,
-          Tiruvallur
+          © {year} {BUSINESS.name}. All Rights Reserved. | Licensed Fireworks Dealer | Morai, Avadi,
+          Chennai
         </div>
       </div>
     </footer>

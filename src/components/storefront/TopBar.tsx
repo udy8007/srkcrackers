@@ -7,7 +7,7 @@ export function TopBar() {
       <a href={`tel:${BUSINESS.phone}`} className="font-semibold text-yellow">
         {BUSINESS.phoneDisplay}
       </a>
-      &nbsp;|&nbsp; Licensed Dealer — Mogai, Avadi, Tiruvallur
+      &nbsp;|&nbsp; Licensed Dealer — Morai, Avadi, Chennai
     </div>
   );
 }

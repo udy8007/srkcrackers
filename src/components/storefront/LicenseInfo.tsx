@@ -3,12 +3,14 @@ import { BUSINESS, LICENSE_INFO } from "@/lib/constants";
 
 const INFO_ROWS: { label: string; value: string }[] = [
   { label: "Name of Licence", value: LICENSE_INFO.name },
-  { label: "Survey No", value: LICENSE_INFO.surveyNo },
-  { label: "Door No", value: LICENSE_INFO.doorNo },
   { label: "Licence No", value: LICENSE_INFO.licenceNo },
+  { label: "Door No", value: LICENSE_INFO.doorNo },
+  { label: "Nagar / Street", value: LICENSE_INFO.nagar },
   { label: "Village", value: LICENSE_INFO.village },
   { label: "Taluk", value: LICENSE_INFO.taluk },
   { label: "District", value: LICENSE_INFO.district },
+  { label: "Pincode", value: LICENSE_INFO.pincode },
+  { label: "Issued On", value: LICENSE_INFO.issuedOn },
   { label: "Valid Up To", value: LICENSE_INFO.validUpTo },
   { label: "Capacity", value: LICENSE_INFO.capacity },
   { label: "Working", value: LICENSE_INFO.working },
