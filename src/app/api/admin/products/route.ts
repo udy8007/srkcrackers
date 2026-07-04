@@ -24,6 +24,7 @@ export async function GET() {
       mrp: product.mrp,
       active: product.active,
       imageUrl: product.imageUrl,
+      description: product.description,
       categoryKey: product.category.key,
       categoryLabel: product.category.label,
     })),

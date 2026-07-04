@@ -22,6 +22,7 @@ import { ProductModal } from "./ProductModal";
 import { Chatbot } from "./Chatbot";
 import { WhatsAppFloat } from "./WhatsAppFloat";
 import { ScrollReveal } from "./ScrollReveal";
+import { VisitTracker } from "./VisitTracker";
 import { Toast } from "./Toast";
 
 export function Storefront({ categories }: { categories: CategoryWithProductsDTO[] }) {
@@ -61,6 +62,7 @@ export function Storefront({ categories }: { categories: CategoryWithProductsDTO
       </div>
 
       <ScrollReveal />
+      <VisitTracker />
       <StickyBar />
       <WhatsAppFloat />
       <Chatbot />

@@ -46,7 +46,7 @@ export function LoginForm() {
           className="input"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="admin@srkcrackers.com"
+          placeholder="Enter your admin email"
           required
           autoComplete="email"
         />
@@ -58,7 +58,7 @@ export function LoginForm() {
           className="input"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="••••••••"
+          placeholder="Enter your password"
           required
           autoComplete="current-password"
         />

@@ -119,6 +119,20 @@ model OrderItem {
   @@index([orderId])
 }
 
+/// Storefront page visits for admin analytics (city + time).
+model SiteVisit {
+  id        String   @id @default(cuid())
+  path      String   @default("/")
+  city      String?
+  region    String?
+  country   String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([city])
+}
+
 /// Timeline of status changes for an order.
 model OrderStatusHistory {
   id        String      @id @default(cuid())

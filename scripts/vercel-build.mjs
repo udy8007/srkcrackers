@@ -1,6 +1,5 @@
 // Vercel build entrypoint.
-// Ensures the database the app connects to has its schema + seed data, then builds.
-// Idempotent: migrate deploy only applies pending migrations, seed only fills gaps.
+// Ensures the database schema exists, creates admin if needed, then builds.
 import { execSync } from "node:child_process";
 
 function firstEnv(...names) {
@@ -70,5 +69,12 @@ run("npx prisma generate");
 // in — it creates our app tables even when the DB already has unrelated tables
 // (e.g. Neon Auth) and no Prisma migration history. Additive + idempotent.
 run("npx prisma db push --skip-generate --accept-data-loss", migrateEnv);
+
+// One-time: set WIPE_CATALOG=true in Vercel env, redeploy, then remove the variable.
+if (process.env.WIPE_CATALOG === "true") {
+  console.log("[vercel-build] WIPE_CATALOG=true — clearing product catalog");
+  run("npx tsx prisma/clear-catalog.ts", migrateEnv);
+}
+
 run("npx prisma db seed", migrateEnv);
 run("npx next build");

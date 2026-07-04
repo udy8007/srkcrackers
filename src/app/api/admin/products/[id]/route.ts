@@ -52,6 +52,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       mrp: product.mrp,
       active: product.active,
       imageUrl: product.imageUrl,
+      description: product.description,
       categoryKey: product.category.key,
       categoryLabel: product.category.label,
     });
