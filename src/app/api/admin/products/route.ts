@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
   const price = Math.max(0, Math.round(body.price ?? 0));
   const mrp = Math.max(price, Math.round(body.mrp ?? price * 5));
 
-  let baseSlug = slugify(name) || "product";
+  const baseSlug = slugify(name) || "product";
   let slug = baseSlug;
   let n = 1;
   while (await prisma.product.findUnique({ where: { slug } })) {

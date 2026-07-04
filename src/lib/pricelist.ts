@@ -6,7 +6,6 @@ type RGB = [number, number, number];
 
 const RED_DARK: RGB = [157, 2, 8];
 const RED: RGB = [214, 40, 40];
-const GOLD: RGB = [255, 183, 3];
 const GOLD_SOFT: RGB = [255, 244, 214];
 const STRIPE: RGB = [255, 248, 242];
 const INK: RGB = [43, 31, 31];
