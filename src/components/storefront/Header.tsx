@@ -27,14 +27,16 @@ export function Header() {
     <header className="sticky top-0 z-50 bg-gradient-to-r from-primary-dark via-primary to-primary-dark shadow-[0_2px_14px_rgba(157,2,8,0.4)]">
       <div className="mx-auto flex max-w-6xl items-center gap-2 px-5 py-3">
         <a href="#home" className="flex min-w-0 items-center gap-2.5 overflow-hidden text-white">
-          <Image
-            src="/logo.png"
-            alt={`${BUSINESS.name} logo`}
-            width={44}
-            height={44}
-            priority
-            className="h-11 w-11 shrink-0 rounded-full ring-2 ring-yellow/70 shadow-md"
-          />
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-yellow via-gold to-orange p-[2.5px] shadow-[0_0_14px_rgba(255,195,0,0.55)]">
+            <Image
+              src="/logo.png"
+              alt={`${BUSINESS.name} logo`}
+              width={48}
+              height={48}
+              priority
+              className="h-full w-full rounded-full bg-black object-cover"
+            />
+          </span>
           <span className="min-w-0">
             <span className="block truncate font-display text-[1.35rem] font-bold leading-tight">
               {BUSINESS.name}
