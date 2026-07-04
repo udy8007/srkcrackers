@@ -6,13 +6,13 @@ const globalForPrisma = globalThis as unknown as {
 
 /**
  * Resolve the database connection URL.
- * Production uses the Neon–Vercel integration variables (prefixed `skr_`),
- * which cannot be renamed; local dev / Prisma CLI use the standard names.
+ * Prefer the standard DATABASE_URL (set locally and in Vercel Project Settings);
+ * fall back to the Neon–Vercel integration variables (prefixed `skr_`).
  */
 const connectionUrl =
+  process.env.DATABASE_URL ??
   process.env["skr_POSTGRES_PRISMA_URL"] ??
-  process.env["skr_DATABASE_URL"] ??
-  process.env.DATABASE_URL;
+  process.env["skr_DATABASE_URL"];
 
 export const prisma =
   globalForPrisma.prisma ??
