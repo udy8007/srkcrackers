@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { customer, items, paymentScreenshot } = body ?? {};
+  const { customer, items, paymentScreenshot, paymentMethod } = body ?? {};
 
   // ── Validate customer ──────────────────────────────────────
   if (!customer?.name?.trim()) {
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
           state: customer.state.trim(),
           pincode: customer.pincode.trim(),
           notes: customer.notes?.trim() || null,
-          paymentMethod: "UPI",
+          paymentMethod: paymentMethod?.trim() || "UPI",
           upiId: BUSINESS.upiId,
           paymentScreenshot: paymentScreenshot || null,
           subtotal,

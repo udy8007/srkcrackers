@@ -44,6 +44,7 @@ export interface CreateOrderInput {
   customer: CustomerInput;
   items: CartLineInput[];
   paymentScreenshot?: string;
+  paymentMethod?: string;
 }
 
 /** Status history entry for the tracking timeline. */
