@@ -52,13 +52,13 @@ export function Storefront({ categories }: { categories: CategoryWithProductsDTO
         <main>
           <Hero />
           <Highlights />
-          <CustomerFeedback />
           <ProductsSection />
           <HowToOrder />
           <TrackOrder />
           <LicenseInfo />
           <ShopShowcase />
           <MapSection />
+          <CustomerFeedback />
         </main>
         <Footer />
       </div>
