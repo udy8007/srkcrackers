@@ -65,13 +65,44 @@ export interface OrderItemDTO {
   amount: number;
 }
 
+/** Customer details shown on invoices. */
+export interface InvoiceCustomer {
+  name: string;
+  phone: string;
+  altPhone?: string | null;
+  email?: string | null;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  notes?: string | null;
+}
+
+/** Data required to generate an order invoice PDF. */
+export interface InvoiceData {
+  orderNumber: string;
+  createdAt: string;
+  status: OrderStatus;
+  statusLabel: string;
+  customer: InvoiceCustomer;
+  items: Pick<OrderItemDTO, "name" | "pack" | "price" | "qty" | "amount">[];
+  subtotal: number;
+  total: number;
+  paymentMethod?: string;
+  upiId?: string;
+}
+
 /** Public tracking result (no sensitive data). */
 export interface TrackOrderResult {
   orderNumber: string;
   status: OrderStatus;
   statusLabel: string;
   total: number;
+  subtotal: number;
   createdAt: string;
+  paymentMethod: string;
+  upiId: string;
+  customer: InvoiceCustomer;
   items: OrderItemDTO[];
   statusHistory: StatusHistoryDTO[];
 }

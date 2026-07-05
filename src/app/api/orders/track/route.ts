@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ORDER_STATUS_LABEL } from "@/lib/constants";
+import { ORDER_STATUS_LABEL, BUSINESS } from "@/lib/constants";
 import { isValidPhone } from "@/lib/utils";
 import type { TrackOrderResult } from "@/types";
 
@@ -41,7 +41,21 @@ export async function POST(request: NextRequest) {
     status: order.status,
     statusLabel: ORDER_STATUS_LABEL[order.status],
     total: order.total,
+    subtotal: order.subtotal,
     createdAt: order.createdAt.toISOString(),
+    paymentMethod: order.paymentMethod,
+    upiId: order.upiId ?? BUSINESS.upiId,
+    customer: {
+      name: order.customerName,
+      phone: order.phone,
+      altPhone: order.altPhone,
+      email: order.email,
+      address: order.address,
+      city: order.city,
+      state: order.state,
+      pincode: order.pincode,
+      notes: order.notes,
+    },
     items: order.items.map((item) => ({
       id: item.id,
       name: item.name,

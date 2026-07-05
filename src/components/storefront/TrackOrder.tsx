@@ -6,6 +6,7 @@ import { SectionDecor } from "./FestiveDecor";
 import { useUI } from "@/store/ui";
 import { useToast } from "@/store/toast";
 import { ORDER_STATUSES } from "@/lib/constants";
+import { downloadOrderInvoice, trackResultToInvoice } from "@/lib/invoice";
 import { formatDateTime, formatPrice, isValidPhone } from "@/lib/utils";
 import type { TrackOrderResult } from "@/types";
 
@@ -21,6 +22,7 @@ export function TrackOrder() {
   const [result, setResult] = useState<TrackOrderResult | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
 
   const runTrack = useCallback(
     async (id: string, mobile: string) => {
@@ -67,6 +69,19 @@ export function TrackOrder() {
 
   const currentIdx = result ? TIMELINE.findIndex((s) => s.key === result.status) : -1;
   const isCancelled = result?.status === "CANCELLED";
+
+  const handleDownloadInvoice = async () => {
+    if (!result) return;
+    setInvoiceLoading(true);
+    try {
+      await downloadOrderInvoice(trackResultToInvoice(result));
+      showToast("Invoice downloaded!");
+    } catch {
+      showToast("Could not download invoice. Please try again.");
+    } finally {
+      setInvoiceLoading(false);
+    }
+  };
 
   return (
     <section id="track" className="relative isolate overflow-hidden bg-brandbg px-4 py-14">
@@ -136,6 +151,29 @@ export function TrackOrder() {
               <p className="mt-1 text-xs text-ink-muted">
                 Placed on {formatDateTime(result.createdAt)} · Total {formatPrice(result.total)}
               </p>
+
+              <button
+                type="button"
+                onClick={handleDownloadInvoice}
+                disabled={invoiceLoading}
+                className="btn-outline mt-4 w-full text-sm disabled:opacity-50"
+              >
+                {invoiceLoading ? "Preparing invoice..." : "Download Invoice (PDF)"}
+              </button>
+
+              <div className="mt-4 rounded-lg bg-brandbg p-3 text-xs">
+                <p className="mb-2 font-semibold text-ink">Order Items</p>
+                <ul className="space-y-1">
+                  {result.items.map((item) => (
+                    <li key={item.id} className="flex justify-between gap-2 text-ink-muted">
+                      <span className="truncate">
+                        {item.name} ({item.pack}) × {item.qty}
+                      </span>
+                      <span className="shrink-0 font-medium text-ink">{formatPrice(item.amount)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
               {isCancelled ? (
                 <p className="mt-4 rounded-lg bg-red/10 p-3 text-sm text-red">

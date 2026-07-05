@@ -8,8 +8,10 @@ import { useUI } from "@/store/ui";
 import { useToast } from "@/store/toast";
 import { formatPrice, isValidPhone, isValidPincode } from "@/lib/utils";
 import { buildUpiPayLink, compressImage, openGooglePay, scrollToId, whatsappUrl } from "@/lib/client-actions";
-import { BUSINESS, INDIAN_STATES } from "@/lib/constants";
-import type { CustomerInput } from "@/types";
+import { BUSINESS, INDIAN_STATES, ORDER_STATUS_LABEL } from "@/lib/constants";
+import { downloadOrderInvoice } from "@/lib/invoice";
+import type { OrderStatus } from "@prisma/client";
+import type { CustomerInput, InvoiceData } from "@/types";
 
 const EMPTY_CUSTOMER: CustomerInput = {
   name: "",
@@ -40,6 +42,9 @@ export function CheckoutModal() {
   const [screenshot, setScreenshot] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
+  const [orderCreatedAt, setOrderCreatedAt] = useState<string | null>(null);
+  const [orderStatus, setOrderStatus] = useState<OrderStatus | null>(null);
+  const [invoiceDownloading, setInvoiceDownloading] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Google Pay");
   const gpayOpenedRef = useRef(false);
@@ -61,6 +66,8 @@ export function CheckoutModal() {
       setStep(1);
       setScreenshot(null);
       setOrderNumber(null);
+      setOrderCreatedAt(null);
+      setOrderStatus(null);
       setSubmitting(false);
       setShowQr(false);
       setPaymentMethod("Google Pay");
@@ -147,6 +154,46 @@ export function CheckoutModal() {
     return lines.filter(Boolean).join("\n");
   };
 
+  const buildInvoiceData = (id: string, createdAt: string, status: OrderStatus): InvoiceData => ({
+    orderNumber: id,
+    createdAt,
+    status,
+    statusLabel: ORDER_STATUS_LABEL[status] ?? status,
+    customer: {
+      name: customer.name,
+      phone: customer.phone,
+      altPhone: customer.altPhone || null,
+      email: customer.email || null,
+      address: customer.address,
+      city: customer.city,
+      state: customer.state,
+      pincode: customer.pincode,
+      notes: customer.notes || null,
+    },
+    items: orderItems.map((line) => ({
+      name: line.product!.name,
+      pack: line.product!.pack,
+      price: line.product!.price,
+      qty: line.qty,
+      amount: line.amount,
+    })),
+    subtotal: total,
+    total,
+    paymentMethod,
+    upiId: BUSINESS.upiId,
+  });
+
+  const triggerInvoiceDownload = async (id: string, createdAt: string, status: OrderStatus) => {
+    setInvoiceDownloading(true);
+    try {
+      await downloadOrderInvoice(buildInvoiceData(id, createdAt, status));
+    } catch {
+      showToast("Could not download invoice. Try again from Track Order.");
+    } finally {
+      setInvoiceDownloading(false);
+    }
+  };
+
   const confirmOrder = async () => {
     if (!screenshot) return showToast("Please upload payment screenshot first");
     setSubmitting(true);
@@ -167,6 +214,9 @@ export function CheckoutModal() {
         return;
       }
       setOrderNumber(data.orderNumber);
+      setOrderCreatedAt(data.createdAt);
+      setOrderStatus(data.status);
+      await triggerInvoiceDownload(data.orderNumber, data.createdAt, data.status);
       clearCart();
       setStep(4);
       showToast("Order placed successfully!");
@@ -498,6 +548,18 @@ export function CheckoutModal() {
                 We will verify your payment and call you within <b>2 hours</b> to confirm delivery.
               </p>
               <div className="mt-5 flex flex-wrap justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    orderCreatedAt &&
+                    orderStatus &&
+                    triggerInvoiceDownload(orderNumber, orderCreatedAt, orderStatus)
+                  }
+                  disabled={!orderCreatedAt || !orderStatus || invoiceDownloading}
+                  className="btn-outline disabled:opacity-40"
+                >
+                  {invoiceDownloading ? "Preparing..." : "Download Invoice (PDF)"}
+                </button>
                 <a
                   href={whatsappUrl(buildWhatsAppText(orderNumber))}
                   target="_blank"
