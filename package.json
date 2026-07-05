@@ -16,7 +16,8 @@
     "db:clear": "tsx prisma/clear-db.ts",
     "db:clear-catalog": "tsx prisma/clear-catalog.ts",
     "db:studio": "prisma studio",
-    "db:reset": "prisma migrate reset"
+    "db:reset": "prisma migrate reset",
+    "icons": "node scripts/generate-favicons.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -42,6 +43,7 @@
     "eslint": "^9",
     "eslint-config-next": "^15.5.20",
     "prisma": "^6.19.3",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "tsx": "^4.23.0",
     "typescript": "^5"

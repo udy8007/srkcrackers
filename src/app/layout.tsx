@@ -50,6 +50,13 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   category: "shopping",
+  icons: {
+    icon: [
+      { url: "/logo.png", type: "image/png", sizes: "512x512" },
+    ],
+    shortcut: "/logo.png",
+    apple: [{ url: "/logo.png", sizes: "180x180", type: "image/png" }],
+  },
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,
