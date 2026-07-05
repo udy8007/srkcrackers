@@ -93,6 +93,7 @@ model Order {
   subtotal          Int
   total             Int
   status            OrderStatus          @default(VERIFYING)
+  expectedDeliveryAt DateTime?           // set when marked dispatched — auto DELIVERED after this time
   items             OrderItem[]
   statusHistory     OrderStatusHistory[]
   createdAt         DateTime             @default(now())

@@ -104,7 +104,7 @@ export function OrderActions(props: OrderActionsProps) {
       <button type="button" onClick={printOrder} className="btn-outline px-3 py-2 text-xs">
         Print Invoice
       </button>
-      {props.status !== "CANCELLED" && props.status !== "DELIVERED" && (
+      {props.status !== "CANCELLED" && props.status !== "DELIVERED" && props.status !== "DISPATCHED" && (
         <button
           type="button"
           onClick={cancelOrder}

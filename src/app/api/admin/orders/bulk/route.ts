@@ -27,6 +27,19 @@ export async function POST(request: NextRequest) {
   }
 
   const orderStatus = status as OrderStatus;
+  if (orderStatus === "DELIVERED") {
+    return NextResponse.json(
+      { error: "Delivered is set automatically after expected delivery time" },
+      { status: 400 },
+    );
+  }
+  if (orderStatus === "DISPATCHED") {
+    return NextResponse.json(
+      { error: "Use order detail page to dispatch with expected delivery time" },
+      { status: 400 },
+    );
+  }
+
   const label = ORDER_STATUS_LABEL[orderStatus];
   const trimmedNote = note?.trim() || null;
 

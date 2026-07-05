@@ -5,11 +5,14 @@ import { StatusBadge } from "@/components/admin/StatusBadge";
 import { formatDateTime, formatPrice, getStoredShipping } from "@/lib/utils";
 import { OrderActions } from "./OrderActions";
 import { StatusUpdater } from "./StatusUpdater";
+import { PaymentScreenshotEditor } from "./PaymentScreenshotEditor";
+import { autoDeliverDueOrders } from "@/lib/auto-deliver";
 
 export const dynamic = "force-dynamic";
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  await autoDeliverDueOrders();
   const order = await prisma.order.findUnique({
     where: { id },
     include: {
@@ -126,20 +129,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 <Row label="Amount" value={formatPrice(order.total)} />
               </div>
               <div>
-                {order.paymentScreenshot ? (
-                  <a href={order.paymentScreenshot} target="_blank" rel="noopener noreferrer">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={order.paymentScreenshot}
-                      alt="Payment screenshot"
-                      className="max-h-64 rounded-lg border border-line"
-                    />
-                  </a>
-                ) : (
-                  <p className="rounded-lg bg-brandbg p-4 text-center text-sm text-ink-muted">
-                    No screenshot uploaded
-                  </p>
-                )}
+                <PaymentScreenshotEditor
+                  orderId={order.id}
+                  status={order.status}
+                  currentScreenshot={order.paymentScreenshot}
+                />
               </div>
             </div>
           </Card>
@@ -163,7 +157,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
         <div className="space-y-6">
           <Card title="Update Status">
-            <StatusUpdater orderId={order.id} currentStatus={order.status} />
+            <StatusUpdater
+              orderId={order.id}
+              currentStatus={order.status}
+              expectedDeliveryAt={order.expectedDeliveryAt}
+            />
           </Card>
 
           <Card title="Customer">

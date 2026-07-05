@@ -27,6 +27,8 @@ export const BUSINESS = {
   freeDeliveryMin: 1000,
   shippingCost: 100,
   yearsExperience: 10,
+  /** Default days from dispatch until expected postal delivery. */
+  defaultDeliveryDays: 3,
   apkUrl: "/srk-crackers.apk",
 } as const;
 

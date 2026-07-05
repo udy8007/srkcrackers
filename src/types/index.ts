@@ -101,6 +101,7 @@ export interface TrackOrderResult {
   total: number;
   subtotal: number;
   shipping: number;
+  expectedDeliveryAt: string | null;
   createdAt: string;
   paymentMethod: string;
   upiId: string;

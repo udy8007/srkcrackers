@@ -157,6 +157,14 @@ export function TrackOrder() {
                 {formatPrice(result.total)}
               </p>
 
+              {result.status === "DISPATCHED" && result.expectedDeliveryAt && (
+                <p className="mt-2 rounded-lg bg-primary/5 p-3 text-xs text-ink">
+                  📦 Parcel handed to postal. Expected delivery by{" "}
+                  <strong>{formatDateTime(result.expectedDeliveryAt)}</strong>. Status will update
+                  automatically when delivered.
+                </p>
+              )}
+
               <button
                 type="button"
                 onClick={handleDownloadInvoice}
