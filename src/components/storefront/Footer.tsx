@@ -22,8 +22,9 @@ export function Footer() {
               <h4 className="font-display text-xl font-bold">{BUSINESS.name}</h4>
             </div>
             <p className="mt-3 text-sm text-white/80">
-              Your trusted licensed fireworks dealer in Morai, Avadi, Chennai. Premium Sivakasi
-              quality crackers at wholesale prices with safe delivery.
+              Your trusted licensed fireworks dealer in Morai, Avadi, Chennai —{" "}
+              <strong className="text-yellow">{BUSINESS.yearsExperience}+ years</strong> of
+              experience. Premium Sivakasi quality crackers at wholesale prices with safe delivery.
             </p>
             <p className="mt-2 text-sm text-white/80">📍 {BUSINESS.addressLine}, Tamil Nadu</p>
             <p className="mt-2 text-sm text-white/80">🧾 GST No: {BUSINESS.gstin}</p>

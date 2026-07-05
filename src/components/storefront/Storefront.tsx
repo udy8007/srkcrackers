@@ -9,6 +9,7 @@ import { Header } from "./Header";
 import { MarqueeBars } from "./Marquee";
 import { Hero } from "./Hero";
 import { Highlights } from "./Highlights";
+import { CustomerFeedback } from "./CustomerFeedback";
 import { ProductsSection } from "./ProductsSection";
 import { HowToOrder } from "./HowToOrder";
 import { TrackOrder } from "./TrackOrder";
@@ -51,6 +52,7 @@ export function Storefront({ categories }: { categories: CategoryWithProductsDTO
         <main>
           <Hero />
           <Highlights />
+          <CustomerFeedback />
           <ProductsSection />
           <HowToOrder />
           <TrackOrder />

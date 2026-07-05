@@ -69,6 +69,16 @@ const FEATURES: { title: string; desc: string; icon: ReactNode }[] = [
     ),
   },
   {
+    title: "10+ Years Experience",
+    desc: "Serving Chennai & Tamil Nadu families for over a decade with trusted service, fair pricing, and repeat customers every festival season.",
+    icon: (
+      <svg {...svgProps}>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 2" />
+      </svg>
+    ),
+  },
+  {
     title: "Govt. Licensed Dealer",
     desc: "100% legal & statutory compliant fireworks dealer — order with complete confidence.",
     icon: (

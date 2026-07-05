@@ -24,8 +24,8 @@ export const BUSINESS = {
   mapQuery: "Sarathi Nagar, Morai Village, Avadi, Chennai 600055, Tamil Nadu",
   mapEmbed:
     "https://maps.google.com/maps?q=13.1987642,80.0896457&z=16&hl=en&output=embed",
-  minOrderTN: 3000,
-  minOrderOther: 5000,
+  minOrder: 500,
+  yearsExperience: 10,
   apkUrl: "/srk-crackers.apk",
 } as const;
 
@@ -79,3 +79,57 @@ export const INDIAN_STATES = [
   "Kerala",
   "Other",
 ] as const;
+
+export interface CustomerFeedbackItem {
+  name: string;
+  location: string;
+  rating: number;
+  text: string;
+  date: string;
+}
+
+/** Customer testimonials shown on the storefront. */
+export const CUSTOMER_FEEDBACK: CustomerFeedbackItem[] = [
+  {
+    name: "Kumaravel S.",
+    location: "Avadi, Chennai",
+    rating: 5,
+    text: "Ordered for Diwali — excellent Sivakasi quality and very fair pricing. Team confirmed within an hour and delivery was on time.",
+    date: "Nov 2025",
+  },
+  {
+    name: "Priya R.",
+    location: "Poonamallee",
+    rating: 5,
+    text: "Best crackers shop near Morai. We could buy single items without forced boxes. GPay payment and WhatsApp order was very easy.",
+    date: "Oct 2025",
+  },
+  {
+    name: "Murugan V.",
+    location: "Ambattur, Chennai",
+    rating: 5,
+    text: "10 years trusted dealer — genuine licensed shop. Bulk order for our apartment celebration was packed safely and rates were wholesale level.",
+    date: "Sep 2025",
+  },
+  {
+    name: "Deepa K.",
+    location: "Thiruvallur",
+    rating: 5,
+    text: "Kids loved the sparklers and flower pots. Good variety, clear price list PDF, and friendly phone support. Will order again this Diwali.",
+    date: "Aug 2025",
+  },
+  {
+    name: "Arun J.",
+    location: "Velachery, Chennai",
+    rating: 5,
+    text: "Sent order to my hometown — dispatch was quick and every item matched the estimate. Highly recommend SRK Crackers for online enquiry orders.",
+    date: "Jul 2025",
+  },
+  {
+    name: "Selvam P.",
+    location: "Red Hills",
+    rating: 5,
+    text: "Licensed dealer with proper GST invoice. Payment verification was smooth and they called to confirm delivery date. Very professional service.",
+    date: "Jun 2025",
+  },
+];

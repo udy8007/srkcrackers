@@ -67,12 +67,11 @@ export function MarqueeBars() {
   ];
 
   const infoItems: ReactNode[] = [
-    <>⚡ Minimum Order — Tamil Nadu &amp; PY: <strong>₹3000</strong></>,
-    <>⚡ Other States Minimum Order: <strong>₹5000</strong></>,
+    <>⚡ Minimum Order: <strong>₹{BUSINESS.minOrder}</strong> — Tamil Nadu &amp; All India</>,
     <>🏛️ Govt. Licensed Fireworks Dealer — 100 KGS Capacity</>,
     <>📍 No 45, Sarathi Nagar, Morai Village, Avadi, Chennai - 600055</>,
     <>⏰ We confirm your order within 2 hours by phone call</>,
-    <>🎁 Best Price — Wholesale Rates Direct from Sivakasi</>,
+    <>🏆 {BUSINESS.yearsExperience}+ Years Trusted Fireworks Dealer</>,
   ];
 
   return (

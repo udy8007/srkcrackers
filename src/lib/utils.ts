@@ -1,4 +1,6 @@
 /** Format a whole-rupee number as an INR currency string. */
+import { BUSINESS } from "@/lib/constants";
+
 export function formatPrice(value: number): string {
   return "₹" + Math.round(value).toLocaleString("en-IN");
 }
@@ -27,6 +29,11 @@ export function isValidPhone(phone: string): boolean {
 /** Validate a 6-digit Indian pincode. */
 export function isValidPincode(pincode: string): boolean {
   return /^\d{6}$/.test(pincode.trim());
+}
+
+/** Whether cart total meets the minimum order value. */
+export function meetsMinOrder(total: number): boolean {
+  return total >= BUSINESS.minOrder;
 }
 
 /** Discount percentage from mrp -> sale price. */

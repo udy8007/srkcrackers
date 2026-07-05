@@ -6,7 +6,7 @@ import { useCatalog, useCartTotals } from "./catalog-context";
 import { useCart } from "@/store/cart";
 import { useUI } from "@/store/ui";
 import { useToast } from "@/store/toast";
-import { formatPrice, isValidPhone, isValidPincode } from "@/lib/utils";
+import { formatPrice, isValidPhone, isValidPincode, meetsMinOrder } from "@/lib/utils";
 import { buildUpiPayLink, compressImage, openGooglePay, scrollToId, whatsappUrl } from "@/lib/client-actions";
 import { BUSINESS, INDIAN_STATES, ORDER_STATUS_LABEL } from "@/lib/constants";
 import { downloadOrderInvoice } from "@/lib/invoice";
@@ -107,6 +107,9 @@ export function CheckoutModal() {
     if (!customer.city.trim()) return fail("Please enter city");
     if (!customer.state) return fail("Please select state");
     if (!isValidPincode(customer.pincode)) return fail("Enter valid 6-digit pincode");
+    if (!meetsMinOrder(total)) {
+      return fail(`Minimum order is ${formatPrice(BUSINESS.minOrder)}. Add more items to your cart.`);
+    }
     return true;
   };
 

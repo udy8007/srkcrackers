@@ -39,6 +39,9 @@ export function Hero() {
         <span className="inline-flex items-center gap-1.5 rounded-full border border-yellow bg-yellow-light px-3 py-1 text-xs font-bold text-primary-dark">
           🎇 Diwali Special — Flat 80% OFF
         </span>
+        <span className="ml-2 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-white/80 px-3 py-1 text-xs font-bold text-primary">
+          ⭐ {BUSINESS.yearsExperience}+ Years Experience
+        </span>
         <h2 className="text-festive mt-4 font-display text-[clamp(1.8rem,4.5vw,2.6rem)] font-extrabold leading-tight">
           Best Crackers Shop — {BUSINESS.name}
         </h2>
