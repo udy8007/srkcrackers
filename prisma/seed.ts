@@ -55,7 +55,6 @@ async function seedProducts() {
         pack: product.pack,
         price: product.price,
         mrp: product.mrp,
-        imageUrl: product.image,
         description: product.description,
         sortOrder: order,
         categoryId,

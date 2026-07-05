@@ -23,7 +23,6 @@ import { FloatingDock } from "./FloatingDock";
 import { ScrollReveal } from "./ScrollReveal";
 import { VisitTracker } from "./VisitTracker";
 import { Toast } from "./Toast";
-import { NoupeEmbed } from "./NoupeEmbed";
 
 export function Storefront({ categories }: { categories: CategoryWithProductsDTO[] }) {
   const closeProduct = useUI((s) => s.closeProduct);
@@ -63,7 +62,6 @@ export function Storefront({ categories }: { categories: CategoryWithProductsDTO
       <VisitTracker />
       <StickyBar />
       <FloatingDock />
-      <NoupeEmbed />
       <ProductModal />
       <CheckoutModal />
       <Toast />

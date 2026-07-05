@@ -59,7 +59,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (typeof body.mrp === "number" && body.mrp >= 0) data.mrp = Math.round(body.mrp);
   if (typeof body.sortOrder === "number") data.sortOrder = Math.round(body.sortOrder);
   if (typeof body.imageUrl === "string" && body.imageUrl.trim()) {
-    data.imageUrl = body.imageUrl.trim();
+    const url = body.imageUrl.trim();
+    if (url.length > 600_000) {
+      return NextResponse.json({ error: "Image data too large to store" }, { status: 413 });
+    }
+    data.imageUrl = url;
   }
   if (typeof body.categoryId === "string") {
     data.category = { connect: { id: body.categoryId } };

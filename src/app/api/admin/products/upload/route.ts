@@ -24,6 +24,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Expected a compressed image data URL" }, { status: 400 });
   }
 
+  // ~500 KB base64 cap keeps saves reliable on Vercel/serverless payloads
+  if (dataUrl.length > 512_000) {
+    return NextResponse.json(
+      { error: "Image too large after compression. Try a smaller photo or crop closer." },
+      { status: 413 },
+    );
+  }
+
   // Vercel has a read-only filesystem — store compressed image URL in the database instead.
   if (process.env.VERCEL) {
     return NextResponse.json({ imageUrl: dataUrl });
@@ -35,10 +43,13 @@ export async function POST(request: NextRequest) {
   }
 
   const ext = match[1] === "jpeg" ? "jpg" : match[1];
-  const safeName = (filename ?? `product-${Date.now()}`).replace(/[^a-z0-9-]/gi, "-").toLowerCase();
+  const safeName = (filename ?? `product-${Date.now()}`)
+    .replace(/[^a-z0-9-]/gi, "-")
+    .toLowerCase()
+    .slice(0, 48);
   const dir = join(process.cwd(), "public", "uploads", "products");
   mkdirSync(dir, { recursive: true });
-  const file = `${safeName}.${ext}`;
+  const file = `${safeName}-${Date.now()}.${ext}`;
   writeFileSync(join(dir, file), Buffer.from(match[2], "base64"));
 
   return NextResponse.json({ imageUrl: `/uploads/products/${file}` });

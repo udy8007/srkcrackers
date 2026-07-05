@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Poppins, Jost } from "next/font/google";
 import { BUSINESS } from "@/lib/constants";
 import "./globals.css";
@@ -142,7 +143,13 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={`${poppins.variable} ${jost.variable} antialiased`}>{children}</body>
+      <body className={`${poppins.variable} ${jost.variable} antialiased`}>
+        {children}
+        <Script
+          src="https://www.noupe.com/embed/019f30967aa0700080c53f9bb9b8a6e42c31.js"
+          strategy="afterInteractive"
+        />
+      </body>
     </html>
   );
 }

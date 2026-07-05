@@ -15,7 +15,7 @@ export function StickyBar() {
   const disabled = !mounted || count === 0;
 
   return (
-    <div className="sticky-order-bar fixed inset-x-0 bottom-0 z-40 flex flex-wrap items-center justify-between gap-3 bg-yellow px-4 py-3 pr-20 shadow-[0_-4px_20px_rgba(0,0,0,0.15)] max-sm:flex-col max-sm:text-center sm:pr-24">
+    <div className="sticky-order-bar fixed inset-x-0 bottom-0 z-40 flex flex-wrap items-center justify-between gap-3 bg-yellow px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.15)] max-sm:flex-col max-sm:text-center sm:pr-4">
       <div className="text-base font-bold text-black">
         Grand Total:{" "}
         <span className="text-[1.35rem] text-primary">{formatPrice(mounted ? total : 0)}</span>

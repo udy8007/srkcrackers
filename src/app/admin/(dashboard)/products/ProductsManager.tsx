@@ -143,9 +143,9 @@ export function ProductsManager() {
     if (product) setDrafts((prev) => ({ ...prev, [id]: toDraft(product) }));
   };
 
-  const save = async (id: string) => {
-    const draft = drafts[id];
-    if (!draft) return;
+  const save = async (id: string, draftOverride?: Draft) => {
+    const draft = draftOverride ?? drafts[id];
+    if (!draft) return false;
     setSavingId(id);
     setMessage(null);
     try {
@@ -154,16 +154,22 @@ export function ProductsManager() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(draft),
       });
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        setMessage({ type: "err", text: "Failed to save product." });
-        return;
+        setMessage({
+          type: "err",
+          text: typeof data.error === "string" ? data.error : "Failed to save product.",
+        });
+        return false;
       }
-      const updated = (await response.json()) as AdminProduct;
+      const updated = data as AdminProduct;
       setProducts((prev) => prev.map((p) => (p.id === id ? updated : p)));
       setDrafts((prev) => ({ ...prev, [id]: toDraft(updated) }));
       setMessage({ type: "ok", text: `"${updated.name}" saved.` });
+      return true;
     } catch {
       setMessage({ type: "err", text: "Network error while saving." });
+      return false;
     } finally {
       setSavingId(null);
     }
@@ -173,49 +179,50 @@ export function ProductsManager() {
     key: string,
     file: File,
     filename: string,
-    onSuccess: (imageUrl: string) => void,
-    successMsg: string,
+    onUploaded: (imageUrl: string) => Promise<void> | void,
   ) => {
     setUploadingId(key);
     setMessage(null);
     try {
-      const dataUrl = await compressImage(file, 800, 0.7);
+      const dataUrl = await compressImage(file, 720, 0.62);
       const uploadRes = await fetch("/api/admin/products/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dataUrl, filename }),
       });
-      if (!uploadRes.ok) throw new Error("upload failed");
-      const { imageUrl } = (await uploadRes.json()) as { imageUrl: string };
-      onSuccess(imageUrl);
-      setMessage({ type: "ok", text: successMsg });
-    } catch {
-      setMessage({ type: "err", text: "Image upload failed. Try a smaller JPG or PNG." });
+      const uploadData = await uploadRes.json().catch(() => ({}));
+      if (!uploadRes.ok) {
+        throw new Error(
+          typeof uploadData.error === "string" ? uploadData.error : "Upload failed",
+        );
+      }
+      const { imageUrl } = uploadData as { imageUrl: string };
+      await onUploaded(imageUrl);
+    } catch (err) {
+      const text = err instanceof Error ? err.message : "Image upload failed.";
+      setMessage({ type: "err", text });
     } finally {
       setUploadingId(null);
     }
   };
 
   const uploadProductImage = (id: string, file: File) =>
-    uploadImageFile(
-      id,
-      file,
-      id,
-      (imageUrl) => {
-        updateDraft(id, { imageUrl });
-        setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, imageUrl } : p)));
-      },
-      "Image uploaded — click Save to publish.",
-    );
+    uploadImageFile(id, file, id, async (imageUrl) => {
+      const product = products.find((p) => p.id === id);
+      const base = drafts[id] ?? (product ? toDraft(product) : null);
+      if (!base) return;
+      const nextDraft = { ...base, imageUrl };
+      updateDraft(id, { imageUrl });
+      setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, imageUrl } : p)));
+      const ok = await save(id, nextDraft);
+      if (ok) setMessage({ type: "ok", text: "Product image saved." });
+    });
 
   const uploadAddImage = (file: File) =>
-    uploadImageFile(
-      "new",
-      file,
-      `new-${Date.now()}`,
-      (imageUrl) => setAddForm((f) => ({ ...f, imageUrl })),
-      "Image uploaded.",
-    );
+    uploadImageFile("new", file, `new-${Date.now()}`, (imageUrl) => {
+      setAddForm((f) => ({ ...f, imageUrl }));
+      setMessage({ type: "ok", text: "Image ready — click Add Product to save." });
+    });
 
   const deleteProduct = async (id: string) => {
     const draft = drafts[id];
