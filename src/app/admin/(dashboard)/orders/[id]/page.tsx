@@ -42,12 +42,17 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         orderId={order.id}
         orderNumber={order.orderNumber}
         status={order.status}
+        createdAt={order.createdAt.toISOString()}
         customerName={order.customerName}
         phone={order.phone}
+        altPhone={order.altPhone}
+        email={order.email}
         address={order.address}
         city={order.city}
         state={order.state}
         pincode={order.pincode}
+        paymentMethod={order.paymentMethod}
+        upiId={order.upiId}
         total={order.total}
         subtotal={order.subtotal}
         shipping={shipping}

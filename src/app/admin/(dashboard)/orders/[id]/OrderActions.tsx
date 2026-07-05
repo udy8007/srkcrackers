@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { OrderStatus } from "@prisma/client";
 import { BUSINESS } from "@/lib/constants";
+import { openPrintInvoice } from "@/lib/print-invoice-html";
 import { formatPrice } from "@/lib/utils";
 
 interface OrderItem {
@@ -18,12 +19,17 @@ interface OrderActionsProps {
   orderId: string;
   orderNumber: string;
   status: OrderStatus;
+  createdAt: string;
   customerName: string;
   phone: string;
+  altPhone?: string | null;
+  email?: string | null;
   address: string;
   city: string;
   state: string;
   pincode: string;
+  paymentMethod: string;
+  upiId?: string | null;
   subtotal: number;
   shipping: number;
   total: number;
@@ -48,37 +54,26 @@ export function OrderActions(props: OrderActionsProps) {
   };
 
   const printOrder = () => {
-    const html = `
-<!DOCTYPE html>
-<html><head><title>${props.orderNumber}</title>
-<style>
-  body { font-family: system-ui, sans-serif; padding: 24px; max-width: 720px; margin: 0 auto; }
-  h1 { font-size: 1.25rem; margin: 0 0 8px; }
-  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
-  th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-  th { background: #f5f5f5; }
-  .total { font-size: 1.1rem; font-weight: bold; text-align: right; margin-top: 12px; }
-  @media print { body { padding: 0; } }
-</style></head><body>
-  <h1>${BUSINESS.name} — ${props.orderNumber}</h1>
-  <p><strong>${props.customerName}</strong><br>${props.phone}<br>${props.address}, ${props.city}, ${props.state} - ${props.pincode}</p>
-  <table>
-    <thead><tr><th>Product</th><th>Pack</th><th>Qty</th><th>Amount</th></tr></thead>
-    <tbody>
-      ${props.items.map((i) => `<tr><td>${i.name}</td><td>${i.pack}</td><td>${i.qty}</td><td>${formatPrice(i.amount)}</td></tr>`).join("")}
-    </tbody>
-  </table>
-  <p style="text-align:right;margin-top:12px;font-size:14px">Subtotal: ${formatPrice(props.subtotal)}</p>
-  <p style="text-align:right;margin:4px 0;font-size:14px">Shipping: ${props.shipping > 0 ? formatPrice(props.shipping) : "FREE"}</p>
-  <div class="total">Grand Total: ${formatPrice(props.total)}</div>
-  <p style="font-size:12px;color:#666;margin-top:24px">${BUSINESS.phoneDisplay} · GST ${BUSINESS.gstin}</p>
-</body></html>`;
-    const w = window.open("", "_blank");
-    if (!w) return;
-    w.document.write(html);
-    w.document.close();
-    w.focus();
-    w.print();
+    openPrintInvoice({
+      orderNumber: props.orderNumber,
+      createdAt: props.createdAt,
+      status: props.status,
+      customerName: props.customerName,
+      phone: props.phone,
+      altPhone: props.altPhone,
+      email: props.email,
+      address: props.address,
+      city: props.city,
+      state: props.state,
+      pincode: props.pincode,
+      paymentMethod: props.paymentMethod,
+      upiId: props.upiId ?? BUSINESS.upiId,
+      subtotal: props.subtotal,
+      shipping: props.shipping,
+      total: props.total,
+      items: props.items,
+      origin: window.location.origin,
+    });
   };
 
   const cancelOrder = async () => {
