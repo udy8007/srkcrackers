@@ -316,6 +316,12 @@ body {
 }
 
 /* Fallback until JS measures sticky bar; overridden by FloatingDock */
+.floating-dock [id^="JotformAgent-"] {
+  position: relative !important;
+  inset: auto !important;
+  margin: 0 !important;
+}
+
 [id^="JotformAgent-"] {
   z-index: 50 !important;
 }

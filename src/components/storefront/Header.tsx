@@ -6,7 +6,7 @@ import { useUI } from "@/store/ui";
 import { useToast } from "@/store/toast";
 import { useMounted } from "@/lib/hooks";
 import { ApkDownloadIcon } from "@/components/icons/ApkDownloadIcon";
-import { downloadApk, scrollToId } from "@/lib/client-actions";
+import { downloadApk } from "@/lib/client-actions";
 import { BUSINESS } from "@/lib/constants";
 import { NAV_LINKS } from "./nav";
 
@@ -15,6 +15,8 @@ export function Header() {
   const mobileNavOpen = useUI((state) => state.mobileNavOpen);
   const toggleMobileNav = useUI((state) => state.toggleMobileNav);
   const closeMobileNav = useUI((state) => state.closeMobileNav);
+  const toggleCart = useUI((state) => state.toggleCart);
+  const cartOpen = useUI((state) => state.cartOpen);
   const showToast = useToast((state) => state.show);
   const mounted = useMounted();
   const count = mounted ? selectCartCount(items) : 0;
@@ -61,8 +63,9 @@ export function Header() {
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
           <button
             type="button"
-            onClick={() => scrollToId("products")}
+            onClick={toggleCart}
             aria-label="View cart"
+            aria-expanded={cartOpen}
             className="flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-lg bg-yellow px-3 text-[0.85rem] font-bold text-primary-dark transition hover:brightness-105"
           >
             <svg

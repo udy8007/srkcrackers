@@ -17,6 +17,7 @@ import { ShopShowcase } from "./ShopShowcase";
 import { MapSection } from "./MapSection";
 import { Footer } from "./Footer";
 import { StickyBar } from "./StickyBar";
+import { CartDrawer } from "./CartDrawer";
 import { CheckoutModal } from "./CheckoutModal";
 import { ProductModal } from "./ProductModal";
 import { FloatingDock } from "./FloatingDock";
@@ -27,17 +28,19 @@ import { Toast } from "./Toast";
 export function Storefront({ categories }: { categories: CategoryWithProductsDTO[] }) {
   const closeProduct = useUI((s) => s.closeProduct);
   const closeCheckout = useUI((s) => s.closeCheckout);
+  const closeCart = useUI((s) => s.closeCart);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         closeProduct();
         closeCheckout();
+        closeCart();
       }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [closeProduct, closeCheckout]);
+  }, [closeProduct, closeCheckout, closeCart]);
 
   return (
     <CatalogProvider categories={categories}>
@@ -62,6 +65,7 @@ export function Storefront({ categories }: { categories: CategoryWithProductsDTO
       <VisitTracker />
       <StickyBar />
       <FloatingDock />
+      <CartDrawer />
       <ProductModal />
       <CheckoutModal />
       <Toast />
