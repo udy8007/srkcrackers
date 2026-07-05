@@ -119,7 +119,7 @@ export function Footer() {
               <path d="M20 4 10 14" />
               <path d="M18 13.5V19a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 19V8a1.5 1.5 0 0 1 1.5-1.5H11" />
             </svg>
-            Powered by Illangovan
+            Powered by Ilangovan
           </a>
         </div>
       </div>

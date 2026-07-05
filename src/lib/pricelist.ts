@@ -1,5 +1,10 @@
 import type { RowInput } from "jspdf-autotable";
 import { BUSINESS, LICENSE_INFO } from "@/lib/constants";
+import {
+  buildStoreQrImageUrl,
+  drawPdfHeaderQr,
+  loadImageDataUrl,
+} from "@/lib/pdf-helpers";
 import type { CategoryWithProductsDTO } from "@/types";
 
 type RGB = [number, number, number];
@@ -10,22 +15,6 @@ const GOLD_SOFT: RGB = [255, 244, 214];
 const STRIPE: RGB = [255, 248, 242];
 const INK: RGB = [43, 31, 31];
 const MUTED: RGB = [110, 95, 95];
-
-async function loadImageDataUrl(url: string): Promise<string | null> {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const blob = await res.blob();
-    return await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : null);
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    return null;
-  }
-}
 
 const rupees = (n: number) => `Rs. ${n.toLocaleString("en-IN")}`;
 
@@ -48,9 +37,11 @@ export async function downloadPriceList(categories: CategoryWithProductsDTO[]) {
   });
 
   const logo = await loadImageDataUrl("/logo.png");
+  const qr = await loadImageDataUrl(buildStoreQrImageUrl(140));
 
   const drawHeader = () => {
     if (logo) doc.addImage(logo, "PNG", margin, 22, 56, 56);
+    drawPdfHeaderQr(doc, qr, pageWidth, margin, "Scan to Order", BUSINESS.url.replace("https://", ""));
 
     const textX = margin + (logo ? 68 : 0);
     doc.setFont("helvetica", "bold");

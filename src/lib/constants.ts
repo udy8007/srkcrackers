@@ -24,8 +24,9 @@ export const BUSINESS = {
   mapQuery: "Sarathi Nagar, Morai Village, Avadi, Chennai 600055, Tamil Nadu",
   mapEmbed:
     "https://maps.google.com/maps?q=13.1987642,80.0896457&z=16&hl=en&output=embed",
-  freeDeliveryMin: 1000,
-  shippingCost: 100,
+  minOrderAmount: 1250,
+  shippingCost: 200,
+  deliveryArea: "Chennai",
   yearsExperience: 10,
   /** Default days from dispatch until expected postal delivery. */
   defaultDeliveryDays: 3,
@@ -94,14 +95,14 @@ export interface CustomerFeedbackItem {
 /** Customer testimonials shown on the storefront. */
 export const CUSTOMER_FEEDBACK: CustomerFeedbackItem[] = [
   {
-    name: "Kumaravel S.",
+    name: "Udhaya Kumar",
     location: "Avadi, Chennai",
     rating: 5,
     text: "Ordered for Diwali — excellent Sivakasi quality and very fair pricing. Team confirmed within an hour and delivery was on time.",
     date: "Nov 2025",
   },
   {
-    name: "Priya R.",
+    name: "Anu",
     location: "Poonamallee",
     rating: 5,
     text: "Best crackers shop near Morai. We could buy single items without forced boxes. GPay payment and WhatsApp order was very easy.",

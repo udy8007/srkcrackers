@@ -1,5 +1,6 @@
 import { BUSINESS, LICENSE_INFO, ORDER_STATUS_LABEL } from "@/lib/constants";
-import { formatPrice } from "@/lib/utils";
+import { buildUpiQrImageUrl } from "@/lib/pdf-helpers";
+import { formatDateTime, formatInvoiceAddressLines, formatPrice } from "@/lib/utils";
 import type { OrderStatus } from "@prisma/client";
 
 export interface PrintInvoiceItem {
@@ -55,6 +56,13 @@ function formatInvoiceDate(value: string | Date): string {
 export function buildPrintInvoiceHtml(data: PrintInvoiceData): string {
   const statusLabel = data.status ? ORDER_STATUS_LABEL[data.status] : "—";
   const logoUrl = `${data.origin.replace(/\/$/, "")}/logo.png`;
+  const qrUrl = buildUpiQrImageUrl(data.total, 140);
+  const addressLines = formatInvoiceAddressLines({
+    address: data.address,
+    city: data.city,
+    state: data.state,
+    pincode: data.pincode,
+  });
   const rows = data.items
     .map(
       (item, index) => `
@@ -90,7 +98,33 @@ export function buildPrintInvoiceHtml(data: PrintInvoiceData): string {
       display: flex;
       gap: 14px;
       align-items: flex-start;
+      justify-content: space-between;
       margin-bottom: 10px;
+    }
+    .header-main {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      flex: 1;
+      min-width: 0;
+    }
+    .header-qr {
+      flex-shrink: 0;
+      text-align: center;
+    }
+    .header-qr img {
+      width: 72px;
+      height: 72px;
+      border-radius: 6px;
+      border: 1px solid #ebe1d7;
+      background: #fff;
+    }
+    .header-qr span {
+      display: block;
+      margin-top: 4px;
+      font-size: 9px;
+      color: #6e5f5f;
+      line-height: 1.35;
     }
     .logo {
       width: 56px;
@@ -205,15 +239,21 @@ export function buildPrintInvoiceHtml(data: PrintInvoiceData): string {
 <body>
   <div class="page">
     <div class="header">
-      <img class="logo" src="${esc(logoUrl)}" alt="${esc(BUSINESS.name)} logo" />
-      <div>
-        <h1 class="brand-name">${esc(BUSINESS.name.toUpperCase())}</h1>
-        <p class="brand-meta">
-          Government Licensed Fireworks Dealer &nbsp;|&nbsp; Premium Sivakasi Quality<br />
-          ${esc(BUSINESS.addressLine)}, ${esc(BUSINESS.state)}<br />
-          Ph: ${esc(BUSINESS.phoneDisplay)} &nbsp;|&nbsp; ${esc(BUSINESS.url.replace("https://", ""))} &nbsp;|&nbsp; GST: ${esc(BUSINESS.gstin)}<br />
-          Licence No: ${esc(LICENSE_INFO.licenceNo)}
-        </p>
+      <div class="header-main">
+        <img class="logo" src="${esc(logoUrl)}" alt="${esc(BUSINESS.name)} logo" />
+        <div>
+          <h1 class="brand-name">${esc(BUSINESS.name.toUpperCase())}</h1>
+          <p class="brand-meta">
+            Government Licensed Fireworks Dealer &nbsp;|&nbsp; Premium Sivakasi Quality<br />
+            ${esc(BUSINESS.addressLine)}, ${esc(BUSINESS.state)}<br />
+            Ph: ${esc(BUSINESS.phoneDisplay)} &nbsp;|&nbsp; ${esc(BUSINESS.url.replace("https://", ""))} &nbsp;|&nbsp; GST: ${esc(BUSINESS.gstin)}<br />
+            Licence No: ${esc(LICENSE_INFO.licenceNo)}
+          </p>
+        </div>
+      </div>
+      <div class="header-qr">
+        <img src="${esc(qrUrl)}" alt="UPI payment QR code" />
+        <span>Scan to Pay<br />${esc(BUSINESS.upiId)}</span>
       </div>
     </div>
 
@@ -229,8 +269,7 @@ export function buildPrintInvoiceHtml(data: PrintInvoiceData): string {
         <p>Mobile: ${esc(data.phone)}</p>
         ${data.altPhone ? `<p>Alt: ${esc(data.altPhone)}</p>` : ""}
         ${data.email ? `<p>Email: ${esc(data.email)}</p>` : ""}
-        <p>${esc(data.address)}</p>
-        <p>${esc(data.city)}, ${esc(data.state)} - ${esc(data.pincode)}</p>
+        ${addressLines.map((line) => `<p>${esc(line)}</p>`).join("")}
       </div>
       <div class="info-block">
         <h3>Invoice Details</h3>

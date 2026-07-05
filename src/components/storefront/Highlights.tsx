@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { BUSINESS } from "@/lib/constants";
 import { SectionHead } from "./SectionHead";
 import { SectionDecor } from "./FestiveDecor";
 
@@ -58,7 +59,7 @@ const FEATURES: { title: string; desc: string; icon: ReactNode }[] = [
   },
   {
     title: "Safe & Fast Delivery",
-    desc: "Careful packing and quick delivery across India — FREE postal charge on orders above ₹1000.",
+    desc: `Careful packing and quick delivery across ${BUSINESS.deliveryArea} — ₹${BUSINESS.shippingCost} shipping on all orders.`,
     icon: (
       <svg {...svgProps}>
         <path d="M2.5 6.5h10v9h-10z" />

@@ -7,7 +7,7 @@ import { OrderTotalsBreakdown } from "./OrderTotalsBreakdown";
 import { useCart } from "@/store/cart";
 import { useUI } from "@/store/ui";
 import { useToast } from "@/store/toast";
-import { formatPrice, isValidPhone, isValidPincode } from "@/lib/utils";
+import { formatPrice, formatFullDeliveryAddress, getMinOrderToastMessage, isValidPhone, isValidPincode, meetsMinOrder } from "@/lib/utils";
 import { buildUpiPayLink, compressImage, scrollToId, whatsappUrl } from "@/lib/client-actions";
 import { BUSINESS, INDIAN_STATES, ORDER_STATUS_LABEL } from "@/lib/constants";
 import { downloadOrderInvoice } from "@/lib/invoice";
@@ -50,6 +50,7 @@ export function CheckoutModal() {
     InvoiceData["items"]
   >([]);
   const [invoiceDownloading, setInvoiceDownloading] = useState(false);
+  const [upiCopied, setUpiCopied] = useState(false);
   const paymentMethod = "UPI QR";
 
   const orderItems = useMemo(
@@ -74,6 +75,7 @@ export function CheckoutModal() {
       setSavedTotals(null);
       setSavedInvoiceItems([]);
       setSubmitting(false);
+      setUpiCopied(false);
       document.body.style.overflow = "hidden";
       return () => {
         document.body.style.overflow = "";
@@ -94,6 +96,9 @@ export function CheckoutModal() {
     if (!customer.state) return fail("Please select state");
     if (!isValidPincode(customer.pincode)) return fail("Enter valid 6-digit pincode");
     if (count === 0 || orderItems.length === 0) return fail("Your cart is empty");
+    if (!meetsMinOrder(subtotal)) {
+      return fail(getMinOrderToastMessage(subtotal));
+    }
     return true;
   };
 
@@ -101,6 +106,17 @@ export function CheckoutModal() {
     showToast(message);
     return false;
   }
+
+  const copyUpiId = async () => {
+    try {
+      await navigator.clipboard.writeText(BUSINESS.upiId);
+      setUpiCopied(true);
+      showToast("UPI ID copied!");
+      window.setTimeout(() => setUpiCopied(false), 2000);
+    } catch {
+      showToast("Could not copy UPI ID");
+    }
+  };
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -125,14 +141,16 @@ export function CheckoutModal() {
       `*Phone:* ${customer.phone}`,
       customer.altPhone ? `*Alt Phone:* ${customer.altPhone}` : "",
       customer.email ? `*Email:* ${customer.email}` : "",
-      `*Address:* ${customer.address}, ${customer.city}, ${customer.state} - ${customer.pincode}`,
+      `*Address:* ${formatFullDeliveryAddress(customer)}`,
       customer.notes ? `*Notes:* ${customer.notes}` : "",
       "",
       "*Items:*",
       ...orderItems.map((line) => `• ${line.product!.name} × ${line.qty} = ₹${line.amount}`),
       "",
       `*Subtotal: ₹${subtotal}*`,
-      shipping > 0 ? `*Shipping: ₹${shipping}*` : "*Shipping: FREE*",
+      customer.city.trim()
+        ? `*Shipping (${customer.city.trim()}): ₹${shipping}*`
+        : `*Shipping: ₹${shipping}*`,
       `*Grand Total: ₹${total}*`,
       `*Payment:* ${paymentMethod} (${BUSINESS.upiId})`,
       "",
@@ -193,6 +211,9 @@ export function CheckoutModal() {
   const confirmOrder = async () => {
     if (!screenshot) return showToast("Please upload payment screenshot first");
     if (orderItems.length === 0) return showToast("Your cart is empty");
+    if (!meetsMinOrder(subtotal)) {
+      return showToast(getMinOrderToastMessage(subtotal));
+    }
     setSubmitting(true);
     try {
       const response = await fetch("/api/orders", {
@@ -301,7 +322,13 @@ export function CheckoutModal() {
               ))}
             </div>
             <div className="mt-2 border-t border-line pt-2">
-              <OrderTotalsBreakdown subtotal={subtotal} shipping={shipping} total={total} compact />
+              <OrderTotalsBreakdown
+                subtotal={subtotal}
+                shipping={shipping}
+                total={total}
+                deliveryCity={customer.city}
+                compact
+              />
             </div>
           </div>
 
@@ -412,14 +439,40 @@ export function CheckoutModal() {
               <div className="text-center">
                 <p className="text-sm text-ink-muted">Scan QR code to pay</p>
                 <div className="mt-1 text-2xl font-bold text-primary">{formatPrice(total)}</div>
-                {shipping > 0 && (
-                  <p className="mt-1 text-xs text-ink-muted">
-                    Includes {formatPrice(shipping)} shipping · Pay exact amount shown
-                  </p>
-                )}
                 <p className="mt-1 text-xs text-ink-muted">
-                  UPI: <strong className="text-ink">{BUSINESS.upiId}</strong>
+                  Includes {formatPrice(shipping)} shipping
+                  {customer.city.trim() ? ` to ${customer.city.trim()}` : ""} · Pay exact amount shown
                 </p>
+                <div className="mt-2 flex items-center justify-center gap-1.5 text-xs text-ink-muted">
+                  <span>
+                    UPI: <strong className="text-ink">{BUSINESS.upiId}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={copyUpiId}
+                    title="Copy UPI ID"
+                    aria-label="Copy UPI ID"
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-line bg-white text-ink transition hover:border-primary hover:bg-brandbg"
+                  >
+                    {upiCopied ? (
+                      <span className="text-[0.65rem] font-bold text-green">✓</span>
+                    ) : (
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-3.5 w-3.5"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden
+                      >
+                        <rect x="9" y="9" width="13" height="13" rx="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="rounded-xl border border-line bg-brandbg p-5 text-center">

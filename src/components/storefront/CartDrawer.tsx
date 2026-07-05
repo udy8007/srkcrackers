@@ -5,8 +5,9 @@ import { SafeImage } from "@/components/SafeImage";
 import { useCatalog, useCartTotals } from "./catalog-context";
 import { useCart } from "@/store/cart";
 import { useUI } from "@/store/ui";
+import { useToast } from "@/store/toast";
 import { useMounted } from "@/lib/hooks";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, getMinOrderToastMessage, meetsMinOrder } from "@/lib/utils";
 import { OrderTotalsBreakdown } from "./OrderTotalsBreakdown";
 import { scrollToId } from "@/lib/client-actions";
 import type { ProductDTO } from "@/types";
@@ -89,6 +90,7 @@ export function CartDrawer() {
   const cartOpen = useUI((s) => s.cartOpen);
   const closeCart = useUI((s) => s.closeCart);
   const openCheckout = useUI((s) => s.openCheckout);
+  const showToast = useToast((s) => s.show);
   const items = useCart((s) => s.items);
   const { getProduct } = useCatalog();
   const { subtotal, shipping, total, count } = useCartTotals(items);
@@ -106,9 +108,18 @@ export function CartDrawer() {
   if (!cartOpen) return null;
 
   const handlePlaceOrder = () => {
-    if (count === 0) return;
+    if (count === 0) {
+      showToast("Your cart is empty. Add items from the product list first.");
+      return;
+    }
+    if (!meetsMinOrder(subtotal)) {
+      showToast(getMinOrderToastMessage(subtotal));
+      return;
+    }
     openCheckout();
   };
+
+  const belowMin = mounted && count > 0 && !meetsMinOrder(subtotal);
 
   return (
     <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label="Shopping cart">
@@ -172,7 +183,7 @@ export function CartDrawer() {
             type="button"
             onClick={handlePlaceOrder}
             disabled={!mounted || count === 0}
-            className="w-full rounded-[10px] bg-gradient-to-r from-primary-bright via-primary to-primary-dark py-3.5 text-base font-bold text-white shadow-[0_4px_16px_rgba(214,40,40,0.45)] transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
+            className={`w-full rounded-[10px] bg-gradient-to-r from-primary-bright via-primary to-primary-dark py-3.5 text-base font-bold text-white shadow-[0_4px_16px_rgba(214,40,40,0.45)] transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45 ${belowMin ? "opacity-80" : ""}`}
           >
             Place Order
           </button>

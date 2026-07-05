@@ -53,7 +53,7 @@ function Marquee({
 export function MarqueeBars() {
   const offerItems: ReactNode[] = [
     <>🎇 Diwali Special — Flat <strong>80% OFF</strong> on All Crackers!</>,
-    <>🎁 <strong>FREE Postal Charge</strong> on Orders Above ₹1000!</>,
+    <>🎁 Minimum order <strong>₹{BUSINESS.minOrderAmount}</strong> · Delivery across {BUSINESS.deliveryArea}</>,
     <>🎆 Premium Sivakasi Quality Crackers</>,
     <>
       📞 Order Now:{" "}
@@ -67,7 +67,7 @@ export function MarqueeBars() {
   ];
 
   const infoItems: ReactNode[] = [
-    <>🚚 Free Delivery on orders <strong>₹{BUSINESS.freeDeliveryMin}+</strong> · ₹{BUSINESS.shippingCost} shipping below</>,
+    <>🚚 {BUSINESS.deliveryArea} delivery — <strong>₹{BUSINESS.shippingCost}</strong> shipping on all orders</>,
     <>🏛️ Govt. Licensed Fireworks Dealer — 100 KGS Capacity</>,
     <>📍 No 45, Sarathi Nagar, Morai Village, Avadi, Chennai - 600055</>,
     <>⏰ We confirm your order within 2 hours by phone call</>,

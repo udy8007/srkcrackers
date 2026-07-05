@@ -150,9 +150,7 @@ export function TrackOrder() {
               </div>
               <p className="mt-1 text-xs text-ink-muted">
                 Placed on {formatDateTime(result.createdAt)} · Subtotal {formatPrice(result.subtotal)}
-                {result.shipping > 0
-                  ? ` · Shipping ${formatPrice(result.shipping)}`
-                  : " · Free delivery"}
+                {` · Shipping ${formatPrice(result.shipping)}`}
                 {" · Total "}
                 {formatPrice(result.total)}
               </p>

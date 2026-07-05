@@ -28,9 +28,12 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-gradient-to-r from-primary-dark via-primary to-primary-dark shadow-[0_2px_14px_rgba(157,2,8,0.4)]">
-      <div className="mx-auto flex max-w-6xl items-center gap-2 px-5 py-3">
-        <a href="#home" className="flex min-w-0 items-center gap-2.5 overflow-hidden text-white">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-yellow via-gold to-orange p-[2.5px] shadow-[0_0_14px_rgba(255,195,0,0.55)]">
+      <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-3 sm:px-5">
+        <a
+          href="#home"
+          className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden text-white lg:flex-initial"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-yellow via-gold to-orange p-[2.5px] shadow-[0_0_14px_rgba(255,195,0,0.55)] sm:h-12 sm:w-12">
             <Image
               src="/logo.png"
               alt={`${BUSINESS.name} logo`}
@@ -41,10 +44,12 @@ export function Header() {
             />
           </span>
           <span className="min-w-0">
-            <span className="block truncate font-display text-[1.35rem] font-bold leading-tight">
+            <span className="block font-display text-base font-bold leading-tight sm:text-[1.35rem] lg:truncate">
               {BUSINESS.name}
             </span>
-            <span className="block text-[0.68rem] opacity-90">{BUSINESS.tagline}</span>
+            <span className="block truncate text-[0.65rem] opacity-90 sm:text-[0.68rem]">
+              {BUSINESS.tagline}
+            </span>
           </span>
         </a>
 
@@ -93,7 +98,7 @@ export function Header() {
             onClick={handleApk}
             title="Download SRK Crackers Android App (APK)"
             aria-label="Download SRK Crackers Android App APK"
-            className="flex h-11 w-11 items-center justify-center rounded-lg border-2 border-yellow bg-white text-primary-dark shadow-sm transition hover:bg-yellow hover:text-black"
+            className="hidden h-11 w-11 items-center justify-center rounded-lg border-2 border-yellow bg-white text-primary-dark shadow-sm transition hover:bg-yellow hover:text-black lg:flex"
           >
             <ApkDownloadIcon className="h-6 w-6" />
           </button>

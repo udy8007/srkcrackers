@@ -1,5 +1,5 @@
 import { BUSINESS } from "@/lib/constants";
-import { cn, formatPrice } from "@/lib/utils";
+import { cn, formatPrice, meetsMinOrder, minOrderShortfall } from "@/lib/utils";
 
 export function OrderTotalsBreakdown({
   subtotal,
@@ -7,32 +7,35 @@ export function OrderTotalsBreakdown({
   total,
   className,
   compact,
+  deliveryCity,
 }: {
   subtotal: number;
   shipping: number;
   total: number;
   className?: string;
   compact?: boolean;
+  /** Customer delivery city — shown on shipping line when provided. */
+  deliveryCity?: string;
 }) {
+  const belowMin = !meetsMinOrder(subtotal);
+  const city = deliveryCity?.trim();
+  const shippingLabel = city ? `Shipping (${city})` : "Shipping";
+
   return (
     <div className={cn(compact ? "space-y-0.5 text-xs" : "space-y-1 text-sm", className)}>
       <div className="flex justify-between gap-2 text-ink-muted">
         <span>Subtotal</span>
         <span>{formatPrice(subtotal)}</span>
       </div>
-      <div className="flex justify-between gap-2 text-ink-muted">
-        <span>Shipping</span>
-        <span>
-          {shipping === 0 ? (
-            <span className="font-semibold text-green">FREE</span>
-          ) : (
-            formatPrice(shipping)
-          )}
-        </span>
-      </div>
-      {shipping > 0 && !compact && (
-        <p className="text-xs text-ink-muted">
-          Add {formatPrice(BUSINESS.freeDeliveryMin - subtotal)} more for free delivery
+      {!belowMin && (
+        <div className="flex justify-between gap-2 text-ink-muted">
+          <span>{shippingLabel}</span>
+          <span>{formatPrice(shipping)}</span>
+        </div>
+      )}
+      {belowMin && (
+        <p className={cn("text-amber-700", compact ? "text-[0.65rem]" : "text-xs")}>
+          Minimum order {formatPrice(BUSINESS.minOrderAmount)} · Add {formatPrice(minOrderShortfall(subtotal))} more
         </p>
       )}
       <div

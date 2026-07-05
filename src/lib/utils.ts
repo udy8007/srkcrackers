@@ -31,9 +31,26 @@ export function isValidPincode(pincode: string): boolean {
   return /^\d{6}$/.test(pincode.trim());
 }
 
-/** Shipping charge for orders below the free-delivery threshold. */
+/** Flat shipping charge for Chennai delivery (only when minimum order is met). */
 export function calculateShipping(subtotal: number): number {
-  return subtotal >= BUSINESS.freeDeliveryMin ? 0 : BUSINESS.shippingCost;
+  if (subtotal <= 0 || !meetsMinOrder(subtotal)) return 0;
+  return BUSINESS.shippingCost;
+}
+
+/** Whether cart subtotal meets the minimum order amount. */
+export function meetsMinOrder(subtotal: number): boolean {
+  return subtotal >= BUSINESS.minOrderAmount;
+}
+
+/** Rupees still needed to reach the minimum order amount. */
+export function minOrderShortfall(subtotal: number): number {
+  return Math.max(0, BUSINESS.minOrderAmount - subtotal);
+}
+
+/** Toast message when the cart is below the minimum order amount. */
+export function getMinOrderToastMessage(subtotal: number): string {
+  const pending = minOrderShortfall(subtotal);
+  return `Minimum order is ${formatPrice(BUSINESS.minOrderAmount)}. Your cart is ${formatPrice(subtotal)} — add ${formatPrice(pending)} more to place your order.`;
 }
 
 /** Order totals with shipping applied. */
@@ -57,4 +74,59 @@ export function discountPercent(mrp: number, price: number): number {
 export function formatDateTime(value: string | Date): string {
   const date = typeof value === "string" ? new Date(value) : value;
   return date.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+}
+
+function normalizeAddressPart(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+/** True when `part` is already present in `text` (avoids "ponneri, ponneri" on invoices). */
+function addressPartIncluded(text: string, part: string): boolean {
+  const normalizedText = normalizeAddressPart(text);
+  const normalizedPart = normalizeAddressPart(part);
+  if (!normalizedPart) return true;
+  return (
+    normalizedText === normalizedPart ||
+    normalizedText.endsWith(normalizedPart) ||
+    normalizedText.endsWith(`, ${normalizedPart}`) ||
+    normalizedText.includes(`${normalizedPart},`)
+  );
+}
+
+/** Bill-to address lines for invoices — street/area first, then city/state/pincode without duplicates. */
+export function formatInvoiceAddressLines(customer: {
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+}): string[] {
+  const street = customer.address.trim();
+  const city = customer.city.trim();
+  const state = customer.state.trim();
+  const pincode = customer.pincode.trim();
+
+  const locationParts: string[] = [];
+  if (city && !addressPartIncluded(street, city)) locationParts.push(city);
+  if (state) locationParts.push(state);
+  let locationLine = locationParts.join(", ");
+  if (pincode) {
+    locationLine = locationLine ? `${locationLine} - ${pincode}` : pincode;
+  }
+
+  if (!street) return locationLine ? [locationLine] : [];
+  if (!locationLine) return [street];
+  if (addressPartIncluded(street, city) && street.includes(state) && street.includes(pincode)) {
+    return [street];
+  }
+  return [street, locationLine];
+}
+
+/** Single-line delivery address for WhatsApp and summaries. */
+export function formatFullDeliveryAddress(customer: {
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+}): string {
+  return formatInvoiceAddressLines(customer).join(", ");
 }

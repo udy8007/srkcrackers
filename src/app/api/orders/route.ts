@@ -73,6 +73,12 @@ export async function POST(request: NextRequest) {
     };
   });
   const subtotal = orderItems.reduce((sum, item) => sum + item.amount, 0);
+  if (subtotal < BUSINESS.minOrderAmount) {
+    return NextResponse.json(
+      { error: `Minimum order amount is ₹${BUSINESS.minOrderAmount}` },
+      { status: 400 },
+    );
+  }
   const { shipping, total } = calculateOrderTotals(subtotal);
 
   const hasPayment = Boolean(paymentScreenshot);

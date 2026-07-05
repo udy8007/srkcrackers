@@ -5,9 +5,6 @@ fireworks dealer in Mogai, Avadi, Tiruvallur. Customers browse the catalog, buil
 order with a GPay/UPI payment screenshot, and track order status. Admins manage orders and products
 from a secure dashboard.
 
-Built by porting the original single-file static site (`reference/demostaticfile.html`) into a modern
-application stack.
-
 ## Tech Stack
 
 | Layer            | Technology                                   |
@@ -44,8 +41,6 @@ srkcrackers/
 │   ├── schema.prisma          # DB models (Category, Product, Order, OrderItem, StatusHistory, AdminUser)
 │   ├── seed.ts                # Seeds categories, products, admin user
 │   └── seed-data.ts           # Catalog source data
-├── reference/
-│   └── demostaticfile.html    # Original static site (design reference)
 ├── src/
 │   ├── app/
 │   │   ├── api/
