@@ -8,6 +8,8 @@ interface CartState {
   changeQty: (id: string, delta: number) => void;
   remove: (id: string) => void;
   clear: () => void;
+  /** Drop cart lines whose product id is not in the current catalog. */
+  pruneInvalid: (validIds: Iterable<string>) => void;
 }
 
 export const useCart = create<CartState>()(
@@ -33,6 +35,19 @@ export const useCart = create<CartState>()(
           return { items };
         }),
       clear: () => set({ items: {} }),
+      pruneInvalid: (validIds) =>
+        set((state) => {
+          const valid = new Set(validIds);
+          const items = { ...state.items };
+          let changed = false;
+          for (const id of Object.keys(items)) {
+            if (!valid.has(id)) {
+              delete items[id];
+              changed = true;
+            }
+          }
+          return changed ? { items } : state;
+        }),
     }),
     { name: "srk-cart" },
   ),

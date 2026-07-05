@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useCatalog, useCartTotals } from "./catalog-context";
 import { OrderTotalsBreakdown } from "./OrderTotalsBreakdown";
@@ -8,7 +8,7 @@ import { useCart } from "@/store/cart";
 import { useUI } from "@/store/ui";
 import { useToast } from "@/store/toast";
 import { formatPrice, isValidPhone, isValidPincode } from "@/lib/utils";
-import { buildUpiPayLink, compressImage, openGooglePay, scrollToId, whatsappUrl } from "@/lib/client-actions";
+import { buildUpiPayLink, compressImage, scrollToId, whatsappUrl } from "@/lib/client-actions";
 import { BUSINESS, INDIAN_STATES, ORDER_STATUS_LABEL } from "@/lib/constants";
 import { downloadOrderInvoice } from "@/lib/invoice";
 import type { OrderStatus } from "@prisma/client";
@@ -50,9 +50,7 @@ export function CheckoutModal() {
     InvoiceData["items"]
   >([]);
   const [invoiceDownloading, setInvoiceDownloading] = useState(false);
-  const [showQr, setShowQr] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("Google Pay");
-  const gpayOpenedRef = useRef(false);
+  const paymentMethod = "UPI QR";
 
   const orderItems = useMemo(
     () =>
@@ -76,31 +74,12 @@ export function CheckoutModal() {
       setSavedTotals(null);
       setSavedInvoiceItems([]);
       setSubmitting(false);
-      setShowQr(false);
-      setPaymentMethod("Google Pay");
-      gpayOpenedRef.current = false;
       document.body.style.overflow = "hidden";
       return () => {
         document.body.style.overflow = "";
       };
     }
   }, [checkoutOpen]);
-
-  useEffect(() => {
-    const onReturnFromGPay = () => {
-      if (!gpayOpenedRef.current || step !== 2) return;
-      gpayOpenedRef.current = false;
-      setPaymentMethod("Google Pay");
-      setStep(3);
-      showToast("Upload your payment screenshot to confirm the order.");
-    };
-    document.addEventListener("visibilitychange", onReturnFromGPay);
-    window.addEventListener("focus", onReturnFromGPay);
-    return () => {
-      document.removeEventListener("visibilitychange", onReturnFromGPay);
-      window.removeEventListener("focus", onReturnFromGPay);
-    };
-  }, [step, showToast]);
 
   if (!checkoutOpen) return null;
 
@@ -114,7 +93,7 @@ export function CheckoutModal() {
     if (!customer.city.trim()) return fail("Please enter city");
     if (!customer.state) return fail("Please select state");
     if (!isValidPincode(customer.pincode)) return fail("Enter valid 6-digit pincode");
-    if (count === 0) return fail("Your cart is empty");
+    if (count === 0 || orderItems.length === 0) return fail("Your cart is empty");
     return true;
   };
 
@@ -213,6 +192,7 @@ export function CheckoutModal() {
 
   const confirmOrder = async () => {
     if (!screenshot) return showToast("Please upload payment screenshot first");
+    if (orderItems.length === 0) return showToast("Your cart is empty");
     setSubmitting(true);
     try {
       const response = await fetch("/api/orders", {
@@ -220,7 +200,7 @@ export function CheckoutModal() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customer,
-          items: Object.entries(items).map(([productId, qty]) => ({ productId, qty })),
+          items: orderItems.map((line) => ({ productId: line.product!.id, qty: line.qty })),
           paymentScreenshot: screenshot,
           paymentMethod,
         }),
@@ -261,17 +241,6 @@ export function CheckoutModal() {
 
   const upiLink = buildUpiPayLink(total);
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiLink)}`;
-
-  const handleGooglePay = () => {
-    gpayOpenedRef.current = true;
-    setPaymentMethod("Google Pay");
-    openGooglePay(total);
-  };
-
-  const handleQrPaid = () => {
-    setPaymentMethod("UPI QR");
-    setStep(3);
-  };
 
   return (
     <div
@@ -441,7 +410,7 @@ export function CheckoutModal() {
           {step === 2 && (
             <div className="space-y-4">
               <div className="text-center">
-                <p className="text-sm text-ink-muted">Choose how you want to pay</p>
+                <p className="text-sm text-ink-muted">Scan QR code to pay</p>
                 <div className="mt-1 text-2xl font-bold text-primary">{formatPrice(total)}</div>
                 {shipping > 0 && (
                   <p className="mt-1 text-xs text-ink-muted">
@@ -453,48 +422,23 @@ export function CheckoutModal() {
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={handleGooglePay}
-                className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#4285F4] px-4 py-4 text-white shadow-md transition hover:bg-[#3367D6]"
-              >
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-lg font-bold text-[#4285F4]">
-                  G
-                </span>
-                <span className="text-left">
-                  <span className="block text-base font-bold">Pay with Google Pay</span>
-                  <span className="block text-xs text-white/80">Opens GPay app · auto continues after payment</span>
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setShowQr((prev) => !prev)}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-line bg-white px-4 py-3 text-ink transition hover:border-primary hover:bg-brandbg"
-              >
-                <span className="text-xl">📷</span>
-                <span className="font-semibold">{showQr ? "Hide QR Code" : "Show QR Code"}</span>
-              </button>
-
-              {showQr && (
-                <div className="rounded-xl border border-line bg-brandbg p-5 text-center">
-                  <div className="font-semibold text-ink">Scan & Pay with any UPI app</div>
-                  <Image
-                    src={qrSrc}
-                    alt="UPI QR Code"
-                    width={220}
-                    height={220}
-                    unoptimized
-                    className="mx-auto my-3 rounded-lg bg-white p-2"
-                  />
-                  <p className="text-xs text-ink-muted">
-                    Scan with Google Pay / PhonePe / Paytm · Pay the <b>exact amount</b> shown above
-                  </p>
-                  <button type="button" onClick={handleQrPaid} className="btn-primary mt-4 w-full">
-                    I Have Paid →
-                  </button>
-                </div>
-              )}
+              <div className="rounded-xl border border-line bg-brandbg p-5 text-center">
+                <div className="font-semibold text-ink">Scan & Pay with any UPI app</div>
+                <Image
+                  src={qrSrc}
+                  alt="UPI QR Code"
+                  width={220}
+                  height={220}
+                  unoptimized
+                  className="mx-auto my-3 rounded-lg bg-white p-2"
+                />
+                <p className="text-xs text-ink-muted">
+                  Google Pay / PhonePe / Paytm · Pay the <b>exact amount</b> shown above
+                </p>
+                <button type="button" onClick={() => setStep(3)} className="btn-primary mt-4 w-full">
+                  I Have Paid →
+                </button>
+              </div>
 
               <div className="flex gap-3">
                 <button type="button" onClick={() => setStep(1)} className="btn-outline flex-1">
@@ -508,17 +452,8 @@ export function CheckoutModal() {
           {step === 3 && (
             <div className="space-y-4">
               <p className="text-sm text-ink-muted">
-                {paymentMethod === "Google Pay" ? (
-                  <>
-                    Complete payment in Google Pay, then upload your <b>payment screenshot</b> here.
-                    We verify within 2 hours.
-                  </>
-                ) : (
-                  <>
-                    Upload your <b>UPI payment screenshot</b>. We verify within 2 hours and confirm
-                    your order.
-                  </>
-                )}
+                Upload your <b>UPI payment screenshot</b>. We verify within 2 hours and confirm your
+                order.
               </p>
               <label className="flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 border-dashed border-line bg-brandbg p-6 text-center transition hover:border-primary">
                 <input type="file" accept="image/*" onChange={handleUpload} className="hidden" />

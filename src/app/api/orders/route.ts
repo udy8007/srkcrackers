@@ -52,10 +52,13 @@ export async function POST(request: NextRequest) {
 
   // ── Price from DB (authoritative) ──────────────────────────
   const products = await prisma.product.findMany({
-    where: { id: { in: [...qtyByProduct.keys()], }, active: true },
+    where: { id: { in: [...qtyByProduct.keys()] }, active: true },
   });
   if (products.length !== qtyByProduct.size) {
-    return NextResponse.json({ error: "Some products are no longer available" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Some items in your cart are outdated. Refresh the page and add them again." },
+      { status: 400 },
+    );
   }
 
   const orderItems = products.map((product) => {

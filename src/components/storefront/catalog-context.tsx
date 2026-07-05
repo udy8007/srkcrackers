@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext, useEffect, useMemo } from "react";
+import { useCart } from "@/store/cart";
 import type { CategoryWithProductsDTO, ProductDTO } from "@/types";
 import { calculateShipping } from "@/lib/utils";
 
@@ -28,6 +29,11 @@ export function CatalogProvider({
       getProduct: (id: string) => byId.get(id),
     };
   }, [categories]);
+
+  const pruneInvalid = useCart((s) => s.pruneInvalid);
+  useEffect(() => {
+    pruneInvalid(value.products.map((product) => product.id));
+  }, [value.products, pruneInvalid]);
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }
