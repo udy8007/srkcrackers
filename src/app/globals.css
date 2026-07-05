@@ -288,9 +288,6 @@ body {
 .pulse-whatsapp {
   animation: ringPulseGreen 2.2s ease-out infinite;
 }
-.pulse-chat {
-  animation: ringPulseRed 2.4s ease-out infinite;
-}
 
 /* Scroll-reveal: hidden state is only applied via JS, so no-JS/SSR stays visible */
 .reveal {
@@ -304,6 +301,25 @@ body {
   transform: none;
 }
 
+.pb-sticky {
+  padding-bottom: calc(var(--sticky-bar-offset, 116px) + 1rem);
+}
+
+:root {
+  --sticky-bar-offset: 116px;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --sticky-bar-offset: 76px;
+  }
+}
+
+/* Fallback until JS measures sticky bar; overridden by FloatingDock */
+[id^="JotformAgent-"] {
+  z-index: 50 !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-float,
   .animate-sway,
@@ -312,8 +328,7 @@ body {
   .animate-spin-slow-rev,
   .flame,
   .animate-pop,
-  .pulse-whatsapp,
-  .pulse-chat {
+  .pulse-whatsapp {
     animation: none !important;
   }
   .reveal {

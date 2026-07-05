@@ -19,32 +19,30 @@ import { Footer } from "./Footer";
 import { StickyBar } from "./StickyBar";
 import { CheckoutModal } from "./CheckoutModal";
 import { ProductModal } from "./ProductModal";
-import { Chatbot } from "./Chatbot";
-import { WhatsAppFloat } from "./WhatsAppFloat";
+import { FloatingDock } from "./FloatingDock";
 import { ScrollReveal } from "./ScrollReveal";
 import { VisitTracker } from "./VisitTracker";
 import { Toast } from "./Toast";
+import { NoupeEmbed } from "./NoupeEmbed";
 
 export function Storefront({ categories }: { categories: CategoryWithProductsDTO[] }) {
   const closeProduct = useUI((s) => s.closeProduct);
   const closeCheckout = useUI((s) => s.closeCheckout);
-  const setChat = useUI((s) => s.setChat);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         closeProduct();
         closeCheckout();
-        setChat(false);
       }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [closeProduct, closeCheckout, setChat]);
+  }, [closeProduct, closeCheckout]);
 
   return (
     <CatalogProvider categories={categories}>
-      <div className="pb-28 sm:pb-20">
+      <div className="pb-sticky">
         <TopBar />
         <Header />
         <MarqueeBars />
@@ -64,8 +62,8 @@ export function Storefront({ categories }: { categories: CategoryWithProductsDTO
       <ScrollReveal />
       <VisitTracker />
       <StickyBar />
-      <WhatsAppFloat />
-      <Chatbot />
+      <FloatingDock />
+      <NoupeEmbed />
       <ProductModal />
       <CheckoutModal />
       <Toast />
