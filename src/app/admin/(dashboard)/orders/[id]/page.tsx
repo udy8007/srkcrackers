@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { formatDateTime, formatPrice } from "@/lib/utils";
+import { formatDateTime, formatPrice, getStoredShipping } from "@/lib/utils";
 import { OrderActions } from "./OrderActions";
 import { StatusUpdater } from "./StatusUpdater";
 
@@ -19,6 +19,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   });
 
   if (!order) notFound();
+
+  const shipping = getStoredShipping(order.subtotal, order.total);
 
   return (
     <div className="space-y-6">
@@ -44,6 +46,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         state={order.state}
         pincode={order.pincode}
         total={order.total}
+        subtotal={order.subtotal}
+        shipping={shipping}
         items={order.items.map((i) => ({
           name: i.name,
           pack: i.pack,
@@ -81,6 +85,20 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   ))}
                 </tbody>
                 <tfoot>
+                  <tr className="text-sm text-ink-muted">
+                    <td colSpan={3} className="py-2 text-right">
+                      Subtotal
+                    </td>
+                    <td className="py-2 text-right">{formatPrice(order.subtotal)}</td>
+                  </tr>
+                  <tr className="text-sm text-ink-muted">
+                    <td colSpan={3} className="py-1 text-right">
+                      Shipping
+                    </td>
+                    <td className="py-1 text-right">
+                      {shipping > 0 ? formatPrice(shipping) : "FREE"}
+                    </td>
+                  </tr>
                   <tr>
                     <td colSpan={3} className="py-3 text-right font-semibold">
                       Grand Total
@@ -100,6 +118,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <div className="space-y-1 text-sm">
                 <Row label="Method" value={order.paymentMethod} />
                 <Row label="UPI ID" value={order.upiId ?? "—"} />
+                <Row label="Subtotal" value={formatPrice(order.subtotal)} />
+                <Row
+                  label="Shipping"
+                  value={shipping > 0 ? formatPrice(shipping) : "FREE"}
+                />
                 <Row label="Amount" value={formatPrice(order.total)} />
               </div>
               <div>

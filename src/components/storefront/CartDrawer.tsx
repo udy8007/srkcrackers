@@ -5,10 +5,9 @@ import { SafeImage } from "@/components/SafeImage";
 import { useCatalog, useCartTotals } from "./catalog-context";
 import { useCart } from "@/store/cart";
 import { useUI } from "@/store/ui";
-import { useToast } from "@/store/toast";
 import { useMounted } from "@/lib/hooks";
-import { BUSINESS } from "@/lib/constants";
-import { formatPrice, meetsMinOrder } from "@/lib/utils";
+import { formatPrice } from "@/lib/utils";
+import { OrderTotalsBreakdown } from "./OrderTotalsBreakdown";
 import { scrollToId } from "@/lib/client-actions";
 import type { ProductDTO } from "@/types";
 
@@ -90,10 +89,9 @@ export function CartDrawer() {
   const cartOpen = useUI((s) => s.cartOpen);
   const closeCart = useUI((s) => s.closeCart);
   const openCheckout = useUI((s) => s.openCheckout);
-  const showToast = useToast((s) => s.show);
   const items = useCart((s) => s.items);
   const { getProduct } = useCatalog();
-  const { total, count } = useCartTotals(items);
+  const { subtotal, shipping, total, count } = useCartTotals(items);
   const mounted = useMounted();
 
   const lines = useMemo(
@@ -109,14 +107,8 @@ export function CartDrawer() {
 
   const handlePlaceOrder = () => {
     if (count === 0) return;
-    if (!meetsMinOrder(total)) {
-      showToast(`Minimum order is ${formatPrice(BUSINESS.minOrder)}. Add more items to continue.`);
-      return;
-    }
     openCheckout();
   };
-
-  const belowMin = count > 0 && !meetsMinOrder(total);
 
   return (
     <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label="Shopping cart">
@@ -170,18 +162,12 @@ export function CartDrawer() {
         </div>
 
         <div className="border-t border-line bg-brandbg p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="font-semibold text-ink">Grand Total</span>
-            <span className="text-xl font-bold text-primary">
-              {formatPrice(mounted ? total : 0)}
-            </span>
-          </div>
-          {belowMin && mounted && (
-            <p className="mb-3 text-center text-xs font-semibold text-primary">
-              Minimum order {formatPrice(BUSINESS.minOrder)} — add{" "}
-              {formatPrice(BUSINESS.minOrder - total)} more
-            </p>
-          )}
+          <OrderTotalsBreakdown
+            subtotal={mounted ? subtotal : 0}
+            shipping={mounted ? shipping : 0}
+            total={mounted ? total : 0}
+            className="mb-3"
+          />
           <button
             type="button"
             onClick={handlePlaceOrder}

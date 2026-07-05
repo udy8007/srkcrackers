@@ -31,9 +31,20 @@ export function isValidPincode(pincode: string): boolean {
   return /^\d{6}$/.test(pincode.trim());
 }
 
-/** Whether cart total meets the minimum order value. */
-export function meetsMinOrder(total: number): boolean {
-  return total >= BUSINESS.minOrder;
+/** Shipping charge for orders below the free-delivery threshold. */
+export function calculateShipping(subtotal: number): number {
+  return subtotal >= BUSINESS.freeDeliveryMin ? 0 : BUSINESS.shippingCost;
+}
+
+/** Order totals with shipping applied. */
+export function calculateOrderTotals(subtotal: number) {
+  const shipping = calculateShipping(subtotal);
+  return { subtotal, shipping, total: subtotal + shipping };
+}
+
+/** Shipping stored on a saved order (total minus item subtotal). */
+export function getStoredShipping(subtotal: number, total: number): number {
+  return Math.max(0, total - subtotal);
 }
 
 /** Discount percentage from mrp -> sale price. */

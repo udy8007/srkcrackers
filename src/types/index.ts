@@ -87,6 +87,7 @@ export interface InvoiceData {
   customer: InvoiceCustomer;
   items: Pick<OrderItemDTO, "name" | "pack" | "price" | "qty" | "amount">[];
   subtotal: number;
+  shipping: number;
   total: number;
   paymentMethod?: string;
   upiId?: string;
@@ -99,6 +100,7 @@ export interface TrackOrderResult {
   statusLabel: string;
   total: number;
   subtotal: number;
+  shipping: number;
   createdAt: string;
   paymentMethod: string;
   upiId: string;

@@ -24,7 +24,8 @@ export const BUSINESS = {
   mapQuery: "Sarathi Nagar, Morai Village, Avadi, Chennai 600055, Tamil Nadu",
   mapEmbed:
     "https://maps.google.com/maps?q=13.1987642,80.0896457&z=16&hl=en&output=embed",
-  minOrder: 500,
+  freeDeliveryMin: 1000,
+  shippingCost: 100,
   yearsExperience: 10,
   apkUrl: "/srk-crackers.apk",
 } as const;

@@ -67,7 +67,7 @@ export function MarqueeBars() {
   ];
 
   const infoItems: ReactNode[] = [
-    <>⚡ Minimum Order: <strong>₹{BUSINESS.minOrder}</strong> — Tamil Nadu &amp; All India</>,
+    <>🚚 Free Delivery on orders <strong>₹{BUSINESS.freeDeliveryMin}+</strong> · ₹{BUSINESS.shippingCost} shipping below</>,
     <>🏛️ Govt. Licensed Fireworks Dealer — 100 KGS Capacity</>,
     <>📍 No 45, Sarathi Nagar, Morai Village, Avadi, Chennai - 600055</>,
     <>⏰ We confirm your order within 2 hours by phone call</>,

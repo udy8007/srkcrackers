@@ -176,21 +176,27 @@ export async function downloadOrderInvoice(data: InvoiceData) {
   let summaryY = tableEnd + 16;
 
   doc.setFillColor(...GOLD_SOFT);
-  doc.rect(pageWidth - margin - 180, summaryY - 10, 180, 52, "F");
+  doc.rect(pageWidth - margin - 180, summaryY - 10, 180, 68, "F");
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...INK);
   doc.text(`Subtotal: ${rupees(data.subtotal)}`, pageWidth - margin - 8, summaryY + 2, { align: "right" });
+  doc.text(
+    data.shipping > 0 ? `Shipping: ${rupees(data.shipping)}` : "Shipping: FREE",
+    pageWidth - margin - 8,
+    summaryY + 16,
+    { align: "right" },
+  );
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.setTextColor(...RED_DARK);
-  doc.text(`Grand Total: ${rupees(data.total)}`, pageWidth - margin - 8, summaryY + 18, { align: "right" });
+  doc.text(`Grand Total: ${rupees(data.total)}`, pageWidth - margin - 8, summaryY + 32, { align: "right" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(...MUTED);
-  doc.text("All prices in INR", pageWidth - margin - 8, summaryY + 32, { align: "right" });
+  doc.text("All prices in INR", pageWidth - margin - 8, summaryY + 46, { align: "right" });
 
-  summaryY += 58;
+  summaryY += 74;
   if (data.customer.notes?.trim()) {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
@@ -225,6 +231,7 @@ export function trackResultToInvoice(result: TrackOrderResult): InvoiceData {
     customer: result.customer,
     items: result.items,
     subtotal: result.subtotal,
+    shipping: result.shipping,
     total: result.total,
     paymentMethod: result.paymentMethod,
     upiId: result.upiId,

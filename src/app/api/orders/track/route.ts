@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
     statusLabel: ORDER_STATUS_LABEL[order.status],
     total: order.total,
     subtotal: order.subtotal,
+    shipping: order.total - order.subtotal,
     createdAt: order.createdAt.toISOString(),
     paymentMethod: order.paymentMethod,
     upiId: order.upiId ?? BUSINESS.upiId,

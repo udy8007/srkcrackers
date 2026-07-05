@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { OrderStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { BUSINESS, ORDER_STATUS_LABEL } from "@/lib/constants";
-import { generateOrderNumber, isValidPhone, isValidPincode } from "@/lib/utils";
+import { calculateOrderTotals, generateOrderNumber, isValidPhone, isValidPincode } from "@/lib/utils";
 import type { CreateOrderInput } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     };
   });
   const subtotal = orderItems.reduce((sum, item) => sum + item.amount, 0);
-  const total = subtotal;
+  const { shipping, total } = calculateOrderTotals(subtotal);
 
   const hasPayment = Boolean(paymentScreenshot);
   const status: OrderStatus = hasPayment ? "VERIFYING" : "PLACED";
@@ -108,12 +108,14 @@ export async function POST(request: NextRequest) {
           items: { create: orderItems },
           statusHistory: { create: history },
         },
-        select: { orderNumber: true, total: true, status: true, createdAt: true },
+        select: { orderNumber: true, subtotal: true, total: true, status: true, createdAt: true },
       });
 
       return NextResponse.json(
         {
           orderNumber: order.orderNumber,
+          subtotal: order.subtotal,
+          shipping: order.total - order.subtotal,
           total: order.total,
           status: order.status,
           createdAt: order.createdAt.toISOString(),

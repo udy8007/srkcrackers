@@ -3,10 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useCatalog, useCartTotals } from "./catalog-context";
+import { OrderTotalsBreakdown } from "./OrderTotalsBreakdown";
 import { useCart } from "@/store/cart";
 import { useUI } from "@/store/ui";
 import { useToast } from "@/store/toast";
-import { formatPrice, isValidPhone, isValidPincode, meetsMinOrder } from "@/lib/utils";
+import { formatPrice, isValidPhone, isValidPincode } from "@/lib/utils";
 import { buildUpiPayLink, compressImage, openGooglePay, scrollToId, whatsappUrl } from "@/lib/client-actions";
 import { BUSINESS, INDIAN_STATES, ORDER_STATUS_LABEL } from "@/lib/constants";
 import { downloadOrderInvoice } from "@/lib/invoice";
@@ -35,7 +36,7 @@ export function CheckoutModal() {
   const closeCheckout = useUI((s) => s.closeCheckout);
   const setTrackPrefill = useUI((s) => s.setTrackPrefill);
   const showToast = useToast((s) => s.show);
-  const { total } = useCartTotals(items);
+  const { subtotal, shipping, total, count } = useCartTotals(items);
 
   const [step, setStep] = useState(1);
   const [customer, setCustomer] = useState<CustomerInput>(EMPTY_CUSTOMER);
@@ -44,6 +45,10 @@ export function CheckoutModal() {
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
   const [orderCreatedAt, setOrderCreatedAt] = useState<string | null>(null);
   const [orderStatus, setOrderStatus] = useState<OrderStatus | null>(null);
+  const [savedTotals, setSavedTotals] = useState<{ subtotal: number; shipping: number; total: number } | null>(null);
+  const [savedInvoiceItems, setSavedInvoiceItems] = useState<
+    InvoiceData["items"]
+  >([]);
   const [invoiceDownloading, setInvoiceDownloading] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Google Pay");
@@ -68,6 +73,8 @@ export function CheckoutModal() {
       setOrderNumber(null);
       setOrderCreatedAt(null);
       setOrderStatus(null);
+      setSavedTotals(null);
+      setSavedInvoiceItems([]);
       setSubmitting(false);
       setShowQr(false);
       setPaymentMethod("Google Pay");
@@ -107,9 +114,7 @@ export function CheckoutModal() {
     if (!customer.city.trim()) return fail("Please enter city");
     if (!customer.state) return fail("Please select state");
     if (!isValidPincode(customer.pincode)) return fail("Enter valid 6-digit pincode");
-    if (!meetsMinOrder(total)) {
-      return fail(`Minimum order is ${formatPrice(BUSINESS.minOrder)}. Add more items to your cart.`);
-    }
+    if (count === 0) return fail("Your cart is empty");
     return true;
   };
 
@@ -147,6 +152,8 @@ export function CheckoutModal() {
       "*Items:*",
       ...orderItems.map((line) => `• ${line.product!.name} × ${line.qty} = ₹${line.amount}`),
       "",
+      `*Subtotal: ₹${subtotal}*`,
+      shipping > 0 ? `*Shipping: ₹${shipping}*` : "*Shipping: FREE*",
       `*Grand Total: ₹${total}*`,
       `*Payment:* ${paymentMethod} (${BUSINESS.upiId})`,
       "",
@@ -157,7 +164,9 @@ export function CheckoutModal() {
     return lines.filter(Boolean).join("\n");
   };
 
-  const buildInvoiceData = (id: string, createdAt: string, status: OrderStatus): InvoiceData => ({
+  const buildInvoiceData = (id: string, createdAt: string, status: OrderStatus): InvoiceData => {
+    const totals = savedTotals ?? { subtotal, shipping, total };
+    return {
     orderNumber: id,
     createdAt,
     status,
@@ -173,18 +182,23 @@ export function CheckoutModal() {
       pincode: customer.pincode,
       notes: customer.notes || null,
     },
-    items: orderItems.map((line) => ({
-      name: line.product!.name,
-      pack: line.product!.pack,
-      price: line.product!.price,
-      qty: line.qty,
-      amount: line.amount,
-    })),
-    subtotal: total,
-    total,
+    items:
+      savedInvoiceItems.length > 0
+        ? savedInvoiceItems
+        : orderItems.map((line) => ({
+            name: line.product!.name,
+            pack: line.product!.pack,
+            price: line.product!.price,
+            qty: line.qty,
+            amount: line.amount,
+          })),
+    subtotal: totals.subtotal,
+    shipping: totals.shipping,
+    total: totals.total,
     paymentMethod,
     upiId: BUSINESS.upiId,
-  });
+  };
+  };
 
   const triggerInvoiceDownload = async (id: string, createdAt: string, status: OrderStatus) => {
     setInvoiceDownloading(true);
@@ -219,6 +233,15 @@ export function CheckoutModal() {
       setOrderNumber(data.orderNumber);
       setOrderCreatedAt(data.createdAt);
       setOrderStatus(data.status);
+      const invoiceItems = orderItems.map((line) => ({
+        name: line.product!.name,
+        pack: line.product!.pack,
+        price: line.product!.price,
+        qty: line.qty,
+        amount: line.amount,
+      }));
+      setSavedTotals({ subtotal: data.subtotal, shipping: data.shipping, total: data.total });
+      setSavedInvoiceItems(invoiceItems);
       await triggerInvoiceDownload(data.orderNumber, data.createdAt, data.status);
       clearCart();
       setStep(4);
@@ -308,9 +331,8 @@ export function CheckoutModal() {
                 </div>
               ))}
             </div>
-            <div className="mt-2 flex justify-between border-t border-line pt-2 font-bold text-primary">
-              <span>Grand Total</span>
-              <span>{formatPrice(total)}</span>
+            <div className="mt-2 border-t border-line pt-2">
+              <OrderTotalsBreakdown subtotal={subtotal} shipping={shipping} total={total} compact />
             </div>
           </div>
 
@@ -421,6 +443,11 @@ export function CheckoutModal() {
               <div className="text-center">
                 <p className="text-sm text-ink-muted">Choose how you want to pay</p>
                 <div className="mt-1 text-2xl font-bold text-primary">{formatPrice(total)}</div>
+                {shipping > 0 && (
+                  <p className="mt-1 text-xs text-ink-muted">
+                    Includes {formatPrice(shipping)} shipping · Pay exact amount shown
+                  </p>
+                )}
                 <p className="mt-1 text-xs text-ink-muted">
                   UPI: <strong className="text-ink">{BUSINESS.upiId}</strong>
                 </p>

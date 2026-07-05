@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useMemo } from "react";
 import type { CategoryWithProductsDTO, ProductDTO } from "@/types";
+import { calculateShipping } from "@/lib/utils";
 
 interface CatalogContextValue {
   categories: CategoryWithProductsDTO[];
@@ -43,14 +44,15 @@ export function useCatalog(): CatalogContextValue {
 export function useCartTotals(items: Record<string, number>) {
   const { getProduct } = useCatalog();
   return useMemo(() => {
-    let total = 0;
+    let subtotal = 0;
     let count = 0;
     for (const [id, qty] of Object.entries(items)) {
       const product = getProduct(id);
       if (!product) continue;
-      total += product.price * qty;
+      subtotal += product.price * qty;
       count += qty;
     }
-    return { total, count };
+    const shipping = calculateShipping(subtotal);
+    return { subtotal, shipping, total: subtotal + shipping, count };
   }, [items, getProduct]);
 }

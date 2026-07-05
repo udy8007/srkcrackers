@@ -149,7 +149,12 @@ export function TrackOrder() {
                 </span>
               </div>
               <p className="mt-1 text-xs text-ink-muted">
-                Placed on {formatDateTime(result.createdAt)} · Total {formatPrice(result.total)}
+                Placed on {formatDateTime(result.createdAt)} · Subtotal {formatPrice(result.subtotal)}
+                {result.shipping > 0
+                  ? ` · Shipping ${formatPrice(result.shipping)}`
+                  : " · Free delivery"}
+                {" · Total "}
+                {formatPrice(result.total)}
               </p>
 
               <button

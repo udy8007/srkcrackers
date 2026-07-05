@@ -24,6 +24,8 @@ interface OrderActionsProps {
   city: string;
   state: string;
   pincode: string;
+  subtotal: number;
+  shipping: number;
   total: number;
   items: OrderItem[];
 }
@@ -66,7 +68,9 @@ export function OrderActions(props: OrderActionsProps) {
       ${props.items.map((i) => `<tr><td>${i.name}</td><td>${i.pack}</td><td>${i.qty}</td><td>${formatPrice(i.amount)}</td></tr>`).join("")}
     </tbody>
   </table>
-  <div class="total">Total: ${formatPrice(props.total)}</div>
+  <p style="text-align:right;margin-top:12px;font-size:14px">Subtotal: ${formatPrice(props.subtotal)}</p>
+  <p style="text-align:right;margin:4px 0;font-size:14px">Shipping: ${props.shipping > 0 ? formatPrice(props.shipping) : "FREE"}</p>
+  <div class="total">Grand Total: ${formatPrice(props.total)}</div>
   <p style="font-size:12px;color:#666;margin-top:24px">${BUSINESS.phoneDisplay} · GST ${BUSINESS.gstin}</p>
 </body></html>`;
     const w = window.open("", "_blank");
@@ -125,7 +129,9 @@ function buildWhatsAppSummary(p: OrderActionsProps) {
     "*Items:*",
     ...p.items.map((i) => `• ${i.name} (${i.pack}) × ${i.qty} = ${formatPrice(i.amount)}`),
     "",
-    `*Total:* ${formatPrice(p.total)}`,
+    `*Subtotal:* ${formatPrice(p.subtotal)}`,
+    p.shipping > 0 ? `*Shipping:* ${formatPrice(p.shipping)}` : "*Shipping:* FREE",
+    `*Grand Total:* ${formatPrice(p.total)}`,
   ];
   return lines.join("\n");
 }
