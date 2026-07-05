@@ -40,6 +40,7 @@ export function OrderActions(props: OrderActionsProps) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const summary = buildWhatsAppSummary(props);
 
@@ -91,6 +92,26 @@ export function OrderActions(props: OrderActionsProps) {
     }
   };
 
+  const deleteOrder = async () => {
+    if (
+      !confirm(
+        `Reset order ${props.orderNumber}? This permanently removes the order and cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${props.orderId}`, { method: "DELETE" });
+      if (res.ok) {
+        router.push("/admin/orders");
+        router.refresh();
+      }
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="flex flex-wrap gap-2">
       <button type="button" onClick={copySummary} className="btn-outline px-3 py-2 text-xs">
@@ -109,6 +130,14 @@ export function OrderActions(props: OrderActionsProps) {
           {cancelling ? "Cancelling..." : "Cancel Order"}
         </button>
       )}
+      <button
+        type="button"
+        onClick={deleteOrder}
+        disabled={deleting}
+        className="rounded-lg border border-red/40 bg-red px-3 py-2 text-xs font-semibold text-white hover:bg-red/90 disabled:opacity-50"
+      >
+        {deleting ? "Resetting..." : "Reset Order"}
+      </button>
     </div>
   );
 }

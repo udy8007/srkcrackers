@@ -12,6 +12,7 @@ const NAV = [
   { href: "/admin/products", label: "Products", icon: "🎆" },
   { href: "/admin/categories", label: "Categories", icon: "🏷️" },
   { href: "/admin/analytics", label: "Analytics", icon: "📈" },
+  { href: "/admin/settings", label: "Settings", icon: "⚙️" },
 ];
 
 export function AdminShell({
@@ -63,6 +64,12 @@ export function AdminShell({
             <div className="text-sm font-semibold leading-tight">{name}</div>
             <div className="text-[0.7rem] text-white/70">{email}</div>
           </div>
+          <Link
+            href="/admin/settings"
+            className="hidden rounded-lg bg-white/15 px-3 py-1.5 text-sm font-semibold transition hover:bg-white/25 sm:inline-block"
+          >
+            Settings
+          </Link>
           <button
             type="button"
             onClick={() => signOut({ callbackUrl: "/admin/login" })}

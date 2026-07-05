@@ -144,6 +144,23 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   return NextResponse.json(serializeOrder(order));
 }
 
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const existing = await prisma.order.findUnique({ where: { id }, select: { id: true, orderNumber: true } });
+  if (!existing) {
+    return NextResponse.json({ error: "Order not found" }, { status: 404 });
+  }
+
+  await prisma.order.delete({ where: { id } });
+
+  return NextResponse.json({ ok: true, orderNumber: existing.orderNumber });
+}
+
 type OrderWithRelations = Prisma.OrderGetPayload<{
   include: { items: true; statusHistory: true };
 }>;
