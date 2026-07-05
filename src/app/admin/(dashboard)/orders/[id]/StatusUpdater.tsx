@@ -136,16 +136,24 @@ export function StatusUpdater({
         </label>
       )}
 
-      <textarea
-        className="input min-h-16"
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        placeholder={
-          status === "DISPATCHED"
-            ? "Postal receipt / tracking note (optional)"
-            : "Optional note (e.g. courier name, tracking id)"
-        }
-      />
+      <label className="block">
+        <span className="mb-1 block text-xs font-semibold text-ink">
+          Comment for customer <span className="font-normal text-ink-muted">(optional)</span>
+        </span>
+        <textarea
+          className="input min-h-16"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder={
+            status === "DISPATCHED"
+              ? "e.g. Postal receipt no., tracking ID — visible on Track Order"
+              : "e.g. Payment verified, packing started — visible on Track Order"
+          }
+        />
+        <span className="mt-1 block text-xs text-ink-muted">
+          Shown to the customer on the Track Order page when provided.
+        </span>
+      </label>
       <button
         type="button"
         onClick={save}

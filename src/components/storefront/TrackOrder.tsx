@@ -235,6 +235,11 @@ export function TrackOrder() {
                               {formatDateTime(historyEntry.createdAt)}
                             </p>
                           )}
+                          {historyEntry?.note?.trim() && (
+                            <p className="mt-1.5 rounded-md bg-brandbg px-2.5 py-1.5 text-xs leading-relaxed text-ink">
+                              {historyEntry.note}
+                            </p>
+                          )}
                         </div>
                       </li>
                     );
