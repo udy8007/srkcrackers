@@ -11,15 +11,11 @@ import { formatPrice, formatFullDeliveryAddress, getMinOrderToastMessage, isVali
 import {
   buildUpiPayLink,
   compressImage,
-  openUpiApp,
   scrollToId,
-  upiAppPaymentMethodLabel,
-  UPI_PAYMENT_APPS,
   whatsappUrl,
 } from "@/lib/client-actions";
-import type { UpiAppId } from "@/lib/client-actions";
-import { UpiAppIcon } from "./UpiAppIcon";
 import { BUSINESS, INDIAN_STATES, ORDER_STATUS_LABEL } from "@/lib/constants";
+import { isCustomerComplete, loadSavedCustomer, saveCustomerDetails } from "@/lib/checkout-storage";
 import { downloadOrderInvoice } from "@/lib/invoice";
 import type { OrderStatus } from "@prisma/client";
 import type { CustomerInput, InvoiceData } from "@/types";
@@ -63,7 +59,11 @@ export function CheckoutModal() {
   const [upiCopied, setUpiCopied] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("UPI QR");
   const [draftOrderId, setDraftOrderId] = useState<string | null>(null);
-  const upiAppOpenedRef = useRef(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [paymentDetailsCopied, setPaymentDetailsCopied] = useState(false);
+  const leftForPaymentRef = useRef(false);
+  const ignoreVisibilityRef = useRef(false);
+  const hiddenAtRef = useRef(0);
 
   const orderItems = useMemo(
     () =>
@@ -110,7 +110,16 @@ export function CheckoutModal() {
 
   useEffect(() => {
     if (checkoutOpen) {
-      setStep(1);
+      const saved = loadSavedCustomer();
+      const canSkipToPayment =
+        saved &&
+        count > 0 &&
+        orderItems.length > 0 &&
+        meetsMinOrder(subtotal) &&
+        isCustomerComplete(saved);
+
+      setCustomer(saved ?? EMPTY_CUSTOMER);
+      setStep(canSkipToPayment ? 2 : 1);
       setScreenshot(null);
       setOrderNumber(null);
       setOrderCreatedAt(null);
@@ -119,38 +128,114 @@ export function CheckoutModal() {
       setSavedInvoiceItems([]);
       setSubmitting(false);
       setUpiCopied(false);
+      setPaymentDetailsCopied(false);
       setPaymentMethod("UPI QR");
       setDraftOrderId(null);
-      upiAppOpenedRef.current = false;
+      leftForPaymentRef.current = false;
       document.body.style.overflow = "hidden";
+
+      if (canSkipToPayment && saved) {
+        window.setTimeout(() => {
+          void fetch("/api/orders/draft", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              customer: saved,
+              items: Object.entries(items)
+                .map(([productId, qty]) => ({ productId, qty }))
+                .filter((line) => line.qty > 0),
+              checkoutStep: "PAYMENT",
+            }),
+          })
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+              if (data?.draftOrderId) setDraftOrderId(data.draftOrderId);
+            })
+            .catch(() => {});
+        }, 0);
+      }
+
       return () => {
         document.body.style.overflow = "";
       };
     }
-  }, [checkoutOpen]);
+  }, [checkoutOpen, count, items, orderItems.length, subtotal]);
 
   useEffect(() => {
-    const onReturnFromUpiApp = () => {
-      if (!upiAppOpenedRef.current || step !== 2) return;
-      if (document.visibilityState === "hidden") return;
-      upiAppOpenedRef.current = false;
-      setStep(3);
-      showToast("Upload your payment screenshot to confirm the order.");
-    };
-    document.addEventListener("visibilitychange", onReturnFromUpiApp);
-    window.addEventListener("focus", onReturnFromUpiApp);
-    window.addEventListener("pageshow", onReturnFromUpiApp);
-    return () => {
-      document.removeEventListener("visibilitychange", onReturnFromUpiApp);
-      window.removeEventListener("focus", onReturnFromUpiApp);
-      window.removeEventListener("pageshow", onReturnFromUpiApp);
-    };
-  }, [step, showToast]);
+    setIsMobile(/android|iphone|ipad|ipod/i.test(navigator.userAgent));
+  }, []);
 
   useEffect(() => {
     if (!checkoutOpen || step !== 3) return;
     void saveCheckoutDraft({ checkoutStep: "SCREENSHOT" });
   }, [checkoutOpen, step, saveCheckoutDraft]);
+
+  const paymentCopyText = useMemo(
+    () => `Pay ${formatPrice(total)} to ${BUSINESS.upiId} (SRK Crackers Order)`,
+    [total],
+  );
+
+  const copyPaymentDetails = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(paymentCopyText);
+      setPaymentDetailsCopied(true);
+      setUpiCopied(true);
+      showToast("Payment details copied — open GPay / PhonePe / Paytm");
+      window.setTimeout(() => {
+        setPaymentDetailsCopied(false);
+        setUpiCopied(false);
+      }, 2500);
+    } catch {
+      showToast("Could not copy payment details");
+    }
+  }, [paymentCopyText, showToast]);
+
+  useEffect(() => {
+    if (!checkoutOpen || step !== 2 || !isMobile) return;
+    void copyPaymentDetails();
+  }, [checkoutOpen, step, isMobile, copyPaymentDetails]);
+
+  useEffect(() => {
+    if (!checkoutOpen || step !== 2) return;
+    const onVisibility = () => {
+      if (ignoreVisibilityRef.current) return;
+      if (document.visibilityState === "hidden") {
+        hiddenAtRef.current = Date.now();
+        leftForPaymentRef.current = true;
+        return;
+      }
+      if (!leftForPaymentRef.current) return;
+      if (Date.now() - hiddenAtRef.current < 1500) {
+        leftForPaymentRef.current = false;
+        return;
+      }
+      leftForPaymentRef.current = false;
+      setStep(3);
+      showToast("Welcome back — upload your payment screenshot.");
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [checkoutOpen, step, showToast]);
+
+  const sharePaymentDetails = async () => {
+    if (!navigator.share) {
+      await copyPaymentDetails();
+      return;
+    }
+    ignoreVisibilityRef.current = true;
+    try {
+      await navigator.share({
+        title: "SRK Crackers Payment",
+        text: paymentCopyText,
+      });
+    } catch {
+      // User cancelled share sheet.
+    } finally {
+      window.setTimeout(() => {
+        ignoreVisibilityRef.current = false;
+      }, 1500);
+    }
+  };
 
   if (!checkoutOpen) return null;
 
@@ -187,16 +272,9 @@ export function CheckoutModal() {
     }
   };
 
-  const handlePayWithApp = async (appId: UpiAppId) => {
-    const method = upiAppPaymentMethodLabel(appId);
-    setPaymentMethod(method);
-    upiAppOpenedRef.current = true;
-    await saveCheckoutDraft({ paymentMethod: method, checkoutStep: "PAYMENT" });
-    openUpiApp(appId, total);
-  };
-
   const continueToPayment = async () => {
     if (!validateDetails()) return;
+    saveCustomerDetails(customer);
     setStep(2);
     await saveCheckoutDraft({ checkoutStep: "PAYMENT" });
   };
@@ -570,38 +648,41 @@ export function CheckoutModal() {
                 <Image
                   src={qrSrc}
                   alt="UPI QR Code"
-                  width={220}
-                  height={220}
+                  width={isMobile ? 260 : 220}
+                  height={isMobile ? 260 : 220}
                   unoptimized
                   className="mx-auto my-3 rounded-lg bg-white p-2"
                 />
                 <p className="text-xs text-ink-muted">
                   Google Pay / PhonePe / Paytm · Pay the <b>exact amount</b> shown above
                 </p>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-center text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                  Or pay in app
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  {UPI_PAYMENT_APPS.map((app) => (
+                {isMobile ? (
+                  <div className="mt-3 space-y-2">
+                    <div className="rounded-lg border border-green/30 bg-green/5 px-3 py-2.5 text-left text-[0.7rem] leading-relaxed text-ink">
+                      {paymentDetailsCopied ? (
+                        <span className="font-semibold text-green">✓ Amount & UPI ID copied</span>
+                      ) : (
+                        <span>Copying payment details…</span>
+                      )}
+                      <p className="mt-1 text-ink-muted">
+                        Open your UPI app → scan QR from screenshot, or paste UPI ID with{" "}
+                        {formatPrice(total)}
+                      </p>
+                    </div>
                     <button
-                      key={app.id}
                       type="button"
-                      onClick={() => void handlePayWithApp(app.id)}
-                      aria-label={`Pay with ${app.label}`}
-                      className="flex min-h-[4.75rem] flex-col items-center justify-center gap-1 rounded-xl border border-line bg-white px-2 py-3 shadow-sm transition hover:border-primary hover:shadow active:scale-[0.98]"
+                      onClick={() => void sharePaymentDetails()}
+                      className="btn-yellow w-full text-sm"
                     >
-                      <UpiAppIcon appId={app.id} />
+                      Share to UPI App
                     </button>
-                  ))}
-                </div>
-                <p className="text-center text-[0.65rem] leading-relaxed text-ink-muted">
-                  Opens {formatPrice(total)} in the selected app. After payment, return here — we&apos;ll
-                  take you to upload screenshot automatically.
-                </p>
-                <button type="button" onClick={() => void handlePaidViaQr()} className="btn-primary mt-2 w-full">
+                  </div>
+                ) : (
+                  <p className="mt-2 text-[0.7rem] text-ink-muted">
+                    Scan with your phone camera or any UPI app
+                  </p>
+                )}
+                <button type="button" onClick={() => void handlePaidViaQr()} className="btn-primary mt-4 w-full">
                   I Have Paid →
                 </button>
               </div>
