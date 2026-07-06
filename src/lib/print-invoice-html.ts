@@ -177,24 +177,34 @@ export function buildPrintInvoiceHtml(data: PrintInvoiceData): string {
     table {
       width: 100%;
       border-collapse: collapse;
+      table-layout: fixed;
       margin: 8px 0 16px;
       font-size: 12px;
     }
+    col.sno { width: 7%; }
+    col.product { width: 34%; }
+    col.pack { width: 15%; }
+    col.qty { width: 8%; }
+    col.rate { width: 16%; }
+    col.amount { width: 20%; }
     th {
       background: #9d0208;
       color: #fff;
       font-weight: 700;
       padding: 8px 6px;
-      text-align: left;
       border: 1px solid #8a0207;
+      vertical-align: middle;
     }
+    th.left { text-align: left; }
     td {
       padding: 7px 6px;
       border: 1px solid #ebe1d7;
-      vertical-align: top;
+      vertical-align: middle;
+      word-wrap: break-word;
     }
     tr.stripe td { background: #fff8f2; }
     .center { text-align: center; }
+    .left { text-align: left; }
     .right { text-align: right; }
     .amount { font-weight: 700; color: #9d0208; }
     .summary-wrap { display: flex; justify-content: flex-end; margin-top: 4px; }
@@ -282,11 +292,19 @@ export function buildPrintInvoiceHtml(data: PrintInvoiceData): string {
     </div>
 
     <table>
+      <colgroup>
+        <col class="sno" />
+        <col class="product" />
+        <col class="pack" />
+        <col class="qty" />
+        <col class="rate" />
+        <col class="amount" />
+      </colgroup>
       <thead>
         <tr>
           <th class="center">S.No</th>
-          <th>Product</th>
-          <th>Pack</th>
+          <th class="left">Product</th>
+          <th class="left">Pack</th>
           <th class="center">Qty</th>
           <th class="right">Rate</th>
           <th class="right">Amount</th>

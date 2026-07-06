@@ -121,6 +121,15 @@ export async function downloadOrderInvoice(data: InvoiceData) {
   }
 
   const tableStart = Math.max(billY, detailY) + 10;
+  const tableWidth = pageWidth - 2 * margin;
+  const colW = {
+    sno: tableWidth * 0.07,
+    product: tableWidth * 0.34,
+    pack: tableWidth * 0.15,
+    qty: tableWidth * 0.08,
+    rate: tableWidth * 0.16,
+    amount: tableWidth * 0.2,
+  };
   const head = [["S.No", "Product", "Pack", "Qty", "Rate", "Amount"]];
   const body: RowInput[] = data.items.map((item, index) => [
     index + 1,
@@ -135,31 +144,33 @@ export async function downloadOrderInvoice(data: InvoiceData) {
     head,
     body,
     startY: tableStart,
+    tableWidth,
     margin: { left: margin, right: margin },
     styles: {
       font: "helvetica",
       fontSize: 8.5,
-      cellPadding: 4,
+      cellPadding: { top: 5, right: 6, bottom: 5, left: 6 },
       textColor: INK,
       lineColor: [235, 225, 215],
       lineWidth: 0.5,
       overflow: "linebreak",
+      valign: "middle",
     },
     headStyles: {
       fillColor: RED_DARK,
       textColor: [255, 255, 255],
       fontStyle: "bold",
       fontSize: 9,
-      halign: "center",
+      valign: "middle",
     },
     alternateRowStyles: { fillColor: STRIPE },
     columnStyles: {
-      0: { cellWidth: 34, halign: "center" },
-      1: { cellWidth: "auto" },
-      2: { cellWidth: 72 },
-      3: { cellWidth: 36, halign: "center" },
-      4: { cellWidth: 58, halign: "right" },
-      5: { cellWidth: 62, halign: "right", textColor: RED_DARK, fontStyle: "bold" },
+      0: { cellWidth: colW.sno, halign: "center" },
+      1: { cellWidth: colW.product, halign: "left" },
+      2: { cellWidth: colW.pack, halign: "left" },
+      3: { cellWidth: colW.qty, halign: "center" },
+      4: { cellWidth: colW.rate, halign: "right" },
+      5: { cellWidth: colW.amount, halign: "right", textColor: RED_DARK, fontStyle: "bold" },
     },
   });
 
