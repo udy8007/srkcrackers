@@ -16,7 +16,6 @@ import {
 } from "@/lib/client-actions";
 import { BUSINESS, INDIAN_STATES, ORDER_STATUS_LABEL } from "@/lib/constants";
 import { isCustomerComplete, loadSavedCustomer, saveCustomerDetails } from "@/lib/checkout-storage";
-import { OrderSuccessCelebration } from "./OrderSuccessCelebration";
 import { downloadOrderInvoice } from "@/lib/invoice";
 import type { OrderStatus } from "@prisma/client";
 import type { CustomerInput, InvoiceData } from "@/types";
@@ -429,7 +428,6 @@ export function CheckoutModal() {
         className="relative flex max-h-[94vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-white sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {step === 4 && orderNumber && <OrderSuccessCelebration />}
         {/* Header + steps */}
         <div className="relative bg-gradient-to-r from-primary to-primary-dark px-5 py-4 text-white">
           <button
@@ -441,7 +439,7 @@ export function CheckoutModal() {
             ✕
           </button>
           <h3 className="font-display text-lg font-bold">
-            {step === 4 ? "Order Confirmed 🎆" : "Complete Your Order"}
+            {step === 4 ? "Order Confirmed" : "Complete Your Order"}
           </h3>
           {step !== 4 && (
           <div className="mt-3 flex items-center gap-1.5">
@@ -742,8 +740,8 @@ export function CheckoutModal() {
 
           {/* Step 4 */}
           {step === 4 && orderNumber && (
-            <div className="relative py-6 text-center">
-              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green text-4xl text-white shadow-lg shadow-green/30">
+            <div className="py-6 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green text-3xl text-white">
                 ✓
               </div>
               <h4 className="mt-5 font-display text-2xl font-bold text-primary">Your Order is Confirmed!</h4>

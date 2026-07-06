@@ -257,37 +257,6 @@ body {
 .animate-spin-slow-rev {
   animation: spinSlow 56s linear infinite reverse;
 }
-@keyframes crackerBurst {
-  0% {
-    opacity: 0;
-    transform: scale(0.2) translateY(8px);
-  }
-  35% {
-    opacity: 1;
-    transform: scale(1.15) translateY(0);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.6) translateY(-28px);
-  }
-}
-@keyframes successGlow {
-  0%,
-  100% {
-    opacity: 0.35;
-    transform: translateX(-50%) scale(1);
-  }
-  50% {
-    opacity: 0.7;
-    transform: translateX(-50%) scale(1.2);
-  }
-}
-.animate-cracker-burst {
-  animation: crackerBurst 2.2s ease-out infinite;
-}
-.animate-success-glow {
-  animation: successGlow 2.8s ease-in-out infinite;
-}
 .flame {
   transform-box: fill-box;
   transform-origin: center bottom;
