@@ -31,10 +31,22 @@ export function isValidPincode(pincode: string): boolean {
   return /^\d{6}$/.test(pincode.trim());
 }
 
-/** Flat shipping charge for Chennai delivery (only when minimum order is met). */
+/** Flat shipping charge when minimum order is met; free at ₹3000+ subtotal. */
 export function calculateShipping(subtotal: number): number {
   if (subtotal <= 0 || !meetsMinOrder(subtotal)) return 0;
+  if (subtotal >= BUSINESS.freeShippingMinAmount) return 0;
   return BUSINESS.shippingCost;
+}
+
+/** Whether subtotal qualifies for free shipping (min order must also be met). */
+export function qualifiesForFreeShipping(subtotal: number): boolean {
+  return meetsMinOrder(subtotal) && subtotal >= BUSINESS.freeShippingMinAmount;
+}
+
+/** Rupees still needed on subtotal to reach free shipping. */
+export function freeShippingShortfall(subtotal: number): number {
+  if (!meetsMinOrder(subtotal)) return 0;
+  return Math.max(0, BUSINESS.freeShippingMinAmount - subtotal);
 }
 
 /** Whether cart subtotal meets the minimum order amount. */

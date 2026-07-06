@@ -10,7 +10,7 @@ export const BUSINESS = {
   whatsapp: "919841916899",
   email: "srkcrackers@gmail.com",
   gstin: "33BJBPR5461B2ZI",
-  upiId: "selvianu2107@okhdfcbank",
+  upiId: "9841916899-5@ybl",
   addressLine: "No 45, Sarathi Nagar, Morai Village, Avadi, Chennai - 600055",
   street: "No 45, Sarathi Nagar, Morai Village",
   city: "Avadi",
@@ -26,6 +26,8 @@ export const BUSINESS = {
     "https://maps.google.com/maps?q=13.1987642,80.0896457&z=16&hl=en&output=embed",
   minOrderAmount: 1250,
   shippingCost: 200,
+  /** Subtotal at or above this amount gets free shipping (min order still applies). */
+  freeShippingMinAmount: 3000,
   deliveryArea: "Chennai",
   yearsExperience: 10,
   /** Default days from dispatch until expected postal delivery. */

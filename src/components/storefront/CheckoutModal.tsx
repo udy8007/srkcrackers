@@ -608,8 +608,18 @@ export function CheckoutModal() {
                 <p className="text-sm text-ink-muted">Scan QR code to pay</p>
                 <div className="mt-1 text-2xl font-bold text-primary">{formatPrice(total)}</div>
                 <p className="mt-1 text-xs text-ink-muted">
-                  Includes {formatPrice(shipping)} shipping
-                  {customer.city.trim() ? ` to ${customer.city.trim()}` : ""} · Pay exact amount shown
+                  {shipping > 0 ? (
+                    <>
+                      Includes {formatPrice(shipping)} shipping
+                      {customer.city.trim() ? ` to ${customer.city.trim()}` : ""}
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-semibold text-green">FREE shipping</span>
+                      {customer.city.trim() ? ` to ${customer.city.trim()}` : ""}
+                    </>
+                  )}
+                  {" · "}Pay exact amount shown
                 </p>
                 <div className="mt-2 flex items-center justify-center gap-1.5 text-xs text-ink-muted">
                   <span>

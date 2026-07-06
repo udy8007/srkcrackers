@@ -59,7 +59,7 @@ const FEATURES: { title: string; desc: string; icon: ReactNode }[] = [
   },
   {
     title: "Safe & Fast Delivery",
-    desc: `Careful packing and quick delivery across ${BUSINESS.deliveryArea} — ₹${BUSINESS.shippingCost} shipping on all orders.`,
+    desc: `Careful packing and quick delivery across ${BUSINESS.deliveryArea} — ₹${BUSINESS.shippingCost} shipping, FREE on orders above ₹${BUSINESS.freeShippingMinAmount.toLocaleString("en-IN")}.`,
     icon: (
       <svg {...svgProps}>
         <path d="M2.5 6.5h10v9h-10z" />

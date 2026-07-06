@@ -67,7 +67,7 @@ export function MarqueeBars() {
   ];
 
   const infoItems: ReactNode[] = [
-    <>🚚 {BUSINESS.deliveryArea} delivery — <strong>₹{BUSINESS.shippingCost}</strong> shipping on all orders</>,
+    <>🚚 {BUSINESS.deliveryArea} — <strong>₹{BUSINESS.shippingCost}</strong> shipping · <strong>FREE</strong> above ₹{BUSINESS.freeShippingMinAmount.toLocaleString("en-IN")}</>,
     <>🏛️ Govt. Licensed Fireworks Dealer — 100 KGS Capacity</>,
     <>📍 No 45, Sarathi Nagar, Morai Village, Avadi, Chennai - 600055</>,
     <>⏰ We confirm your order within 2 hours by phone call</>,

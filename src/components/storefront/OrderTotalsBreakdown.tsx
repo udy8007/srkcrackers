@@ -1,5 +1,5 @@
 import { BUSINESS } from "@/lib/constants";
-import { cn, formatPrice, meetsMinOrder, minOrderShortfall } from "@/lib/utils";
+import { cn, formatPrice, freeShippingShortfall, meetsMinOrder, minOrderShortfall, qualifiesForFreeShipping } from "@/lib/utils";
 
 export function OrderTotalsBreakdown({
   subtotal,
@@ -20,6 +20,8 @@ export function OrderTotalsBreakdown({
   const belowMin = !meetsMinOrder(subtotal);
   const city = deliveryCity?.trim();
   const shippingLabel = city ? `Shipping (${city})` : "Shipping";
+  const freeShipping = qualifiesForFreeShipping(subtotal);
+  const shippingShortfall = freeShippingShortfall(subtotal);
 
   return (
     <div className={cn(compact ? "space-y-0.5 text-xs" : "space-y-1 text-sm", className)}>
@@ -30,8 +32,15 @@ export function OrderTotalsBreakdown({
       {!belowMin && (
         <div className="flex justify-between gap-2 text-ink-muted">
           <span>{shippingLabel}</span>
-          <span>{formatPrice(shipping)}</span>
+          <span className={freeShipping ? "font-semibold text-green" : undefined}>
+            {freeShipping ? "FREE" : formatPrice(shipping)}
+          </span>
         </div>
+      )}
+      {!belowMin && shippingShortfall > 0 && (
+        <p className={cn("text-ink-muted", compact ? "text-[0.65rem]" : "text-xs")}>
+          Add {formatPrice(shippingShortfall)} more for <strong className="text-green">FREE shipping</strong>
+        </p>
       )}
       {belowMin && (
         <p className={cn("text-amber-700", compact ? "text-[0.65rem]" : "text-xs")}>
