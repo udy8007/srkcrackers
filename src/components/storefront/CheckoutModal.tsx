@@ -699,7 +699,7 @@ export function CheckoutModal() {
               </p>
               <label className="flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 border-dashed border-line bg-brandbg p-6 text-center transition hover:border-primary">
                 <input type="file" accept="image/*" onChange={handleUpload} className="hidden" />
-                <span className="text-3xl">📷</span>
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-2xl font-light text-primary">↑</span>
                 <strong className="text-sm text-ink">Tap to upload payment screenshot</strong>
                 <span className="text-xs text-ink-muted">JPG, PNG · Max 5 MB</span>
               </label>
@@ -741,8 +741,8 @@ export function CheckoutModal() {
           {/* Step 4 */}
           {step === 4 && orderNumber && (
             <div className="py-6 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green text-3xl text-white">
-                ✓
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-yellow/20 text-4xl">
+                ⭐
               </div>
               <h4 className="mt-5 font-display text-2xl font-bold text-primary">Your Order is Confirmed!</h4>
               <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink-muted">
