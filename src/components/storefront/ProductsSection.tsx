@@ -12,32 +12,77 @@ import { useMounted } from "@/lib/hooks";
 import { formatPrice } from "@/lib/utils";
 import type { ProductDTO } from "@/types";
 
-function QtyControl({ product }: { product: ProductDTO }) {
+function QtyControl({ product, large }: { product: ProductDTO; large?: boolean }) {
   const changeQty = useCart((s) => s.changeQty);
   const qty = useCart((s) => s.items[product.id] ?? 0);
   const mounted = useMounted();
   const shown = mounted ? qty : 0;
+  const btn = large ? "h-9 w-9 text-xl" : "h-8 w-8 text-lg";
+  const count = large ? "w-10 text-base" : "w-9 text-sm";
 
   return (
-    <div className="inline-flex items-center overflow-hidden rounded-lg border border-line">
+    <div className="inline-flex items-center overflow-hidden rounded-lg border border-line shadow-sm">
       <button
         type="button"
         aria-label="Remove"
         onClick={() => changeQty(product.id, -1)}
-        className="flex h-8 w-8 items-center justify-center bg-brandbg text-lg font-bold text-primary transition hover:bg-line"
+        className={`flex ${btn} items-center justify-center bg-brandbg font-bold text-primary transition hover:bg-line`}
       >
         −
       </button>
-      <span className="w-9 text-center text-sm font-semibold">{shown}</span>
+      <span className={`${count} text-center font-semibold`}>{shown}</span>
       <button
         type="button"
         aria-label="Add"
         onClick={() => changeQty(product.id, 1)}
-        className="flex h-8 w-8 items-center justify-center bg-primary text-lg font-bold text-white transition hover:bg-primary-dark"
+        className={`flex ${btn} items-center justify-center bg-primary font-bold text-white transition hover:bg-primary-dark`}
       >
         +
       </button>
     </div>
+  );
+}
+
+function ProductCardMobile({ product }: { product: ProductDTO }) {
+  const openProduct = useUI((s) => s.openProduct);
+  const qty = useCart((s) => s.items[product.id] ?? 0);
+  const mounted = useMounted();
+  const amount = mounted ? qty * product.price : 0;
+
+  return (
+    <article className="flex items-start gap-3 border-b border-line p-3 last:border-0">
+      <button type="button" onClick={() => openProduct(product.id)} className="shrink-0">
+        <SafeImage
+          src={product.imageUrl}
+          alt={product.name}
+          width={72}
+          height={72}
+          className="h-[4.5rem] w-[4.5rem] rounded-lg object-cover shadow-sm"
+        />
+      </button>
+
+      <div className="min-w-0 flex-1">
+        <button
+          type="button"
+          onClick={() => openProduct(product.id)}
+          className="text-left text-sm font-semibold leading-snug text-ink hover:text-primary"
+        >
+          {product.name}
+        </button>
+        <p className="mt-0.5 text-xs text-ink-muted">{product.pack}</p>
+        <div className="mt-1.5 flex flex-wrap items-baseline gap-2">
+          <span className="text-xs text-ink-muted line-through">{formatPrice(product.mrp)}</span>
+          <span className="text-base font-bold text-green">{formatPrice(product.price)}</span>
+        </div>
+        {mounted && qty > 0 && (
+          <p className="mt-1 text-xs font-semibold text-primary">Amount: {formatPrice(amount)}</p>
+        )}
+      </div>
+
+      <div className="flex shrink-0 flex-col items-end gap-1 pt-1">
+        <QtyControl product={product} large />
+      </div>
+    </article>
   );
 }
 
@@ -119,7 +164,7 @@ export function ProductsSection() {
       <div className="mx-auto max-w-5xl">
         <SectionHead
           title="Crackers Price List — 80% Discount"
-          subtitle="Select a category to expand · Tap product name or image for full description"
+          subtitle="Select a category · Tap product for details · Use + to add to cart"
         />
 
         <div className="mb-6 flex justify-center">
@@ -174,24 +219,32 @@ export function ProductsSection() {
                 </button>
 
                 {isOpen && (
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[480px]">
-                      <thead>
-                        <tr className="bg-brandbg text-left text-[0.7rem] uppercase tracking-wide text-ink-muted">
-                          <th className="p-2 font-semibold">Image</th>
-                          <th className="p-2 font-semibold">Products</th>
-                          <th className="p-2 text-center font-semibold">Price</th>
-                          <th className="p-2 text-center font-semibold">Qty</th>
-                          <th className="p-2 text-right font-semibold">Amount</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {category.products.map((product) => (
-                          <ProductRow key={product.id} product={product} />
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <>
+                    <div className="md:hidden">
+                      {category.products.map((product) => (
+                        <ProductCardMobile key={product.id} product={product} />
+                      ))}
+                    </div>
+
+                    <div className="hidden overflow-x-auto md:block">
+                      <table className="w-full min-w-[640px]">
+                        <thead>
+                          <tr className="bg-brandbg text-left text-[0.7rem] uppercase tracking-wide text-ink-muted">
+                            <th className="p-2 font-semibold">Image</th>
+                            <th className="p-2 font-semibold">Products</th>
+                            <th className="p-2 text-center font-semibold">Price</th>
+                            <th className="p-2 text-center font-semibold">Qty</th>
+                            <th className="p-2 text-right font-semibold">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {category.products.map((product) => (
+                            <ProductRow key={product.id} product={product} />
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
                 )}
               </div>
             );
