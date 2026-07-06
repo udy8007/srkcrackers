@@ -52,6 +52,7 @@ export function OrdersManager() {
   const [bulkStatus, setBulkStatus] = useState<OrderStatus>("CONFIRMED");
   const [bulkBusy, setBulkBusy] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [abandonedCount, setAbandonedCount] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -77,6 +78,7 @@ export function OrdersManager() {
       if (overviewRes.ok) {
         const ov = await overviewRes.json();
         setPendingCount(ov.orders?.pending ?? 0);
+        setAbandonedCount(ov.orders?.abandoned ?? 0);
       }
     } finally {
       setLoading(false);
@@ -179,6 +181,7 @@ export function OrdersManager() {
           <h1 className="font-display text-2xl font-bold text-ink">Orders</h1>
           <p className="text-sm text-ink-muted">
             {total} matching · {pendingCount} pending verification
+            {abandonedCount > 0 ? ` · ${abandonedCount} incomplete checkout${abandonedCount === 1 ? "" : "s"}` : ""}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

@@ -18,7 +18,7 @@ export async function GET() {
     prisma.order.count({ where: { createdAt: { gte: startOfToday } } }),
     prisma.order.aggregate({
       _sum: { total: true },
-      where: { status: { notIn: ["CANCELLED"] } },
+      where: { status: { notIn: ["CANCELLED", "PAYMENT_PENDING"] } },
     }),
     prisma.product.groupBy({ by: ["active"], _count: { _all: true } }),
     prisma.category.findMany({
@@ -45,6 +45,7 @@ export async function GET() {
       revenue: revenue._sum.total ?? 0,
       pending:
         (byStatus.PLACED ?? 0) + (byStatus.PAYMENT_UPLOADED ?? 0) + (byStatus.VERIFYING ?? 0),
+      abandoned: byStatus.PAYMENT_PENDING ?? 0,
     },
     products: { active: activeProducts, hidden: hiddenProducts, total: activeProducts + hiddenProducts },
     categories: categoryStats.map((c) => ({

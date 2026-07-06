@@ -38,6 +38,13 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         <StatusBadge status={order.status} />
       </div>
 
+      {order.status === "PAYMENT_PENDING" && (
+        <div className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-900">
+          <strong>Incomplete checkout.</strong> Customer entered details and reached payment but did not
+          finish. Call or WhatsApp them to complete the order.
+        </div>
+      )}
+
       <OrderActions
         orderId={order.id}
         orderNumber={order.orderNumber}

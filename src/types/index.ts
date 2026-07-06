@@ -45,6 +45,16 @@ export interface CreateOrderInput {
   items: CartLineInput[];
   paymentScreenshot?: string;
   paymentMethod?: string;
+  draftOrderId?: string;
+}
+
+/** Payload sent to POST /api/orders/draft (incomplete checkout). */
+export interface CheckoutDraftInput {
+  customer: CustomerInput;
+  items: CartLineInput[];
+  draftOrderId?: string;
+  paymentMethod?: string;
+  checkoutStep?: "PAYMENT" | "SCREENSHOT";
 }
 
 /** Status history entry for the tracking timeline. */

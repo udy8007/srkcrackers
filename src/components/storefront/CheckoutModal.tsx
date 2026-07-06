@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useCatalog, useCartTotals } from "./catalog-context";
 import { OrderTotalsBreakdown } from "./OrderTotalsBreakdown";
@@ -62,6 +62,7 @@ export function CheckoutModal() {
   const [invoiceDownloading, setInvoiceDownloading] = useState(false);
   const [upiCopied, setUpiCopied] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("UPI QR");
+  const [draftOrderId, setDraftOrderId] = useState<string | null>(null);
   const upiAppOpenedRef = useRef(false);
 
   const orderItems = useMemo(
@@ -76,6 +77,37 @@ export function CheckoutModal() {
     [items, getProduct],
   );
 
+  const cartLines = useMemo(
+    () => orderItems.map((line) => ({ productId: line.product!.id, qty: line.qty })),
+    [orderItems],
+  );
+
+  const saveCheckoutDraft = useCallback(
+    async (opts?: { paymentMethod?: string; checkoutStep?: "PAYMENT" | "SCREENSHOT" }) => {
+      if (orderItems.length === 0) return;
+      try {
+        const response = await fetch("/api/orders/draft", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            customer,
+            items: cartLines,
+            draftOrderId: draftOrderId ?? undefined,
+            paymentMethod: opts?.paymentMethod ?? paymentMethod,
+            checkoutStep: opts?.checkoutStep,
+          }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setDraftOrderId(data.draftOrderId);
+        }
+      } catch {
+        // Do not block checkout if draft save fails.
+      }
+    },
+    [cartLines, customer, draftOrderId, orderItems.length, paymentMethod],
+  );
+
   useEffect(() => {
     if (checkoutOpen) {
       setStep(1);
@@ -88,6 +120,7 @@ export function CheckoutModal() {
       setSubmitting(false);
       setUpiCopied(false);
       setPaymentMethod("UPI QR");
+      setDraftOrderId(null);
       upiAppOpenedRef.current = false;
       document.body.style.overflow = "hidden";
       return () => {
@@ -113,6 +146,11 @@ export function CheckoutModal() {
       window.removeEventListener("pageshow", onReturnFromUpiApp);
     };
   }, [step, showToast]);
+
+  useEffect(() => {
+    if (!checkoutOpen || step !== 3) return;
+    void saveCheckoutDraft({ checkoutStep: "SCREENSHOT" });
+  }, [checkoutOpen, step, saveCheckoutDraft]);
 
   if (!checkoutOpen) return null;
 
@@ -149,15 +187,24 @@ export function CheckoutModal() {
     }
   };
 
-  const handlePayWithApp = (appId: UpiAppId) => {
-    setPaymentMethod(upiAppPaymentMethodLabel(appId));
+  const handlePayWithApp = async (appId: UpiAppId) => {
+    const method = upiAppPaymentMethodLabel(appId);
+    setPaymentMethod(method);
     upiAppOpenedRef.current = true;
+    await saveCheckoutDraft({ paymentMethod: method, checkoutStep: "PAYMENT" });
     openUpiApp(appId, total);
   };
 
-  const handlePaidViaQr = () => {
+  const continueToPayment = async () => {
+    if (!validateDetails()) return;
+    setStep(2);
+    await saveCheckoutDraft({ checkoutStep: "PAYMENT" });
+  };
+
+  const handlePaidViaQr = async () => {
     setPaymentMethod("UPI QR");
     setStep(3);
+    await saveCheckoutDraft({ paymentMethod: "UPI QR", checkoutStep: "SCREENSHOT" });
   };
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -266,6 +313,7 @@ export function CheckoutModal() {
           items: orderItems.map((line) => ({ productId: line.product!.id, qty: line.qty })),
           paymentScreenshot: screenshot,
           paymentMethod,
+          draftOrderId: draftOrderId ?? undefined,
         }),
       });
       const data = await response.json();
@@ -467,7 +515,7 @@ export function CheckoutModal() {
               </Field>
               <button
                 type="button"
-                onClick={() => validateDetails() && setStep(2)}
+                onClick={() => void continueToPayment()}
                 className="btn-primary w-full"
               >
                 Continue to Payment →
@@ -541,7 +589,7 @@ export function CheckoutModal() {
                     <button
                       key={app.id}
                       type="button"
-                      onClick={() => handlePayWithApp(app.id)}
+                      onClick={() => void handlePayWithApp(app.id)}
                       aria-label={`Pay with ${app.label}`}
                       className="flex min-h-[4.75rem] flex-col items-center justify-center gap-1 rounded-xl border border-line bg-white px-2 py-3 shadow-sm transition hover:border-primary hover:shadow active:scale-[0.98]"
                     >
@@ -553,7 +601,7 @@ export function CheckoutModal() {
                   Opens {formatPrice(total)} in the selected app. After payment, return here — we&apos;ll
                   take you to upload screenshot automatically.
                 </p>
-                <button type="button" onClick={handlePaidViaQr} className="btn-primary mt-2 w-full">
+                <button type="button" onClick={() => void handlePaidViaQr()} className="btn-primary mt-2 w-full">
                   I Have Paid →
                 </button>
               </div>

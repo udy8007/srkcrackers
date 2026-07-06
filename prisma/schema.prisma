@@ -12,6 +12,7 @@ datasource db {
 }
 
 enum OrderStatus {
+  PAYMENT_PENDING
   PLACED
   PAYMENT_UPLOADED
   VERIFYING

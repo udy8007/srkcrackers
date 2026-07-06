@@ -21,7 +21,7 @@ export default async function DashboardPage() {
       prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
       prisma.order.aggregate({
         _sum: { total: true },
-        where: { status: { notIn: ["CANCELLED"] } },
+        where: { status: { notIn: ["CANCELLED", "PAYMENT_PENDING"] } },
       }),
       prisma.order.findMany({
         orderBy: { createdAt: "desc" },
@@ -59,6 +59,7 @@ export default async function DashboardPage() {
     (countByStatus.get("VERIFYING") ?? 0) +
     (countByStatus.get("PLACED") ?? 0) +
     (countByStatus.get("PAYMENT_UPLOADED") ?? 0);
+  const abandoned = countByStatus.get("PAYMENT_PENDING") ?? 0;
 
   const topCities = cityGroups
     .filter((g) => g.city)
@@ -72,6 +73,7 @@ export default async function DashboardPage() {
     { label: "Total Orders", value: totalOrders, accent: "text-primary" },
     { label: "Orders Today", value: todayOrders, accent: "text-blue-600" },
     { label: "Pending Verification", value: pending, accent: "text-amber-600" },
+    { label: "Incomplete Checkouts", value: abandoned, accent: "text-orange-600" },
     { label: "Revenue (net)", value: formatPrice(revenue._sum.total ?? 0), accent: "text-green" },
     { label: "Active Products", value: activeProducts, accent: "text-orange-600" },
     { label: "Visits Today", value: todayVisits, accent: "text-indigo-600" },
@@ -86,6 +88,7 @@ export default async function DashboardPage() {
 
       <div className="flex flex-wrap gap-2">
         <QuickLink href="/admin/orders?status=VERIFYING" label={`Review pending (${pending})`} />
+        <QuickLink href="/admin/orders?status=PAYMENT_PENDING" label={`Incomplete checkouts (${abandoned})`} />
         <QuickLink href="/admin/products" label="Manage products" />
         <QuickLink href="/admin/categories" label="Categories" />
         <QuickLink href="/admin/analytics" label="Full analytics →" />

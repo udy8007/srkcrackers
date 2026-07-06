@@ -2,6 +2,7 @@ import type { OrderStatus } from "@prisma/client";
 import { ORDER_STATUS_LABEL } from "@/lib/constants";
 
 const STYLES: Record<OrderStatus, string> = {
+  PAYMENT_PENDING: "bg-orange-100 text-orange-800",
   PLACED: "bg-slate-100 text-slate-700",
   PAYMENT_UPLOADED: "bg-blue-100 text-blue-700",
   VERIFYING: "bg-amber-100 text-amber-800",
