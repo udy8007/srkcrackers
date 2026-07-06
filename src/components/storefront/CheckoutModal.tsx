@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useCatalog, useCartTotals } from "./catalog-context";
 import { OrderTotalsBreakdown } from "./OrderTotalsBreakdown";
@@ -8,7 +8,17 @@ import { useCart } from "@/store/cart";
 import { useUI } from "@/store/ui";
 import { useToast } from "@/store/toast";
 import { formatPrice, formatFullDeliveryAddress, getMinOrderToastMessage, isValidPhone, isValidPincode, meetsMinOrder } from "@/lib/utils";
-import { buildUpiPayLink, compressImage, scrollToId, whatsappUrl } from "@/lib/client-actions";
+import {
+  buildUpiPayLink,
+  compressImage,
+  openUpiApp,
+  scrollToId,
+  upiAppPaymentMethodLabel,
+  UPI_PAYMENT_APPS,
+  whatsappUrl,
+} from "@/lib/client-actions";
+import type { UpiAppId } from "@/lib/client-actions";
+import { UpiAppIcon } from "./UpiAppIcon";
 import { BUSINESS, INDIAN_STATES, ORDER_STATUS_LABEL } from "@/lib/constants";
 import { downloadOrderInvoice } from "@/lib/invoice";
 import type { OrderStatus } from "@prisma/client";
@@ -51,7 +61,8 @@ export function CheckoutModal() {
   >([]);
   const [invoiceDownloading, setInvoiceDownloading] = useState(false);
   const [upiCopied, setUpiCopied] = useState(false);
-  const paymentMethod = "UPI QR";
+  const [paymentMethod, setPaymentMethod] = useState("UPI QR");
+  const upiAppOpenedRef = useRef(false);
 
   const orderItems = useMemo(
     () =>
@@ -76,12 +87,32 @@ export function CheckoutModal() {
       setSavedInvoiceItems([]);
       setSubmitting(false);
       setUpiCopied(false);
+      setPaymentMethod("UPI QR");
+      upiAppOpenedRef.current = false;
       document.body.style.overflow = "hidden";
       return () => {
         document.body.style.overflow = "";
       };
     }
   }, [checkoutOpen]);
+
+  useEffect(() => {
+    const onReturnFromUpiApp = () => {
+      if (!upiAppOpenedRef.current || step !== 2) return;
+      if (document.visibilityState === "hidden") return;
+      upiAppOpenedRef.current = false;
+      setStep(3);
+      showToast("Upload your payment screenshot to confirm the order.");
+    };
+    document.addEventListener("visibilitychange", onReturnFromUpiApp);
+    window.addEventListener("focus", onReturnFromUpiApp);
+    window.addEventListener("pageshow", onReturnFromUpiApp);
+    return () => {
+      document.removeEventListener("visibilitychange", onReturnFromUpiApp);
+      window.removeEventListener("focus", onReturnFromUpiApp);
+      window.removeEventListener("pageshow", onReturnFromUpiApp);
+    };
+  }, [step, showToast]);
 
   if (!checkoutOpen) return null;
 
@@ -116,6 +147,17 @@ export function CheckoutModal() {
     } catch {
       showToast("Could not copy UPI ID");
     }
+  };
+
+  const handlePayWithApp = (appId: UpiAppId) => {
+    setPaymentMethod(upiAppPaymentMethodLabel(appId));
+    upiAppOpenedRef.current = true;
+    openUpiApp(appId, total);
+  };
+
+  const handlePaidViaQr = () => {
+    setPaymentMethod("UPI QR");
+    setStep(3);
   };
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -488,7 +530,30 @@ export function CheckoutModal() {
                 <p className="text-xs text-ink-muted">
                   Google Pay / PhonePe / Paytm · Pay the <b>exact amount</b> shown above
                 </p>
-                <button type="button" onClick={() => setStep(3)} className="btn-primary mt-4 w-full">
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-center text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                  Or pay in app
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {UPI_PAYMENT_APPS.map((app) => (
+                    <button
+                      key={app.id}
+                      type="button"
+                      onClick={() => handlePayWithApp(app.id)}
+                      aria-label={`Pay with ${app.label}`}
+                      className="flex min-h-[4.75rem] flex-col items-center justify-center gap-1 rounded-xl border border-line bg-white px-2 py-3 shadow-sm transition hover:border-primary hover:shadow active:scale-[0.98]"
+                    >
+                      <UpiAppIcon appId={app.id} />
+                    </button>
+                  ))}
+                </div>
+                <p className="text-center text-[0.65rem] leading-relaxed text-ink-muted">
+                  Opens {formatPrice(total)} in the selected app. After payment, return here — we&apos;ll
+                  take you to upload screenshot automatically.
+                </p>
+                <button type="button" onClick={handlePaidViaQr} className="btn-primary mt-2 w-full">
                   I Have Paid →
                 </button>
               </div>

@@ -1,5 +1,8 @@
 import { BUSINESS } from "@/lib/constants";
 
+export { buildUpiPayLink, openUpiApp, UPI_PAYMENT_APPS, upiAppPaymentMethodLabel } from "@/lib/upi-apps";
+export type { UpiAppId, UpiPaymentApp } from "@/lib/upi-apps";
+
 /** Trigger a download of the SRK Crackers Android APK (served from /public). */
 export function downloadApk() {
   const link = document.createElement("a");
@@ -18,18 +21,6 @@ export function scrollToId(id: string) {
 /** Build a wa.me URL with pre-filled text. */
 export function whatsappUrl(text: string) {
   return `https://wa.me/${BUSINESS.whatsapp}?text=${encodeURIComponent(text)}`;
-}
-
-/** Build a UPI deep link for the given amount (in INR). */
-export function buildUpiPayLink(amount: number, note = "SRK Crackers Order") {
-  const params = new URLSearchParams({
-    pa: BUSINESS.upiId,
-    pn: "SRK Crackers",
-    am: amount.toFixed(2),
-    cu: "INR",
-    tn: note,
-  });
-  return `upi://pay?${params.toString()}`;
 }
 
 /** Compress an image file to a JPEG data URL (client only). */
