@@ -16,6 +16,7 @@ import {
 } from "@/lib/client-actions";
 import { BUSINESS, INDIAN_STATES, ORDER_STATUS_LABEL } from "@/lib/constants";
 import { isCustomerComplete, loadSavedCustomer, saveCustomerDetails } from "@/lib/checkout-storage";
+import { OrderSuccessCelebration } from "./OrderSuccessCelebration";
 import { downloadOrderInvoice } from "@/lib/invoice";
 import type { OrderStatus } from "@prisma/client";
 import type { CustomerInput, InvoiceData } from "@/types";
@@ -62,8 +63,8 @@ export function CheckoutModal() {
   const [isMobile, setIsMobile] = useState(false);
   const [paymentDetailsCopied, setPaymentDetailsCopied] = useState(false);
   const leftForPaymentRef = useRef(false);
-  const ignoreVisibilityRef = useRef(false);
   const hiddenAtRef = useRef(0);
+  const checkoutInitializedRef = useRef(false);
 
   const orderItems = useMemo(
     () =>
@@ -109,56 +110,61 @@ export function CheckoutModal() {
   );
 
   useEffect(() => {
-    if (checkoutOpen) {
-      const saved = loadSavedCustomer();
-      const canSkipToPayment =
-        saved &&
-        count > 0 &&
-        orderItems.length > 0 &&
-        meetsMinOrder(subtotal) &&
-        isCustomerComplete(saved);
-
-      setCustomer(saved ?? EMPTY_CUSTOMER);
-      setStep(canSkipToPayment ? 2 : 1);
-      setScreenshot(null);
-      setOrderNumber(null);
-      setOrderCreatedAt(null);
-      setOrderStatus(null);
-      setSavedTotals(null);
-      setSavedInvoiceItems([]);
-      setSubmitting(false);
-      setUpiCopied(false);
-      setPaymentDetailsCopied(false);
-      setPaymentMethod("UPI QR");
-      setDraftOrderId(null);
-      leftForPaymentRef.current = false;
-      document.body.style.overflow = "hidden";
-
-      if (canSkipToPayment && saved) {
-        window.setTimeout(() => {
-          void fetch("/api/orders/draft", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              customer: saved,
-              items: Object.entries(items)
-                .map(([productId, qty]) => ({ productId, qty }))
-                .filter((line) => line.qty > 0),
-              checkoutStep: "PAYMENT",
-            }),
-          })
-            .then((res) => (res.ok ? res.json() : null))
-            .then((data) => {
-              if (data?.draftOrderId) setDraftOrderId(data.draftOrderId);
-            })
-            .catch(() => {});
-        }, 0);
-      }
-
-      return () => {
-        document.body.style.overflow = "";
-      };
+    if (!checkoutOpen) {
+      checkoutInitializedRef.current = false;
+      return;
     }
+    if (checkoutInitializedRef.current) return;
+    checkoutInitializedRef.current = true;
+
+    const saved = loadSavedCustomer();
+    const canSkipToPayment =
+      saved &&
+      count > 0 &&
+      orderItems.length > 0 &&
+      meetsMinOrder(subtotal) &&
+      isCustomerComplete(saved);
+
+    setCustomer(saved ?? EMPTY_CUSTOMER);
+    setStep(canSkipToPayment ? 2 : 1);
+    setScreenshot(null);
+    setOrderNumber(null);
+    setOrderCreatedAt(null);
+    setOrderStatus(null);
+    setSavedTotals(null);
+    setSavedInvoiceItems([]);
+    setSubmitting(false);
+    setUpiCopied(false);
+    setPaymentDetailsCopied(false);
+    setPaymentMethod("UPI QR");
+    setDraftOrderId(null);
+    leftForPaymentRef.current = false;
+    document.body.style.overflow = "hidden";
+
+    if (canSkipToPayment && saved) {
+      window.setTimeout(() => {
+        void fetch("/api/orders/draft", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            customer: saved,
+            items: Object.entries(items)
+              .map(([productId, qty]) => ({ productId, qty }))
+              .filter((line) => line.qty > 0),
+            checkoutStep: "PAYMENT",
+          }),
+        })
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data) => {
+            if (data?.draftOrderId) setDraftOrderId(data.draftOrderId);
+          })
+          .catch(() => {});
+      }, 0);
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [checkoutOpen, count, items, orderItems.length, subtotal]);
 
   useEffect(() => {
@@ -198,7 +204,6 @@ export function CheckoutModal() {
   useEffect(() => {
     if (!checkoutOpen || step !== 2) return;
     const onVisibility = () => {
-      if (ignoreVisibilityRef.current) return;
       if (document.visibilityState === "hidden") {
         hiddenAtRef.current = Date.now();
         leftForPaymentRef.current = true;
@@ -216,26 +221,6 @@ export function CheckoutModal() {
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
   }, [checkoutOpen, step, showToast]);
-
-  const sharePaymentDetails = async () => {
-    if (!navigator.share) {
-      await copyPaymentDetails();
-      return;
-    }
-    ignoreVisibilityRef.current = true;
-    try {
-      await navigator.share({
-        title: "SRK Crackers Payment",
-        text: paymentCopyText,
-      });
-    } catch {
-      // User cancelled share sheet.
-    } finally {
-      window.setTimeout(() => {
-        ignoreVisibilityRef.current = false;
-      }, 1500);
-    }
-  };
 
   if (!checkoutOpen) return null;
 
@@ -300,7 +285,11 @@ export function CheckoutModal() {
   };
 
   const buildWhatsAppText = (id?: string) => {
-    const lines = [
+    const lines = orderItems.length > 0
+      ? orderItems.map((line) => `• ${line.product!.name} × ${line.qty} = ₹${line.amount}`)
+      : savedInvoiceItems.map((line) => `• ${line.name} × ${line.qty} = ₹${line.amount}`);
+    const totals = savedTotals ?? { subtotal, shipping, total };
+    const text = [
       "🎆 *SRK CRACKERS - New Order*",
       "",
       id ? `*Order ID:* ${id}` : "",
@@ -312,20 +301,20 @@ export function CheckoutModal() {
       customer.notes ? `*Notes:* ${customer.notes}` : "",
       "",
       "*Items:*",
-      ...orderItems.map((line) => `• ${line.product!.name} × ${line.qty} = ₹${line.amount}`),
+      ...lines,
       "",
-      `*Subtotal: ₹${subtotal}*`,
+      `*Subtotal: ₹${totals.subtotal}*`,
       customer.city.trim()
-        ? `*Shipping (${customer.city.trim()}): ₹${shipping}*`
-        : `*Shipping: ₹${shipping}*`,
-      `*Grand Total: ₹${total}*`,
+        ? `*Shipping (${customer.city.trim()}): ₹${totals.shipping}*`
+        : `*Shipping: ₹${totals.shipping}*`,
+      `*Grand Total: ₹${totals.total}*`,
       `*Payment:* ${paymentMethod} (${BUSINESS.upiId})`,
       "",
       "Please confirm availability and delivery.",
       "📍 Morai, Avadi, Chennai",
       `📞 ${BUSINESS.phoneDisplay}`,
     ];
-    return lines.filter(Boolean).join("\n");
+    return text.filter(Boolean).join("\n");
   };
 
   const buildInvoiceData = (id: string, createdAt: string, status: OrderStatus): InvoiceData => {
@@ -399,9 +388,6 @@ export function CheckoutModal() {
         showToast(data.error ?? "Failed to place order");
         return;
       }
-      setOrderNumber(data.orderNumber);
-      setOrderCreatedAt(data.createdAt);
-      setOrderStatus(data.status);
       const invoiceItems = orderItems.map((line) => ({
         name: line.product!.name,
         pack: line.product!.pack,
@@ -411,9 +397,12 @@ export function CheckoutModal() {
       }));
       setSavedTotals({ subtotal: data.subtotal, shipping: data.shipping, total: data.total });
       setSavedInvoiceItems(invoiceItems);
-      await triggerInvoiceDownload(data.orderNumber, data.createdAt, data.status);
-      clearCart();
+      setOrderNumber(data.orderNumber);
+      setOrderCreatedAt(data.createdAt);
+      setOrderStatus(data.status);
       setStep(4);
+      clearCart();
+      void triggerInvoiceDownload(data.orderNumber, data.createdAt, data.status);
       showToast("Order placed successfully!");
     } catch {
       showToast("Network error. Please try again.");
@@ -437,9 +426,10 @@ export function CheckoutModal() {
       onClick={closeCheckout}
     >
       <div
-        className="flex max-h-[94vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-white sm:rounded-2xl"
+        className="relative flex max-h-[94vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-white sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
+        {step === 4 && orderNumber && <OrderSuccessCelebration />}
         {/* Header + steps */}
         <div className="relative bg-gradient-to-r from-primary to-primary-dark px-5 py-4 text-white">
           <button
@@ -450,7 +440,10 @@ export function CheckoutModal() {
           >
             ✕
           </button>
-          <h3 className="font-display text-lg font-bold">Complete Your Order</h3>
+          <h3 className="font-display text-lg font-bold">
+            {step === 4 ? "Order Confirmed 🎆" : "Complete Your Order"}
+          </h3>
+          {step !== 4 && (
           <div className="mt-3 flex items-center gap-1.5">
             {STEP_LABELS.map((label, index) => {
               const n = index + 1;
@@ -474,9 +467,11 @@ export function CheckoutModal() {
               );
             })}
           </div>
+          )}
         </div>
 
-        <div className="scrollbar-thin flex-1 overflow-y-auto p-5">
+        <div className="scrollbar-thin relative flex-1 overflow-y-auto p-5">
+          {step !== 4 && (
           <div className="mb-4 rounded-lg bg-brandbg p-3 text-xs text-ink">
             <strong>Order Summary</strong>
             <div className="mt-1 space-y-0.5">
@@ -499,6 +494,7 @@ export function CheckoutModal() {
               />
             </div>
           </div>
+          )}
 
           {/* Step 1 */}
           {step === 1 && (
@@ -667,25 +663,16 @@ export function CheckoutModal() {
                   Google Pay / PhonePe / Paytm · Pay the <b>exact amount</b> shown above
                 </p>
                 {isMobile ? (
-                  <div className="mt-3 space-y-2">
-                    <div className="rounded-lg border border-green/30 bg-green/5 px-3 py-2.5 text-left text-[0.7rem] leading-relaxed text-ink">
-                      {paymentDetailsCopied ? (
-                        <span className="font-semibold text-green">✓ Amount & UPI ID copied</span>
-                      ) : (
-                        <span>Copying payment details…</span>
-                      )}
-                      <p className="mt-1 text-ink-muted">
-                        Open your UPI app → scan QR from screenshot, or paste UPI ID with{" "}
-                        {formatPrice(total)}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => void sharePaymentDetails()}
-                      className="btn-yellow w-full text-sm"
-                    >
-                      Share to UPI App
-                    </button>
+                  <div className="mt-3 rounded-lg border border-green/30 bg-green/5 px-3 py-2.5 text-left text-[0.7rem] leading-relaxed text-ink">
+                    {paymentDetailsCopied ? (
+                      <span className="font-semibold text-green">✓ Amount & UPI ID copied</span>
+                    ) : (
+                      <span>Copying payment details…</span>
+                    )}
+                    <p className="mt-1 text-ink-muted">
+                      Open GPay, PhonePe, or Paytm → scan QR from screenshot, or paste UPI ID with{" "}
+                      {formatPrice(total)}
+                    </p>
                   </div>
                 ) : (
                   <p className="mt-2 text-[0.7rem] text-ink-muted">
@@ -755,21 +742,31 @@ export function CheckoutModal() {
 
           {/* Step 4 */}
           {step === 4 && orderNumber && (
-            <div className="py-4 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green text-3xl text-white">
+            <div className="relative py-6 text-center">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green text-4xl text-white shadow-lg shadow-green/30">
                 ✓
               </div>
-              <h4 className="mt-4 font-display text-xl font-bold text-primary">Order Submitted!</h4>
-              <p className="mt-1 text-sm text-ink-muted">
-                Your order has been received. Save your Order ID to track status.
+              <h4 className="mt-5 font-display text-2xl font-bold text-primary">Your Order is Confirmed!</h4>
+              <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink-muted">
+                Thank you for ordering from SRK Crackers. Our team will verify your payment and call you
+                within <b>2 hours</b> to confirm availability and delivery date.
               </p>
-              <div className="mx-auto my-4 inline-block rounded-lg border-2 border-dashed border-primary bg-yellow/10 px-5 py-2 font-mono text-lg font-bold text-primary">
-                {orderNumber}
+              <div className="mx-auto my-5 inline-block rounded-xl border-2 border-dashed border-primary bg-yellow/15 px-6 py-3">
+                <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-ink-muted">Order ID</p>
+                <p className="font-mono text-xl font-bold text-primary">{orderNumber}</p>
               </div>
-              <p className="text-sm text-ink-muted">
-                We will verify your payment and call you within <b>2 hours</b> to confirm delivery.
+              <p className="mx-auto max-w-xs text-xs text-ink-muted">
+                Save this Order ID to track status. Invoice has been downloaded to your device.
               </p>
-              <div className="mt-5 flex flex-wrap justify-center gap-3">
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+                <button type="button" onClick={goToTrack} className="btn-primary">
+                  Track My Order
+                </button>
+                <button type="button" onClick={closeCheckout} className="btn-outline">
+                  Continue Shopping
+                </button>
+              </div>
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
                 <button
                   type="button"
                   onClick={() =>
@@ -778,24 +775,19 @@ export function CheckoutModal() {
                     triggerInvoiceDownload(orderNumber, orderCreatedAt, orderStatus)
                   }
                   disabled={!orderCreatedAt || !orderStatus || invoiceDownloading}
-                  className="btn-outline disabled:opacity-40"
+                  className="text-xs font-semibold text-primary underline disabled:opacity-40"
                 >
-                  {invoiceDownloading ? "Preparing..." : "Download Invoice (PDF)"}
+                  {invoiceDownloading ? "Preparing invoice…" : "Download invoice again"}
                 </button>
+                <span className="text-ink-muted">·</span>
                 <a
                   href={whatsappUrl(buildWhatsAppText(orderNumber))}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-primary"
+                  className="text-xs font-semibold text-primary underline"
                 >
-                  Send Order on WhatsApp
+                  Send on WhatsApp
                 </a>
-                <button type="button" onClick={goToTrack} className="btn-yellow">
-                  Track Order
-                </button>
-                <button type="button" onClick={closeCheckout} className="btn-outline">
-                  Close
-                </button>
               </div>
             </div>
           )}
