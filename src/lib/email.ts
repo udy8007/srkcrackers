@@ -3,7 +3,7 @@ import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
 import type { EmailSettings } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getEmailSettings } from "@/lib/email-settings";
+import { getEmailSettings, smtpConfigError } from "@/lib/email-settings";
 
 export type EmailTrigger =
   | "ORDER_PLACED_CUSTOMER"
@@ -29,15 +29,22 @@ function configKey(settings: EmailSettings): string {
 }
 
 function createTransport(settings: EmailSettings): Transporter {
+  const port = settings.port || 465;
+  const secure = port === 465;
+
   return nodemailer.createTransport({
     host: settings.host,
-    port: settings.port,
-    secure: settings.enableSsl && settings.port === 465,
+    port,
+    secure,
     auth: {
       user: settings.username,
       pass: settings.password,
     },
-    tls: settings.enableSsl ? { rejectUnauthorized: true } : undefined,
+    ...(port === 587 ? { requireTLS: true } : {}),
+    tls: {
+      minVersion: "TLSv1.2",
+      rejectUnauthorized: true,
+    },
   });
 }
 
@@ -132,9 +139,20 @@ export async function sendEmail(options: {
   orderId?: string;
   /** Skip global enabled check (test emails only). */
   force?: boolean;
+  settings?: EmailSettings;
 }): Promise<{ ok: boolean; error?: string }> {
-  const settings = await getEmailSettings();
-  return deliverMail(options, settings);
+  const settings = options.settings ?? (await getEmailSettings());
+  return deliverMail(
+    {
+      to: options.to,
+      subject: options.subject,
+      html: options.html,
+      trigger: options.trigger,
+      orderId: options.orderId,
+      force: options.force,
+    },
+    settings,
+  );
 }
 
 export async function sendEmailWithAttachment(options: {
@@ -144,15 +162,31 @@ export async function sendEmailWithAttachment(options: {
   trigger: EmailTrigger;
   attachments: EmailAttachment[];
   force?: boolean;
+  settings?: EmailSettings;
 }): Promise<{ ok: boolean; error?: string }> {
-  const settings = await getEmailSettings();
-  return deliverMail(options, settings);
+  const settings = options.settings ?? (await getEmailSettings());
+  return deliverMail(
+    {
+      to: options.to,
+      subject: options.subject,
+      html: options.html,
+      trigger: options.trigger,
+      attachments: options.attachments,
+      force: options.force,
+    },
+    settings,
+  );
 }
 
 /** Verify SMTP connection (used by admin test button). */
 export async function verifySmtpConnection(
   settings: EmailSettings,
 ): Promise<{ ok: boolean; error?: string }> {
+  const configError = smtpConfigError(settings);
+  if (configError) {
+    return { ok: false, error: configError };
+  }
+
   const transport = await getTransport(settings);
   if (!transport) {
     return { ok: false, error: "SMTP is not fully configured" };

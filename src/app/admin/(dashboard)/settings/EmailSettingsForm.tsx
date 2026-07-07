@@ -52,6 +52,7 @@ export function EmailSettingsForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [testResult, setTestResult] = useState("");
+  const [testTo, setTestTo] = useState("udyilangovan@gmail.com");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -106,12 +107,28 @@ export function EmailSettingsForm() {
       const res = await fetch("/api/admin/settings/email/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to: form.adminNotifyEmail || form.fromEmail }),
+        body: JSON.stringify({
+          to: testTo.trim() || form.adminNotifyEmail || form.fromEmail,
+          host: form.host,
+          port: form.port,
+          enableSsl: form.enableSsl,
+          username: form.username,
+          password: form.password,
+          fromEmail: form.fromEmail,
+          fromName: form.fromName,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
         setTestResult(`Failed: ${data.error ?? "Unknown error"}`);
         return;
+      }
+      if (data.settings) {
+        setForm((prev) => ({
+          ...prev,
+          ...data.settings,
+          password: data.settings.hasPassword ? data.settings.password : prev.password,
+        }));
       }
       setTestResult(`Test email sent to ${data.to}`);
     } catch {
@@ -211,8 +228,14 @@ export function EmailSettingsForm() {
               className="input"
               value={form.password}
               onChange={(e) => update("password", e.target.value)}
-              placeholder={form.hasPassword ? "Leave unchanged or enter new password" : "SMTP password"}
+              placeholder={form.hasPassword ? "Enter password to update, or leave as saved" : "SMTP password"}
+              autoComplete="new-password"
             />
+            {!form.hasPassword && (
+              <span className="mt-1 block text-xs text-amber-700">
+                Password not saved yet — enter it here before Send test.
+              </span>
+            )}
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-semibold text-ink">From email</span>
@@ -232,6 +255,20 @@ export function EmailSettingsForm() {
             />
           </label>
         </div>
+
+        <label className="mt-4 block max-w-md">
+          <span className="mb-1 block text-xs font-semibold text-ink">Test recipient email</span>
+          <input
+            type="email"
+            className="input"
+            value={testTo}
+            onChange={(e) => setTestTo(e.target.value)}
+            placeholder="your-email@gmail.com"
+          />
+          <span className="mt-1 block text-xs text-ink-muted">
+            Sends a test using the SMTP settings above (saves password automatically if test succeeds).
+          </span>
+        </label>
 
         <button
           type="button"
