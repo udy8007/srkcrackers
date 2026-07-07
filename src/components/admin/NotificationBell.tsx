@@ -19,6 +19,7 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [clearing, setClearing] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
@@ -67,6 +68,19 @@ export function NotificationBell() {
     void load();
   };
 
+  const clearAll = async () => {
+    if (!confirm("Clear all notifications? This cannot be undone.")) return;
+    setClearing(true);
+    try {
+      const res = await fetch("/api/admin/notifications", { method: "DELETE" });
+      if (!res.ok) return;
+      setItems([]);
+      setUnreadCount(0);
+    } finally {
+      setClearing(false);
+    }
+  };
+
   const typeIcon = (type: string) => {
     switch (type) {
       case "NEW_ORDER":
@@ -102,15 +116,27 @@ export function NotificationBell() {
         <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl border border-line bg-white shadow-xl sm:w-96">
           <div className="flex items-center justify-between border-b border-line px-4 py-3">
             <span className="font-display text-sm font-bold text-ink">Notifications</span>
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={() => void markAllRead()}
-                className="text-xs font-semibold text-primary hover:underline"
-              >
-                Mark all read
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {unreadCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => void markAllRead()}
+                  className="text-xs font-semibold text-primary hover:underline"
+                >
+                  Mark all read
+                </button>
+              )}
+              {items.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => void clearAll()}
+                  disabled={clearing}
+                  className="text-xs font-semibold text-red hover:underline disabled:opacity-50"
+                >
+                  {clearing ? "Clearing…" : "Clear all"}
+                </button>
+              )}
+            </div>
           </div>
           <div className="max-h-80 overflow-y-auto">
             {items.length === 0 ? (
