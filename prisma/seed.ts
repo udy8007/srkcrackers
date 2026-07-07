@@ -92,11 +92,59 @@ async function seedAdmin() {
   console.log(`✓ Admin user created: ${email}`);
 }
 
+async function seedEmailSettings() {
+  const host = process.env.EMAIL_SMTP_HOST ?? "smtp.hostinger.com";
+  const port = Number(process.env.EMAIL_SMTP_PORT ?? 465);
+  const username = process.env.EMAIL_SMTP_USERNAME ?? "admin@srkcrackers.in";
+  const password = process.env.EMAIL_SMTP_PASSWORD ?? "";
+  const adminNotifyEmail = process.env.EMAIL_ADMIN_NOTIFY ?? username;
+
+  await prisma.emailSettings.upsert({
+    where: { id: "default" },
+    update: {},
+    create: {
+      id: "default",
+      enabled: false,
+      host,
+      port,
+      enableSsl: true,
+      username,
+      password,
+      fromEmail: username,
+      fromName: "SRK Crackers",
+      adminNotifyEmail,
+    },
+  });
+  console.log(`✓ Email settings seeded (host: ${host})`);
+}
+
+async function seedBackupSettings() {
+  const adminNotify = process.env.EMAIL_ADMIN_NOTIFY ?? "admin@srkcrackers.in";
+  await prisma.backupSettings.upsert({
+    where: { id: "default" },
+    update: {},
+    create: {
+      id: "default",
+      enabled: false,
+      frequency: "DAILY",
+      recipientEmail: adminNotify,
+      runHour: 2,
+      runDayOfMonth: 1,
+      runMonth: 1,
+      runDayOfYear: 1,
+      includeScreenshots: false,
+    },
+  });
+  console.log("✓ Backup settings seeded");
+}
+
 async function main() {
   console.log("Seeding SRK Crackers database...");
   await seedCategories();
   await seedProducts();
   await seedAdmin();
+  await seedEmailSettings();
+  await seedBackupSettings();
   console.log("Seed complete.");
 }
 

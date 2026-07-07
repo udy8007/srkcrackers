@@ -3,6 +3,7 @@ import type { OrderStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { ORDER_STATUS_LABEL, ORDER_STATUSES } from "@/lib/constants";
+import { dispatchNotification, notifyStatusChange } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,12 @@ export async function POST(request: NextRequest) {
   let count = 0;
   for (const id of ids) {
     try {
+      const existing = await prisma.order.findUnique({
+        where: { id },
+        select: { status: true },
+      });
+      if (!existing) continue;
+
       await prisma.order.update({
         where: { id },
         data: {
@@ -55,6 +62,7 @@ export async function POST(request: NextRequest) {
           },
         },
       });
+      dispatchNotification(() => notifyStatusChange(id, existing.status, trimmedNote));
       count++;
     } catch {
       /* skip missing */

@@ -7,12 +7,14 @@ import { OrderActions } from "./OrderActions";
 import { StatusUpdater } from "./StatusUpdater";
 import { PaymentScreenshotEditor } from "./PaymentScreenshotEditor";
 import { autoDeliverDueOrders } from "@/lib/auto-deliver";
+import { notifyAutoDelivered } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await autoDeliverDueOrders();
+  const deliveredIds = await autoDeliverDueOrders();
+  notifyAutoDelivered(deliveredIds);
   const order = await prisma.order.findUnique({
     where: { id },
     include: {

@@ -28,6 +28,12 @@ enum UserRole {
   STAFF
 }
 
+enum BackupFrequency {
+  DAILY
+  MONTHLY
+  YEARLY
+}
+
 /// Admin/staff accounts for the dashboard (credentials login).
 model AdminUser {
   id           String   @id @default(cuid())
@@ -95,6 +101,7 @@ model Order {
   total             Int
   status            OrderStatus          @default(VERIFYING)
   expectedDeliveryAt DateTime?           // set when marked dispatched — auto DELIVERED after this time
+  lastPendingReminderAt DateTime?       // last admin reminder for unactioned orders
   items             OrderItem[]
   statusHistory     OrderStatusHistory[]
   createdAt         DateTime             @default(now())
@@ -146,4 +153,90 @@ model OrderStatusHistory {
   createdAt DateTime    @default(now())
 
   @@index([orderId])
+}
+
+/// Singleton SMTP + notification configuration (admin portal).
+model EmailSettings {
+  id                       String   @id @default("default")
+  enabled                  Boolean  @default(false)
+  host                     String   @default("")
+  port                     Int      @default(465)
+  enableSsl                Boolean  @default(true)
+  username                 String   @default("")
+  password                 String   @default("")
+  fromEmail                String   @default("")
+  fromName                 String   @default("SRK Crackers")
+  adminNotifyEmail         String   @default("")
+  notifyCustomerOrderPlaced  Boolean @default(true)
+  notifyCustomerStatusChange Boolean @default(true)
+  notifyCustomerDelivered    Boolean @default(true)
+  notifyAdminNewOrder        Boolean @default(true)
+  notifyAdminStatusChange    Boolean @default(false)
+  notifyAdminPendingReminder Boolean @default(true)
+  pendingReminderHours       Int     @default(2)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+}
+
+/// Audit log of outbound emails.
+model EmailLog {
+  id        String   @id @default(cuid())
+  orderId   String?
+  trigger   String
+  recipient String
+  subject   String
+  status    String
+  error     String?
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([createdAt])
+  @@index([trigger])
+}
+
+/// In-app admin notification alerts.
+model AdminNotification {
+  id          String   @id @default(cuid())
+  type        String
+  title       String
+  message     String
+  orderId     String?
+  orderNumber String?
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([read, createdAt])
+}
+
+/// Singleton database backup schedule (admin portal).
+model BackupSettings {
+  id                 String          @id @default("default")
+  enabled            Boolean         @default(false)
+  frequency          BackupFrequency @default(DAILY)
+  recipientEmail     String          @default("")
+  runHour            Int             @default(2)
+  runDayOfMonth      Int             @default(1)
+  runMonth           Int             @default(1)
+  runDayOfYear       Int             @default(1)
+  includeScreenshots Boolean         @default(false)
+  lastBackupAt       DateTime?
+  lastBackupStatus   String?
+  lastBackupError    String?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+}
+
+/// History of database backup runs.
+model DbBackupLog {
+  id          String   @id @default(cuid())
+  filename    String
+  sizeBytes   Int
+  tableCounts String?
+  status      String
+  trigger     String
+  recipient   String
+  error       String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
 }

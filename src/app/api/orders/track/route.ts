@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ORDER_STATUS_LABEL, BUSINESS } from "@/lib/constants";
 import { isValidPhone } from "@/lib/utils";
 import { autoDeliverDueOrders } from "@/lib/auto-deliver";
+import { notifyAutoDelivered } from "@/lib/notifications";
 import type { TrackOrderResult } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +26,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  await autoDeliverDueOrders();
+  const deliveredIds = await autoDeliverDueOrders();
+  notifyAutoDelivered(deliveredIds);
 
   const order = await prisma.order.findFirst({
     where: { orderNumber, phone },

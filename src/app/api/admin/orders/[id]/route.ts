@@ -3,7 +3,8 @@ import type { OrderStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { ORDER_STATUS_LABEL, ORDER_STATUSES } from "@/lib/constants";
-import { canAdminEditBeforeDispatch } from "@/lib/auto-deliver";
+import { canAdminEditBeforeDispatch } from "@/lib/order-status";
+import { dispatchNotification, notifyStatusChange } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -140,6 +141,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       statusHistory: { orderBy: { createdAt: "asc" } },
     },
   });
+
+  dispatchNotification(() => notifyStatusChange(id, existing.status, dispatchNote));
 
   return NextResponse.json(serializeOrder(order));
 }

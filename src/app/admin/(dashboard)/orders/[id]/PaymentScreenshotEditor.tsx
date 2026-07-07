@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { OrderStatus } from "@prisma/client";
 import { compressImage } from "@/lib/client-actions";
-import { canAdminEditBeforeDispatch } from "@/lib/auto-deliver";
+import { canAdminEditBeforeDispatch } from "@/lib/order-status";
 
 const MAX_SCREENSHOT_CHARS = 3_000_000;
 

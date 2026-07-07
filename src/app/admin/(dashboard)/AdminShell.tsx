@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "@/components/admin/NotificationBell";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: "📊" },
@@ -60,6 +61,7 @@ export function AdminShell({
           </Link>
         </div>
         <div className="flex items-center gap-3">
+          <NotificationBell />
           <div className="hidden text-right sm:block">
             <div className="text-sm font-semibold leading-tight">{name}</div>
             <div className="text-[0.7rem] text-white/70">{email}</div>

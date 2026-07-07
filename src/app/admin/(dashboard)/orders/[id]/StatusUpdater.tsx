@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { OrderStatus } from "@prisma/client";
 import { BUSINESS, ORDER_STATUSES } from "@/lib/constants";
-import { canAdminEditBeforeDispatch } from "@/lib/auto-deliver";
+import { canAdminEditBeforeDispatch } from "@/lib/order-status";
 import { formatDateTime } from "@/lib/utils";
 
 function defaultExpectedDeliveryLocal(): string {

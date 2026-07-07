@@ -1,17 +1,8 @@
-import type { OrderStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { ORDER_STATUS_LABEL } from "@/lib/constants";
 
-/** Statuses where the parcel is with postal — manual updates are locked. */
-export const POSTAL_HANDOVER_STATUSES: OrderStatus[] = ["DISPATCHED"];
-
-/** Whether admin can still edit payment screenshot or change status manually. */
-export function canAdminEditBeforeDispatch(status: OrderStatus): boolean {
-  return status !== "DISPATCHED" && status !== "DELIVERED" && status !== "CANCELLED";
-}
-
 /** Mark DISPATCHED orders as DELIVERED when expected delivery time has passed. */
-export async function autoDeliverDueOrders(): Promise<number> {
+export async function autoDeliverDueOrders(): Promise<string[]> {
   const now = new Date();
   const due = await prisma.order.findMany({
     where: {
@@ -21,7 +12,7 @@ export async function autoDeliverDueOrders(): Promise<number> {
     select: { id: true },
   });
 
-  if (due.length === 0) return 0;
+  if (due.length === 0) return [];
 
   await prisma.$transaction(
     due.map((order) =>
@@ -41,5 +32,5 @@ export async function autoDeliverDueOrders(): Promise<number> {
     ),
   );
 
-  return due.length;
+  return due.map((o) => o.id);
 }

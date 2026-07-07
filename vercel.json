@@ -3,6 +3,12 @@
   "framework": "nextjs",
   "buildCommand": "node scripts/vercel-build.mjs",
   "installCommand": "npm install",
+  "crons": [
+    {
+      "path": "/api/cron/notifications",
+      "schedule": "0 * * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/srk-crackers.apk",

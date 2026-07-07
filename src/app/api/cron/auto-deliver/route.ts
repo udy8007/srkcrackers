@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { autoDeliverDueOrders } from "@/lib/auto-deliver";
+import { notifyAutoDelivered } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +15,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const delivered = await autoDeliverDueOrders();
-    return NextResponse.json({ ok: true, delivered });
+    const deliveredIds = await autoDeliverDueOrders();
+    notifyAutoDelivered(deliveredIds);
+    return NextResponse.json({ ok: true, delivered: deliveredIds.length });
   } catch (error) {
     console.error("auto-deliver cron failed:", error);
     return NextResponse.json({ error: "Auto-deliver failed" }, { status: 500 });
