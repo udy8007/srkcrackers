@@ -66,7 +66,7 @@ function buildContext(order: NonNullable<OrderWithItems>, origin: string): Order
     itemCount: order.items.reduce((s, i) => s + i.qty, 0),
     createdAt: order.createdAt.toISOString(),
     adminOrderUrl: `${origin}/admin/orders/${order.id}`,
-    trackUrl: `${origin}/?track=${encodeURIComponent(order.orderNumber)}`,
+    trackUrl: `${origin}/?track=${encodeURIComponent(order.orderNumber)}&phone=${encodeURIComponent(order.phone)}`,
   };
 }
 

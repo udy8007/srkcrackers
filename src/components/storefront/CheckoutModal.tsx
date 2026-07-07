@@ -17,6 +17,7 @@ import {
 import { BUSINESS, INDIAN_STATES, ORDER_STATUS_LABEL } from "@/lib/constants";
 import { isCustomerComplete, loadSavedCustomer, saveCustomerDetails } from "@/lib/checkout-storage";
 import { downloadOrderInvoice } from "@/lib/invoice";
+import { storeTrackPhone } from "./TrackOrderDeepLink";
 import type { OrderStatus } from "@prisma/client";
 import type { CustomerInput, InvoiceData } from "@/types";
 
@@ -399,6 +400,7 @@ export function CheckoutModal() {
       setOrderNumber(data.orderNumber);
       setOrderCreatedAt(data.createdAt);
       setOrderStatus(data.status);
+      storeTrackPhone(data.orderNumber, customer.phone);
       setStep(4);
       clearCart();
       void triggerInvoiceDownload(data.orderNumber, data.createdAt, data.status);
@@ -411,7 +413,10 @@ export function CheckoutModal() {
   };
 
   const goToTrack = () => {
-    if (orderNumber) setTrackPrefill({ orderNumber, phone: customer.phone });
+    if (orderNumber) {
+      storeTrackPhone(orderNumber, customer.phone);
+      setTrackPrefill({ orderNumber, phone: customer.phone });
+    }
     closeCheckout();
     setTimeout(() => scrollToId("track"), 100);
   };

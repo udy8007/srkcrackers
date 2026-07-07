@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import type { CategoryWithProductsDTO } from "@/types";
 import { CatalogProvider } from "./catalog-context";
 import { useUI } from "@/store/ui";
@@ -13,6 +13,7 @@ import { CustomerFeedback } from "./CustomerFeedback";
 import { ProductsSection } from "./ProductsSection";
 import { HowToOrder } from "./HowToOrder";
 import { TrackOrder } from "./TrackOrder";
+import { TrackOrderDeepLink } from "./TrackOrderDeepLink";
 import { LicenseInfo } from "./LicenseInfo";
 import { ShopShowcase } from "./ShopShowcase";
 import { MapSection } from "./MapSection";
@@ -45,6 +46,9 @@ export function Storefront({ categories }: { categories: CategoryWithProductsDTO
 
   return (
     <CatalogProvider categories={categories}>
+      <Suspense fallback={null}>
+        <TrackOrderDeepLink />
+      </Suspense>
       <div className="pb-sticky">
         <TopBar />
         <Header />

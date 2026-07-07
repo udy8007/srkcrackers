@@ -39,7 +39,7 @@ function sampleContext(status: OrderStatus = "VERIFYING"): OrderEmailContext {
     itemCount: 8,
     createdAt: new Date().toISOString(),
     adminOrderUrl: `${origin}/admin/orders/sample-order-id`,
-    trackUrl: `${origin}/?track=SRK-20260707-0042`,
+    trackUrl: `${origin}/?track=SRK-20260707-0042&phone=9841916899`,
   };
 }
 

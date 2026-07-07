@@ -61,8 +61,10 @@ export function TrackOrder() {
   useEffect(() => {
     if (trackPrefill) {
       setOrderNumber(trackPrefill.orderNumber);
-      setPhone(trackPrefill.phone);
-      runTrack(trackPrefill.orderNumber, trackPrefill.phone);
+      if (trackPrefill.phone && isValidPhone(trackPrefill.phone)) {
+        setPhone(trackPrefill.phone);
+        runTrack(trackPrefill.orderNumber, trackPrefill.phone);
+      }
       setTrackPrefill(null);
     }
   }, [trackPrefill, runTrack, setTrackPrefill]);
