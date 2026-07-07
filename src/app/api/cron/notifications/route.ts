@@ -5,7 +5,7 @@ import { sendPendingOrderReminders, notifyAutoDelivered } from "@/lib/notificati
 
 export const dynamic = "force-dynamic";
 
-/** Vercel Cron — pending order reminders + auto-deliver. */
+/** Vercel Cron (daily on Hobby plan) — auto-deliver, reminders, scheduled backup. */
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
   if (secret) {

@@ -310,7 +310,7 @@ export function EmailSettingsForm() {
           />
           <Toggle
             label="Admin — pending order reminder"
-            description="Repeat email if order stays in Placed/Verifying without action"
+            description="Repeat email if order stays in Placed/Verifying (checked once daily via cron)"
             checked={form.notifyAdminPendingReminder}
             onChange={(v) => update("notifyAdminPendingReminder", v)}
           />

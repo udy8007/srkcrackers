@@ -64,11 +64,10 @@ export async function getBackupSettings(): Promise<BackupSettings> {
 export function isBackupDue(settings: BackupSettings, now = new Date()): boolean {
   if (!settings.enabled) return false;
 
-  const { year, month, day, hour } = getISTParts(now);
-  if (hour !== settings.runHour) return false;
-
+  const { year, month, day } = getISTParts(now);
   const last = settings.lastBackupAt ? getISTParts(settings.lastBackupAt) : null;
 
+  // Vercel Hobby cron runs once per day (~2:00 AM IST). Hour is informational in admin UI.
   switch (settings.frequency) {
     case "DAILY":
       if (!last) return true;
@@ -316,7 +315,7 @@ async function updateBackupStatus(id: string, status: string, error?: string) {
   });
 }
 
-/** Called from hourly cron — runs backup when schedule matches. */
+/** Called from daily Vercel cron — runs backup when schedule matches. */
 export async function runScheduledBackupIfDue(): Promise<{ ran: boolean; ok?: boolean; error?: string }> {
   const settings = await getBackupSettings();
   if (!isBackupDue(settings)) {
