@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { BUSINESS, ORDER_STATUS_LABEL } from "@/lib/constants";
 import { buildOrderFromItems, customerOrderFields, validateCustomer } from "@/lib/order-build";
 import { generateOrderNumber } from "@/lib/utils";
-import { notifyOrderPlaced } from "@/lib/notifications";
+import { dispatchNotification, notifyOrderPlaced } from "@/lib/notifications";
 import type { CreateOrderInput } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -79,11 +79,7 @@ export async function POST(request: NextRequest) {
       });
     });
 
-    try {
-      await notifyOrderPlaced(order.id);
-    } catch (error) {
-      console.error(`Order ${order.orderNumber} notification failed:`, error);
-    }
+    dispatchNotification(() => notifyOrderPlaced(order.id));
 
     return NextResponse.json({
       orderNumber: order.orderNumber,
@@ -123,11 +119,7 @@ export async function POST(request: NextRequest) {
         select: { id: true, orderNumber: true, subtotal: true, total: true, status: true, createdAt: true },
       });
 
-      try {
-        await notifyOrderPlaced(order.id);
-      } catch (error) {
-        console.error(`Order ${order.orderNumber} notification failed:`, error);
-      }
+      dispatchNotification(() => notifyOrderPlaced(order.id));
 
       return NextResponse.json(
         {
