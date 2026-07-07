@@ -4,6 +4,7 @@ import { ORDER_STATUS_LABEL, BUSINESS } from "@/lib/constants";
 import { isValidPhone } from "@/lib/utils";
 import { autoDeliverDueOrders } from "@/lib/auto-deliver";
 import { notifyAutoDelivered } from "@/lib/notifications";
+import { dispatchSchedulerTick } from "@/lib/scheduler";
 import type { TrackOrderResult } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +29,7 @@ export async function POST(request: NextRequest) {
 
   const deliveredIds = await autoDeliverDueOrders();
   notifyAutoDelivered(deliveredIds);
+  dispatchSchedulerTick("track");
 
   const order = await prisma.order.findFirst({
     where: { orderNumber, phone },

@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { autoDeliverDueOrders } from "@/lib/auto-deliver";
-import { runScheduledBackupIfDue } from "@/lib/db-backup";
-import { sendPendingOrderReminders, notifyAutoDelivered } from "@/lib/notifications";
+import { runSchedulerTick } from "@/lib/scheduler";
 
 export const dynamic = "force-dynamic";
 
-/** Vercel Cron (daily on Hobby plan) — auto-deliver, reminders, scheduled backup. */
+/** Vercel Cron fallback (daily on Hobby) + optional external cron hit. */
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
   if (secret) {
@@ -16,20 +14,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const [deliveredIds, reminders, backup] = await Promise.all([
-      autoDeliverDueOrders(),
-      sendPendingOrderReminders(),
-      runScheduledBackupIfDue(),
-    ]);
-    notifyAutoDelivered(deliveredIds);
-    return NextResponse.json({
-      ok: true,
-      delivered: deliveredIds.length,
-      reminders: reminders.reminded,
-      backup,
-    });
+    const result = await runSchedulerTick("cron");
+    return NextResponse.json({ ok: true, ...result });
   } catch (error) {
-    console.error("cron notifications failed:", error);
-    return NextResponse.json({ error: "Cron job failed" }, { status: 500 });
+    console.error("cron scheduler failed:", error);
+    return NextResponse.json({ error: "Scheduler failed" }, { status: 500 });
   }
 }

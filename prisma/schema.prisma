@@ -240,3 +240,14 @@ model DbBackupLog {
 
   @@index([createdAt])
 }
+
+/// In-app scheduler state (DB-backed — runs reminders/backup without Vercel Pro cron).
+model SchedulerState {
+  id                  String    @id @default("default")
+  enabled             Boolean   @default(true)
+  tickIntervalMinutes Int       @default(30)
+  lastTickAt          DateTime?
+  lastDeliverAt       DateTime?
+  lastReminderAt      DateTime?
+  updatedAt           DateTime  @updatedAt
+}

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { autoDeliverDueOrders } from "@/lib/auto-deliver";
-import { notifyAutoDelivered } from "@/lib/notifications";
+import { runSchedulerTick } from "@/lib/scheduler";
 
 export const dynamic = "force-dynamic";
 
-/** Vercel Cron — auto-mark dispatched orders as delivered after expected time. */
+/** Vercel Cron fallback — delegates to in-app scheduler. */
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
   if (secret) {
@@ -15,9 +14,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const deliveredIds = await autoDeliverDueOrders();
-    notifyAutoDelivered(deliveredIds);
-    return NextResponse.json({ ok: true, delivered: deliveredIds.length });
+    const result = await runSchedulerTick("cron");
+    return NextResponse.json({ ok: true, ...result });
   } catch (error) {
     console.error("auto-deliver cron failed:", error);
     return NextResponse.json({ error: "Auto-deliver failed" }, { status: 500 });

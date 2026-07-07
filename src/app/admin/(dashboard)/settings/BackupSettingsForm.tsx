@@ -155,10 +155,10 @@ export function BackupSettingsForm() {
 
   const scheduleHint =
     form.frequency === "DAILY"
-      ? `Once per day (Vercel cron ~2:00 AM IST)`
+      ? `Once per day (in-app scheduler + Vercel daily cron fallback)`
       : form.frequency === "MONTHLY"
-        ? `Day ${form.runDayOfMonth} of each month (checked daily ~2:00 AM IST)`
-        : `${form.runDayOfYear} ${MONTHS[form.runMonth - 1]} each year (checked daily ~2:00 AM IST)`;
+        ? `Day ${form.runDayOfMonth} of each month (checked by scheduler)`
+        : `${form.runDayOfYear} ${MONTHS[form.runMonth - 1]} each year (checked by scheduler)`;
 
   return (
     <form onSubmit={handleSave} className="space-y-6">

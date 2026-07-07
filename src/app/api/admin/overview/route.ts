@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { dispatchSchedulerTick } from "@/lib/scheduler";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,8 @@ export async function GET() {
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  dispatchSchedulerTick("overview");
 
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);

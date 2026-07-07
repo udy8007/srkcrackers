@@ -138,6 +138,15 @@ async function seedBackupSettings() {
   console.log("✓ Backup settings seeded");
 }
 
+async function seedScheduler() {
+  await prisma.schedulerState.upsert({
+    where: { id: "default" },
+    update: {},
+    create: { id: "default", enabled: true, tickIntervalMinutes: 30 },
+  });
+  console.log("✓ Scheduler state seeded");
+}
+
 async function main() {
   console.log("Seeding SRK Crackers database...");
   await seedCategories();
@@ -145,6 +154,7 @@ async function main() {
   await seedAdmin();
   await seedEmailSettings();
   await seedBackupSettings();
+  await seedScheduler();
   console.log("Seed complete.");
 }
 

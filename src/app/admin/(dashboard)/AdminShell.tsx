@@ -38,6 +38,28 @@ export function AdminShell({
       .catch(() => {});
   }, [pathname]);
 
+  // In-app scheduler — polls while admin portal is open
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval> | undefined;
+
+    const start = async () => {
+      const res = await fetch("/api/admin/scheduler").catch(() => null);
+      const data = res?.ok ? await res.json() : null;
+      const minutes = data?.tickIntervalMinutes ?? 30;
+
+      const tick = () => {
+        fetch("/api/admin/scheduler", { method: "POST" }).catch(() => {});
+      };
+      tick();
+      intervalId = setInterval(tick, minutes * 60 * 1000);
+    };
+
+    void start();
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, []);
+
   const isActive = (href: string) =>
     href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
 

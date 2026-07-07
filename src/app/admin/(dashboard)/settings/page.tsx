@@ -1,6 +1,7 @@
 import { ChangePasswordForm } from "./ChangePasswordForm";
 import { EmailSettingsForm } from "./EmailSettingsForm";
 import { BackupSettingsForm } from "./BackupSettingsForm";
+import { SchedulerSettingsForm } from "./SchedulerSettingsForm";
 
 export const metadata = {
   title: "Settings — SRK Admin",
@@ -15,6 +16,8 @@ export default function SettingsPage() {
       </div>
 
       <EmailSettingsForm />
+
+      <SchedulerSettingsForm />
 
       <BackupSettingsForm />
 
