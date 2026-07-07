@@ -127,10 +127,13 @@ export function EmailSettingsForm() {
         setForm((prev) => ({
           ...prev,
           ...data.settings,
+          adminNotifyEmail: data.adminNotifyEmail ?? data.settings.adminNotifyEmail ?? prev.adminNotifyEmail,
           password: data.settings.hasPassword ? data.settings.password : prev.password,
         }));
       }
-      setTestResult(`Test email sent to ${data.to}`);
+      setTestResult(
+        `Test email sent to ${data.to}${!form.enabled ? " — turn on Email Notifications (Enabled) and Save for order alerts to send." : ""}`,
+      );
     } catch {
       setTestResult("Network error during test.");
     } finally {

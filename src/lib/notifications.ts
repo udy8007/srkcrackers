@@ -1,8 +1,9 @@
 import "server-only";
+import { after } from "next/server";
 import type { OrderStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { ORDER_STATUS_LABEL } from "@/lib/constants";
-import { getEmailSettings, resolveSiteOrigin } from "@/lib/email-settings";
+import { getEmailSettings, resolveAdminNotifyEmail, resolveSiteOrigin } from "@/lib/email-settings";
 import { sendEmail } from "@/lib/email";
 import {
   buildAdminNewOrderEmail,
@@ -79,11 +80,18 @@ export async function createAdminNotification(input: {
   await prisma.adminNotification.create({ data: input });
 }
 
-/** Fire-and-forget wrapper — never throws to callers. */
+/** Schedule notification work after the HTTP response (Vercel-safe). Never throws to callers. */
 export function dispatchNotification(task: () => Promise<void>) {
-  void task().catch((error) => {
-    console.error("Notification dispatch failed:", error);
-  });
+  const run = () =>
+    task().catch((error) => {
+      console.error("Notification dispatch failed:", error);
+    });
+
+  try {
+    after(run);
+  } catch {
+    void run();
+  }
 }
 
 /** Send customer confirmation + admin alert when order is finalized. */
@@ -94,29 +102,60 @@ export async function notifyOrderPlaced(orderId: string) {
   const settings = await getEmailSettings();
   const origin = resolveSiteOrigin();
   const ctx = buildContext(order, origin);
+  const adminTo = resolveAdminNotifyEmail(settings);
 
-  if (settings.enabled) {
+  if (!settings.enabled) {
+    console.warn(
+      `[notifyOrderPlaced] Skipped emails for ${order.orderNumber}: email notifications are disabled in admin settings`,
+    );
+  } else {
     if (settings.notifyCustomerOrderPlaced && order.email?.trim()) {
-      const invoice = orderToInvoice(order, origin);
-      const { subject, html } = buildCustomerOrderConfirmationEmail(ctx, invoice);
-      await sendEmail({
-        to: order.email.trim(),
-        subject,
-        html,
-        trigger: "ORDER_PLACED_CUSTOMER",
-        orderId,
-      });
+      try {
+        const invoice = orderToInvoice(order, origin);
+        const { subject, html } = buildCustomerOrderConfirmationEmail(ctx, invoice);
+        const result = await sendEmail({
+          to: order.email.trim(),
+          subject,
+          html,
+          trigger: "ORDER_PLACED_CUSTOMER",
+          orderId,
+        });
+        if (!result.ok) {
+          console.error(
+            `[notifyOrderPlaced] Customer email failed for ${order.orderNumber}:`,
+            result.error,
+          );
+        }
+      } catch (error) {
+        console.error(`[notifyOrderPlaced] Customer email error for ${order.orderNumber}:`, error);
+      }
     }
 
-    if (settings.notifyAdminNewOrder && settings.adminNotifyEmail.trim()) {
-      const { subject, html } = buildAdminNewOrderEmail(ctx);
-      await sendEmail({
-        to: settings.adminNotifyEmail.trim(),
-        subject,
-        html,
-        trigger: "ORDER_PLACED_ADMIN",
-        orderId,
-      });
+    if (settings.notifyAdminNewOrder) {
+      if (!adminTo) {
+        console.warn(
+          `[notifyOrderPlaced] Skipped admin email for ${order.orderNumber}: no admin notification email configured`,
+        );
+      } else {
+        try {
+          const { subject, html } = buildAdminNewOrderEmail(ctx);
+          const result = await sendEmail({
+            to: adminTo,
+            subject,
+            html,
+            trigger: "ORDER_PLACED_ADMIN",
+            orderId,
+          });
+          if (!result.ok) {
+            console.error(
+              `[notifyOrderPlaced] Admin email failed for ${order.orderNumber}:`,
+              result.error,
+            );
+          }
+        } catch (error) {
+          console.error(`[notifyOrderPlaced] Admin email error for ${order.orderNumber}:`, error);
+        }
+      }
     }
   }
 
@@ -164,19 +203,22 @@ export async function notifyStatusChange(
       });
     }
 
-    if (settings.notifyAdminStatusChange && settings.adminNotifyEmail.trim()) {
-      const { subject, html } = buildCustomerStatusChangeEmail({
-        ...ctx,
-        previousStatus,
-        note,
-      });
-      await sendEmail({
-        to: settings.adminNotifyEmail.trim(),
-        subject: `[Admin] ${subject}`,
-        html,
-        trigger: "STATUS_CHANGE_ADMIN",
-        orderId,
-      });
+    if (settings.notifyAdminStatusChange) {
+      const adminTo = resolveAdminNotifyEmail(settings);
+      if (adminTo) {
+        const { subject, html } = buildCustomerStatusChangeEmail({
+          ...ctx,
+          previousStatus,
+          note,
+        });
+        await sendEmail({
+          to: adminTo,
+          subject: `[Admin] ${subject}`,
+          html,
+          trigger: "STATUS_CHANGE_ADMIN",
+          orderId,
+        });
+      }
     }
   }
 
@@ -198,12 +240,13 @@ export async function sendPendingOrderReminders(): Promise<{ reminded: number }>
     return { reminded: 0 };
   }
 
-  if (!settings.adminNotifyEmail.trim()) {
+  if (!settings.adminNotifyEmail.trim() && !settings.fromEmail.trim() && !settings.username.trim()) {
     return { reminded: 0 };
   }
 
   const hours = Math.max(1, settings.pendingReminderHours);
   const threshold = new Date(Date.now() - hours * 60 * 60 * 1000);
+  const adminTo = resolveAdminNotifyEmail(settings);
 
   const pending = await prisma.order.findMany({
     where: {
@@ -230,7 +273,7 @@ export async function sendPendingOrderReminders(): Promise<{ reminded: number }>
   );
 
   const result = await sendEmail({
-    to: settings.adminNotifyEmail.trim(),
+    to: adminTo,
     subject,
     html,
     trigger: "PENDING_REMINDER_ADMIN",

@@ -75,3 +75,13 @@ export function resolveSiteOrigin(): string {
     BUSINESS.url
   );
 }
+
+/** Admin alert recipient — falls back when adminNotifyEmail was not saved. */
+export function resolveAdminNotifyEmail(settings: EmailSettings): string {
+  return (
+    settings.adminNotifyEmail.trim() ||
+    settings.fromEmail.trim() ||
+    settings.username.trim() ||
+    BUSINESS.email
+  );
+}

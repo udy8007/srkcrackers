@@ -1,5 +1,6 @@
 import { ChangePasswordForm } from "./ChangePasswordForm";
 import { EmailSettingsForm } from "./EmailSettingsForm";
+import { EmailNotificationLog } from "./EmailNotificationLog";
 import { BackupSettingsForm } from "./BackupSettingsForm";
 import { SchedulerSettingsForm } from "./SchedulerSettingsForm";
 
@@ -16,6 +17,8 @@ export default function SettingsPage() {
       </div>
 
       <EmailSettingsForm />
+
+      <EmailNotificationLog />
 
       <SchedulerSettingsForm />
 

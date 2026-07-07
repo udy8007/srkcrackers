@@ -79,6 +79,8 @@ export async function POST(request: NextRequest) {
       ? body.password.trim()
       : saved.password;
 
+  const adminNotifyEmail = saved.adminNotifyEmail.trim() || to;
+
   await prisma.emailSettings.upsert({
     where: { id: EMAIL_SETTINGS_ID },
     create: {
@@ -90,7 +92,7 @@ export async function POST(request: NextRequest) {
       password,
       fromEmail: settings.fromEmail,
       fromName: settings.fromName,
-      adminNotifyEmail: saved.adminNotifyEmail,
+      adminNotifyEmail,
     },
     update: {
       host: settings.host,
@@ -100,12 +102,14 @@ export async function POST(request: NextRequest) {
       password,
       fromEmail: settings.fromEmail,
       fromName: settings.fromName,
+      adminNotifyEmail,
     },
   });
 
   return NextResponse.json({
     ok: true,
     to,
-    settings: serializeEmailSettings({ ...settings, password }),
+    adminNotifyEmail,
+    settings: serializeEmailSettings({ ...settings, password, adminNotifyEmail }),
   });
 }

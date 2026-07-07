@@ -69,3 +69,13 @@ export async function PATCH(request: NextRequest) {
 
   return NextResponse.json({ ok: true });
 }
+
+export async function DELETE() {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const result = await prisma.adminNotification.deleteMany();
+  return NextResponse.json({ ok: true, deleted: result.count });
+}
