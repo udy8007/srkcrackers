@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { EmailPreviewPanel } from "@/components/admin/NotificationTriggerCard";
 
 type BackupFrequency = "DAILY" | "MONTHLY" | "YEARLY";
 
@@ -74,6 +75,7 @@ export function BackupSettingsForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [runResult, setRunResult] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -268,6 +270,20 @@ export function BackupSettingsForm() {
         <p className="mt-3 rounded-lg bg-brandbg px-3 py-2 text-xs text-ink-muted">
           Schedule: <strong className="text-ink">{scheduleHint}</strong>
         </p>
+
+        <button
+          type="button"
+          onClick={() => setPreviewOpen(true)}
+          className="mt-3 text-xs font-semibold text-primary hover:underline"
+        >
+          Preview backup email template →
+        </button>
+
+        <EmailPreviewPanel
+          trigger="DB_BACKUP"
+          open={previewOpen}
+          onClose={() => setPreviewOpen(false)}
+        />
 
         <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-lg border border-line px-4 py-3">
           <input

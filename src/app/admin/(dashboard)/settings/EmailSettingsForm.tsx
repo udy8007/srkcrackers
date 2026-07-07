@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { NotificationTriggerCard } from "@/components/admin/NotificationTriggerCard";
+import { NOTIFICATION_TRIGGER_META } from "@/lib/notification-trigger-meta";
 
 interface EmailSettingsFormData {
   enabled: boolean;
@@ -41,33 +43,6 @@ const DEFAULTS: EmailSettingsFormData = {
   notifyAdminPendingReminder: true,
   pendingReminderHours: 2,
 };
-
-function Toggle({
-  label,
-  description,
-  checked,
-  onChange,
-}: {
-  label: string;
-  description?: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <label className="flex cursor-pointer items-start justify-between gap-4 rounded-lg border border-line px-4 py-3">
-      <div>
-        <span className="block text-sm font-semibold text-ink">{label}</span>
-        {description && <span className="mt-0.5 block text-xs text-ink-muted">{description}</span>}
-      </div>
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="mt-1 h-4 w-4 accent-primary"
-      />
-    </label>
-  );
-}
 
 export function EmailSettingsForm() {
   const [form, setForm] = useState<EmailSettingsFormData>(DEFAULTS);
@@ -275,60 +250,46 @@ export function EmailSettingsForm() {
 
       <div className="rounded-xl border border-line bg-white p-5 shadow-sm">
         <h3 className="font-display text-base font-semibold text-ink">Notification Triggers</h3>
-        <p className="mt-1 mb-4 text-sm text-ink-muted">Choose which events send emails</p>
+        <p className="mt-1 mb-4 text-sm text-ink-muted">
+          Enable each alert and preview the exact email template customers or admin will receive.
+        </p>
 
-        <div className="space-y-2">
-          <Toggle
-            label="Customer — order placed"
-            description="Confirmation email with invoice when customer provides email"
-            checked={form.notifyCustomerOrderPlaced}
-            onChange={(v) => update("notifyCustomerOrderPlaced", v)}
-          />
-          <Toggle
-            label="Customer — status updates"
-            description="Email when order status changes (confirmed, processing, dispatched)"
-            checked={form.notifyCustomerStatusChange}
-            onChange={(v) => update("notifyCustomerStatusChange", v)}
-          />
-          <Toggle
-            label="Customer — delivered"
-            description="Delivery confirmation when order is marked delivered"
-            checked={form.notifyCustomerDelivered}
-            onChange={(v) => update("notifyCustomerDelivered", v)}
-          />
-          <Toggle
-            label="Admin — new order alert"
-            description="Instant alert when a customer finalizes an order"
-            checked={form.notifyAdminNewOrder}
-            onChange={(v) => update("notifyAdminNewOrder", v)}
-          />
-          <Toggle
-            label="Admin — status change alert"
-            description="Notify admin on every status update (optional)"
-            checked={form.notifyAdminStatusChange}
-            onChange={(v) => update("notifyAdminStatusChange", v)}
-          />
-          <Toggle
-            label="Admin — pending order reminder"
-            description="Repeat email if order stays in Placed/Verifying (interval below; in-app scheduler)"
-            checked={form.notifyAdminPendingReminder}
-            onChange={(v) => update("notifyAdminPendingReminder", v)}
-          />
-        </div>
-
-        {form.notifyAdminPendingReminder && (
-          <label className="mt-4 block max-w-xs">
-            <span className="mb-1 block text-xs font-semibold text-ink">Reminder interval (hours)</span>
-            <input
-              type="number"
-              min={1}
-              max={72}
-              className="input"
-              value={form.pendingReminderHours}
-              onChange={(e) => update("pendingReminderHours", Number(e.target.value))}
+        <div className="space-y-3">
+          {NOTIFICATION_TRIGGER_META.map((meta) => (
+            <NotificationTriggerCard
+              key={meta.formKey}
+              icon={meta.icon}
+              label={meta.label}
+              description={meta.description}
+              audience={meta.audience}
+              timing={
+                meta.formKey === "notifyAdminPendingReminder"
+                  ? `Repeating — every ${form.pendingReminderHours}h via in-app scheduler`
+                  : meta.timing
+              }
+              checked={form[meta.formKey]}
+              onChange={(v) => update(meta.formKey, v)}
+              previewTrigger={meta.previewTrigger}
+              extra={
+                meta.formKey === "notifyAdminPendingReminder" && form.notifyAdminPendingReminder ? (
+                  <label className="block max-w-xs">
+                    <span className="mb-1 block text-xs font-semibold text-ink">
+                      Reminder interval (hours)
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={72}
+                      className="input"
+                      value={form.pendingReminderHours}
+                      onChange={(e) => update("pendingReminderHours", Number(e.target.value))}
+                    />
+                  </label>
+                ) : undefined
+              }
             />
-          </label>
-        )}
+          ))}
+        </div>
       </div>
 
       {error && <p className="rounded-lg bg-red/10 p-2.5 text-sm text-red">{error}</p>}

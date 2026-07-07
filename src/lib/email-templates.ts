@@ -211,3 +211,36 @@ export function buildTestEmail(): { subject: string; html: string } {
     html: emailLayout("Test Email", body),
   };
 }
+
+export function buildDatabaseBackupPreviewEmail(): { subject: string; html: string } {
+  const filename = "srkcrackers-db-20260707-0200-ist.json.gz";
+  const body = `
+    <h2 style="margin-top:0;color:#9d0208">Database Backup</h2>
+    <p>Your scheduled database backup for <strong>${esc(BUSINESS.name)}</strong> is attached.</p>
+    <div class="meta">
+      <p><strong>File:</strong> ${esc(filename)}</p>
+      <p><strong>Size:</strong> 1.24 MB</p>
+      <p><strong>Exported:</strong> ${esc(new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }))} IST</p>
+      <p><strong>Payment screenshots:</strong> Excluded (smaller file)</p>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:12px">
+      <thead>
+        <tr style="background:#fff4d6">
+          <th style="padding:8px;text-align:left">Table</th>
+          <th style="padding:8px;text-align:right">Rows</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td style="padding:6px 10px;border-bottom:1px solid #ebe1d7">orders</td><td style="padding:6px 10px;border-bottom:1px solid #ebe1d7;text-align:right">42</td></tr>
+        <tr><td style="padding:6px 10px;border-bottom:1px solid #ebe1d7">products</td><td style="padding:6px 10px;border-bottom:1px solid #ebe1d7;text-align:right">86</td></tr>
+        <tr><td style="padding:6px 10px;border-bottom:1px solid #ebe1d7">categories</td><td style="padding:6px 10px;border-bottom:1px solid #ebe1d7;text-align:right">12</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px;color:#6e5f5f;margin-top:16px">Store this file securely. It contains business and customer data.</p>
+  `;
+
+  return {
+    subject: `SRK Crackers DB Backup — ${filename}`,
+    html: emailLayout("Database Backup", body),
+  };
+}
