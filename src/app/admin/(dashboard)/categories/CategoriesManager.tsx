@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { CategoryEditModal } from "@/components/admin/CategoryEditModal";
 import { cn } from "@/lib/utils";
 
 interface CategoryRow {
@@ -16,7 +17,7 @@ export function CategoriesManager() {
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
-  const [drafts, setDrafts] = useState<Record<string, { label: string; sortOrder: number }>>({});
+  const [editingCategory, setEditingCategory] = useState<CategoryRow | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -26,11 +27,6 @@ export function CategoriesManager() {
       if (!res.ok) return;
       const data = await res.json();
       setCategories(data.categories);
-      setDrafts(
-        Object.fromEntries(
-          data.categories.map((c: CategoryRow) => [c.id, { label: c.label, sortOrder: c.sortOrder }]),
-        ),
-      );
     } finally {
       setLoading(false);
     }
@@ -40,7 +36,11 @@ export function CategoriesManager() {
     load();
   }, [load]);
 
-  const save = async (id: string, patch: Partial<{ label: string; active: boolean; sortOrder: number }>) => {
+  const save = async (
+    id: string,
+    patch: Partial<{ label: string; active: boolean; sortOrder: number }>,
+    closeModal = false,
+  ) => {
     setSavingId(id);
     setMessage(null);
     try {
@@ -56,6 +56,7 @@ export function CategoriesManager() {
       const updated = await res.json();
       setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, ...updated } : c)));
       setMessage("Category updated");
+      if (closeModal) setEditingCategory(null);
     } catch {
       setMessage("Network error");
     } finally {
@@ -64,15 +65,6 @@ export function CategoriesManager() {
   };
 
   const toggleActive = (cat: CategoryRow) => save(cat.id, { active: !cat.active });
-
-  const saveDraft = (cat: CategoryRow) => {
-    const draft = drafts[cat.id];
-    if (!draft) return;
-    const patch: { label?: string; sortOrder?: number } = {};
-    if (draft.label.trim() && draft.label !== cat.label) patch.label = draft.label.trim();
-    if (draft.sortOrder !== cat.sortOrder) patch.sortOrder = draft.sortOrder;
-    if (Object.keys(patch).length) save(cat.id, patch);
-  };
 
   return (
     <div className="space-y-5">
@@ -101,67 +93,38 @@ export function CategoriesManager() {
               </tr>
             </thead>
             <tbody>
-              {categories.map((cat) => {
-                const draft = drafts[cat.id] ?? { label: cat.label, sortOrder: cat.sortOrder };
-                const dirty =
-                  draft.label !== cat.label || draft.sortOrder !== cat.sortOrder;
-                return (
-                  <tr key={cat.id} className="border-b border-line last:border-0 hover:bg-brandbg">
-                    <td className="px-4 py-3 font-mono text-xs text-ink-muted">{cat.key}</td>
-                    <td className="px-4 py-3">
-                      <input
-                        className="input py-1.5 text-sm"
-                        value={draft.label}
-                        onChange={(e) =>
-                          setDrafts((d) => ({
-                            ...d,
-                            [cat.id]: { ...draft, label: e.target.value },
-                          }))
-                        }
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="number"
-                        className="input w-20 py-1.5 text-sm"
-                        value={draft.sortOrder}
-                        onChange={(e) =>
-                          setDrafts((d) => ({
-                            ...d,
-                            [cat.id]: { ...draft, sortOrder: Number(e.target.value) || 0 },
-                          }))
-                        }
-                      />
-                    </td>
-                    <td className="px-4 py-3 font-semibold">{cat.productCount}</td>
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => toggleActive(cat)}
-                        disabled={savingId === cat.id}
-                        className={cn(
-                          "rounded-full px-3 py-1 text-xs font-semibold",
-                          cat.active
-                            ? "bg-green/10 text-green"
-                            : "bg-ink/10 text-ink-muted",
-                        )}
-                      >
-                        {cat.active ? "Visible" : "Hidden"}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => saveDraft(cat)}
-                        disabled={!dirty || savingId === cat.id}
-                        className="btn-primary px-3 py-1.5 text-xs disabled:opacity-40"
-                      >
-                        {savingId === cat.id ? "Saving..." : "Save"}
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+              {categories.map((cat) => (
+                <tr key={cat.id} className="border-b border-line last:border-0 hover:bg-brandbg">
+                  <td className="px-4 py-3 font-mono text-xs text-ink-muted">{cat.key}</td>
+                  <td className="px-4 py-3 font-medium text-ink">{cat.label}</td>
+                  <td className="px-4 py-3 text-ink-muted">{cat.sortOrder}</td>
+                  <td className="px-4 py-3 font-semibold">{cat.productCount}</td>
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => toggleActive(cat)}
+                      disabled={savingId === cat.id}
+                      className={cn(
+                        "rounded-full px-3 py-1 text-xs font-semibold",
+                        cat.active
+                          ? "bg-green/10 text-green"
+                          : "bg-ink/10 text-ink-muted",
+                      )}
+                    >
+                      {cat.active ? "Visible" : "Hidden"}
+                    </button>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => setEditingCategory(cat)}
+                      className="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-ink-muted hover:border-primary hover:text-primary"
+                    >
+                      Edit
+                    </button>
+                  </td>
+                </tr>
+              ))}
               {!loading && categories.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-4 py-12 text-center text-ink-muted">
@@ -180,6 +143,17 @@ export function CategoriesManager() {
           </table>
         </div>
       </div>
+
+      {editingCategory && (
+        <CategoryEditModal
+          category={editingCategory}
+          saving={savingId === editingCategory.id}
+          onClose={() => {
+            if (savingId !== editingCategory.id) setEditingCategory(null);
+          }}
+          onSave={(patch) => save(editingCategory.id, patch, true)}
+        />
+      )}
     </div>
   );
 }
