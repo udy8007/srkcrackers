@@ -127,6 +127,18 @@ export function CategoriesManager() {
       )}
 
       <div className="rounded-xl border border-line bg-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
+          <p className="text-sm font-semibold text-ink-muted">
+            {categories.length} categor{categories.length === 1 ? "y" : "ies"}
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowAdd(true)}
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark"
+          >
+            + Add Category
+          </button>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead>
