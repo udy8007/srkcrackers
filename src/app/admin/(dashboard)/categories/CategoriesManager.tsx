@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { CategoryAddModal } from "@/components/admin/CategoryAddModal";
 import { CategoryEditModal } from "@/components/admin/CategoryEditModal";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +19,8 @@ export function CategoriesManager() {
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<CategoryRow | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -50,15 +52,42 @@ export function CategoriesManager() {
         body: JSON.stringify(patch),
       });
       if (!res.ok) {
-        setMessage("Save failed");
+        setMessage({ type: "err", text: "Save failed" });
         return;
       }
       const updated = await res.json();
       setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, ...updated } : c)));
-      setMessage("Category updated");
+      setMessage({ type: "ok", text: "Category updated" });
       if (closeModal) setEditingCategory(null);
     } catch {
-      setMessage("Network error");
+      setMessage({ type: "err", text: "Network error" });
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const createCategory = async (data: { key: string; label: string; active: boolean; sortOrder: number }) => {
+    setSavingId("new");
+    setMessage(null);
+    try {
+      const res = await fetch("/api/admin/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage({
+          type: "err",
+          text: typeof payload.error === "string" ? payload.error : "Could not add category",
+        });
+        return;
+      }
+      setCategories((prev) => [...prev, payload as CategoryRow].sort((a, b) => a.sortOrder - b.sortOrder));
+      setShowAdd(false);
+      setMessage({ type: "ok", text: `"${data.label}" added.` });
+    } catch {
+      setMessage({ type: "err", text: "Network error" });
     } finally {
       setSavingId(null);
     }
@@ -66,17 +95,35 @@ export function CategoriesManager() {
 
   const toggleActive = (cat: CategoryRow) => save(cat.id, { active: !cat.active });
 
+  const defaultSortOrder =
+    categories.length > 0 ? Math.max(...categories.map((c) => c.sortOrder)) + 1 : 1;
+
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-ink">Categories</h1>
-        <p className="text-sm text-ink-muted">
-          Rename, reorder, or hide categories on the storefront
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-ink">Categories</h1>
+          <p className="text-sm text-ink-muted">
+            Add, rename, reorder, or hide categories on the storefront
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowAdd(true)}
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark"
+        >
+          + Add Category
+        </button>
       </div>
 
       {message && (
-        <p className="rounded-lg bg-green/10 px-4 py-2 text-sm font-medium text-green">{message}</p>
+        <p
+          className={`rounded-lg px-4 py-2 text-sm font-medium ${
+            message.type === "ok" ? "bg-green/10 text-green" : "bg-red/10 text-red"
+          }`}
+        >
+          {message.text}
+        </p>
       )}
 
       <div className="rounded-xl border border-line bg-white shadow-sm">
@@ -152,6 +199,17 @@ export function CategoriesManager() {
             if (savingId !== editingCategory.id) setEditingCategory(null);
           }}
           onSave={(patch) => save(editingCategory.id, patch, true)}
+        />
+      )}
+
+      {showAdd && (
+        <CategoryAddModal
+          defaultSortOrder={defaultSortOrder}
+          saving={savingId === "new"}
+          onClose={() => {
+            if (savingId !== "new") setShowAdd(false);
+          }}
+          onSave={createCategory}
         />
       )}
     </div>
