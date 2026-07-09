@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { AdminPagination } from "@/components/admin/AdminPagination";
 import { ProductImageUpload } from "@/components/admin/ProductImageUpload";
 import { ProductPreviewModal } from "@/components/admin/ProductPreviewModal";
 import { compressImage } from "@/lib/client-actions";
@@ -35,6 +36,8 @@ type Draft = Pick<
 
 type StatusFilter = "all" | "active" | "hidden";
 
+const PAGE_SIZE = 25;
+
 const EMPTY_ADD: Draft = {
   name: "",
   pack: "1 box",
@@ -68,6 +71,9 @@ function draftsEqual(a: Draft, b: Draft) {
 export function ProductsManager() {
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [total, setTotal] = useState(0);
+  const [stats, setStats] = useState({ total: 0, active: 0, hidden: 0 });
+  const [page, setPage] = useState(0);
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -82,51 +88,55 @@ export function ProductsManager() {
   const [addForm, setAddForm] = useState<Draft>(EMPTY_ADD);
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
-  const load = useCallback(async () => {
-    const [prodRes, catRes] = await Promise.all([
-      fetch("/api/admin/products"),
-      fetch("/api/admin/categories"),
-    ]);
-    if (prodRes.ok) {
-      const data = await prodRes.json();
-      const list = data.products as AdminProduct[];
-      setProducts(list);
-      setDrafts(Object.fromEntries(list.map((p) => [p.id, toDraft(p)])));
-    }
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const loadCategories = useCallback(async () => {
+    const catRes = await fetch("/api/admin/categories?take=500&skip=0");
     if (catRes.ok) {
       const data = await catRes.json();
       setCategories(data.categories as Category[]);
     }
-    setLoading(false);
   }, []);
 
+  const load = useCallback(async (pageOverride?: number) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (search.trim()) params.set("q", search.trim());
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      if (categoryFilter) params.set("categoryId", categoryFilter);
+      params.set("take", String(PAGE_SIZE));
+      params.set("skip", String((pageOverride ?? page) * PAGE_SIZE));
+
+      const prodRes = await fetch(`/api/admin/products?${params.toString()}`);
+      if (prodRes.ok) {
+        const data = await prodRes.json();
+        const list = data.products as AdminProduct[];
+        setProducts(list);
+        setTotal(data.total);
+        setStats(data.stats ?? { total: data.total, active: 0, hidden: 0 });
+        setDrafts(Object.fromEntries(list.map((p) => [p.id, toDraft(p)])));
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [search, statusFilter, categoryFilter, page]);
+
   useEffect(() => {
-    void load();
+    void loadCategories();
+  }, [loadCategories]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void load();
+    }, 250);
+    return () => clearTimeout(timer);
   }, [load]);
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return products.filter((p) => {
-      if (statusFilter === "active" && !p.active) return false;
-      if (statusFilter === "hidden" && p.active) return false;
-      if (categoryFilter && p.categoryId !== categoryFilter) return false;
-      if (!q) return true;
-      return (
-        p.name.toLowerCase().includes(q) ||
-        p.categoryLabel.toLowerCase().includes(q) ||
-        p.pack.toLowerCase().includes(q)
-      );
-    });
-  }, [products, search, statusFilter, categoryFilter]);
-
-  const stats = useMemo(
-    () => ({
-      total: products.length,
-      active: products.filter((p) => p.active).length,
-      hidden: products.filter((p) => !p.active).length,
-    }),
-    [products],
-  );
+  useEffect(() => {
+    setPage(0);
+    setSelected(new Set());
+  }, [search, statusFilter, categoryFilter]);
 
   const updateDraft = (id: string, patch: Partial<Draft>) =>
     setDrafts((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
@@ -244,6 +254,7 @@ export function ProductsManager() {
       return next;
     });
     setMessage({ type: "ok", text: "Product deleted." });
+    void load();
   };
 
   const duplicateProduct = async (id: string) => {
@@ -267,10 +278,9 @@ export function ProductsManager() {
       });
       if (!response.ok) throw new Error();
       const created = (await response.json()) as AdminProduct;
-      setProducts((prev) => [...prev, created]);
-      setDrafts((prev) => ({ ...prev, [created.id]: toDraft(created) }));
       setExpandedId(created.id);
       setMessage({ type: "ok", text: `Duplicated as "${created.name}" (hidden until you enable).` });
+      void load();
     } catch {
       setMessage({ type: "err", text: "Duplicate failed." });
     } finally {
@@ -293,25 +303,15 @@ export function ProductsManager() {
       return;
     }
     if (action === "delete") {
-      setProducts((prev) => prev.filter((p) => !ids.includes(p.id)));
       setDrafts((prev) => {
         const next = { ...prev };
         ids.forEach((id) => delete next[id]);
         return next;
       });
-    } else {
-      const active = action === "enable";
-      setProducts((prev) => prev.map((p) => (ids.includes(p.id) ? { ...p, active } : p)));
-      setDrafts((prev) => {
-        const next = { ...prev };
-        ids.forEach((id) => {
-          if (next[id]) next[id] = { ...next[id], active };
-        });
-        return next;
-      });
     }
     setSelected(new Set());
     setMessage({ type: "ok", text: `Bulk ${action} applied to ${ids.length} item(s).` });
+    void load();
   };
 
   const createProduct = async () => {
@@ -329,12 +329,12 @@ export function ProductsManager() {
       });
       if (!response.ok) throw new Error();
       const created = (await response.json()) as AdminProduct;
-      setProducts((prev) => [...prev, created]);
-      setDrafts((prev) => ({ ...prev, [created.id]: toDraft(created) }));
       setShowAdd(false);
       setAddForm({ ...EMPTY_ADD, categoryId: categories[0]?.id ?? "" });
       setExpandedId(created.id);
       setMessage({ type: "ok", text: `"${created.name}" added.` });
+      setPage(0);
+      void load(0);
     } catch {
       setMessage({ type: "err", text: "Could not add product." });
     } finally {
@@ -352,10 +352,10 @@ export function ProductsManager() {
   };
 
   const toggleSelectAll = () => {
-    if (selected.size === filtered.length) {
+    if (selected.size === products.length) {
       setSelected(new Set());
     } else {
-      setSelected(new Set(filtered.map((p) => p.id)));
+      setSelected(new Set(products.map((p) => p.id)));
     }
   };
 
@@ -485,21 +485,21 @@ export function ProductsManager() {
       )}
 
       {/* Select all */}
-      {!loading && filtered.length > 0 && (
+      {!loading && products.length > 0 && (
         <label className="flex items-center gap-2 text-sm text-ink-muted">
           <input
             type="checkbox"
-            checked={selected.size === filtered.length && filtered.length > 0}
+            checked={selected.size === products.length && products.length > 0}
             onChange={toggleSelectAll}
             className="h-4 w-4 rounded border-line"
           />
-          Select all on this page ({filtered.length})
+          Select all on this page ({products.length})
         </label>
       )}
 
       {/* Product list */}
       <div className="space-y-3">
-        {filtered.map((product) => {
+        {products.map((product) => {
           const draft = drafts[product.id] ?? toDraft(product);
           const dirty = isDirty(product.id);
           const expanded = expandedId === product.id;
@@ -692,11 +692,20 @@ export function ProductsManager() {
             Loading products...
           </div>
         )}
-        {!loading && filtered.length === 0 && (
+        {!loading && products.length === 0 && (
           <div className="rounded-xl border border-line bg-white px-4 py-12 text-center text-ink-muted">
             No products found.
           </div>
         )}
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-line bg-white shadow-sm">
+        <AdminPagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          className="border-t-0"
+        />
       </div>
 
       {/* Add product modal */}

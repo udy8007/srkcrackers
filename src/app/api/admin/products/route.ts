@@ -26,18 +26,55 @@ function serializeProduct(
   };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const products = await prisma.product.findMany({
-    orderBy: [{ category: { sortOrder: "asc" } }, { sortOrder: "asc" }],
-    include: { category: { select: { key: true, label: true } } },
-  });
+  const { searchParams } = new URL(request.url);
+  const q = searchParams.get("q")?.trim() ?? "";
+  const statusParam = searchParams.get("status") ?? "";
+  const categoryId = searchParams.get("categoryId") ?? "";
+  const take = Math.min(Number(searchParams.get("take")) || 25, 200);
+  const skip = Math.max(Number(searchParams.get("skip")) || 0, 0);
 
-  return NextResponse.json({ products: products.map(serializeProduct) });
+  const where: Prisma.ProductWhereInput = {};
+  if (statusParam === "active") where.active = true;
+  else if (statusParam === "hidden") where.active = false;
+  if (categoryId) where.categoryId = categoryId;
+  if (q) {
+    where.OR = [
+      { name: { contains: q, mode: "insensitive" } },
+      { pack: { contains: q, mode: "insensitive" } },
+      { category: { label: { contains: q, mode: "insensitive" } } },
+    ];
+  }
+
+  const orderBy: Prisma.ProductOrderByWithRelationInput[] = [
+    { category: { sortOrder: "asc" } },
+    { sortOrder: "asc" },
+  ];
+
+  const [products, total, statsTotal, statsActive, statsHidden] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      orderBy,
+      take,
+      skip,
+      include: { category: { select: { key: true, label: true } } },
+    }),
+    prisma.product.count({ where }),
+    prisma.product.count(),
+    prisma.product.count({ where: { active: true } }),
+    prisma.product.count({ where: { active: false } }),
+  ]);
+
+  return NextResponse.json({
+    products: products.map(serializeProduct),
+    total,
+    stats: { total: statsTotal, active: statsActive, hidden: statsHidden },
+  });
 }
 
 export async function POST(request: NextRequest) {

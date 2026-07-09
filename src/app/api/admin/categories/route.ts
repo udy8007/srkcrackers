@@ -5,33 +5,58 @@ import { slugify } from "@/lib/slugify";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+function serializeCategory(
+  c: {
+    id: string;
+    key: string;
+    label: string;
+    active: boolean;
+    sortOrder: number;
+    _count: { products: number };
+  },
+) {
+  return {
+    id: c.id,
+    key: c.key,
+    label: c.label,
+    active: c.active,
+    sortOrder: c.sortOrder,
+    productCount: c._count.products,
+  };
+}
+
+export async function GET(request: NextRequest) {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const categories = await prisma.category.findMany({
-    orderBy: { sortOrder: "asc" },
-    select: {
-      id: true,
-      key: true,
-      label: true,
-      active: true,
-      sortOrder: true,
-      _count: { select: { products: true } },
-    },
-  });
+  const { searchParams } = new URL(request.url);
+  const take = Math.min(Number(searchParams.get("take")) || 25, 500);
+  const skip = Math.max(Number(searchParams.get("skip")) || 0, 0);
+
+  const [categories, total, maxSort] = await Promise.all([
+    prisma.category.findMany({
+      orderBy: { sortOrder: "asc" },
+      take,
+      skip,
+      select: {
+        id: true,
+        key: true,
+        label: true,
+        active: true,
+        sortOrder: true,
+        _count: { select: { products: true } },
+      },
+    }),
+    prisma.category.count(),
+    prisma.category.aggregate({ _max: { sortOrder: true } }),
+  ]);
 
   return NextResponse.json({
-    categories: categories.map((c) => ({
-      id: c.id,
-      key: c.key,
-      label: c.label,
-      active: c.active,
-      sortOrder: c.sortOrder,
-      productCount: c._count.products,
-    })),
+    categories: categories.map(serializeCategory),
+    total,
+    nextSortOrder: (maxSort._max.sortOrder ?? 0) + 1,
   });
 }
 

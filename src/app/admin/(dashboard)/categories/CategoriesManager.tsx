@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { AdminPagination } from "@/components/admin/AdminPagination";
 import { CategoryAddModal } from "@/components/admin/CategoryAddModal";
 import { CategoryEditModal } from "@/components/admin/CategoryEditModal";
 import { cn } from "@/lib/utils";
@@ -14,25 +15,38 @@ interface CategoryRow {
   productCount: number;
 }
 
+const PAGE_SIZE = 25;
+
 export function CategoriesManager() {
   const [categories, setCategories] = useState<CategoryRow[]>([]);
+  const [total, setTotal] = useState(0);
+  const [nextSortOrder, setNextSortOrder] = useState(1);
+  const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<CategoryRow | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
-  const load = useCallback(async () => {
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const load = useCallback(async (pageOverride?: number) => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/categories");
+      const params = new URLSearchParams({
+        take: String(PAGE_SIZE),
+        skip: String((pageOverride ?? page) * PAGE_SIZE),
+      });
+      const res = await fetch(`/api/admin/categories?${params.toString()}`);
       if (!res.ok) return;
       const data = await res.json();
       setCategories(data.categories);
+      setTotal(data.total);
+      setNextSortOrder(data.nextSortOrder ?? 1);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page]);
 
   useEffect(() => {
     load();
@@ -59,6 +73,7 @@ export function CategoriesManager() {
       setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, ...updated } : c)));
       setMessage({ type: "ok", text: "Category updated" });
       if (closeModal) setEditingCategory(null);
+      void load();
     } catch {
       setMessage({ type: "err", text: "Network error" });
     } finally {
@@ -83,9 +98,11 @@ export function CategoriesManager() {
         });
         return;
       }
-      setCategories((prev) => [...prev, payload as CategoryRow].sort((a, b) => a.sortOrder - b.sortOrder));
       setShowAdd(false);
       setMessage({ type: "ok", text: `"${data.label}" added.` });
+      const nextPage = Math.max(0, Math.ceil((total + 1) / PAGE_SIZE) - 1);
+      setPage(nextPage);
+      void load(nextPage);
     } catch {
       setMessage({ type: "err", text: "Network error" });
     } finally {
@@ -94,9 +111,6 @@ export function CategoriesManager() {
   };
 
   const toggleActive = (cat: CategoryRow) => save(cat.id, { active: !cat.active });
-
-  const defaultSortOrder =
-    categories.length > 0 ? Math.max(...categories.map((c) => c.sortOrder)) + 1 : 1;
 
   return (
     <div className="space-y-5">
@@ -129,7 +143,7 @@ export function CategoriesManager() {
       <div className="rounded-xl border border-line bg-white shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
           <p className="text-sm font-semibold text-ink-muted">
-            {categories.length} categor{categories.length === 1 ? "y" : "ies"}
+            {total} categor{total === 1 ? "y" : "ies"}
           </p>
           <button
             type="button"
@@ -201,6 +215,7 @@ export function CategoriesManager() {
             </tbody>
           </table>
         </div>
+        <AdminPagination page={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       {editingCategory && (
@@ -216,7 +231,7 @@ export function CategoriesManager() {
 
       {showAdd && (
         <CategoryAddModal
-          defaultSortOrder={defaultSortOrder}
+          defaultSortOrder={nextSortOrder}
           saving={savingId === "new"}
           onClose={() => {
             if (savingId !== "new") setShowAdd(false);
