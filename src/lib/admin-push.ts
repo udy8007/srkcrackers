@@ -1,12 +1,16 @@
 import "server-only";
-import { cert, getApps, initializeApp, type App } from "firebase-admin/app";
+import { cert, deleteApp, getApps, initializeApp, type App } from "firebase-admin/app";
 import { getMessaging } from "firebase-admin/messaging";
 import { prisma } from "@/lib/prisma";
 
-type ServiceAccountJson = {
+export const FIREBASE_SETTINGS_ID = "default";
+
+export type ServiceAccountJson = {
+  type?: string;
   project_id?: string;
   client_email?: string;
   private_key?: string;
+  [key: string]: unknown;
 };
 
 export type AdminPushFailure = {
@@ -22,26 +26,133 @@ export type AdminPushResult = {
   failures: AdminPushFailure[];
 };
 
-function parseServiceAccount(): ServiceAccountJson | null {
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim();
-  if (!raw) return null;
+/** Validate service-account JSON (reject google-services.json). */
+export function parseAndValidateServiceAccount(raw: string): {
+  ok: true;
+  json: ServiceAccountJson;
+  serialized: string;
+} | {
+  ok: false;
+  error: string;
+} {
+  let parsed: unknown;
   try {
-    return JSON.parse(raw) as ServiceAccountJson;
-  } catch (error) {
-    console.error("[admin-push] Invalid FIREBASE_SERVICE_ACCOUNT_JSON:", error);
-    return null;
+    parsed = JSON.parse(raw);
+  } catch {
+    return { ok: false, error: "File is not valid JSON." };
   }
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return { ok: false, error: "JSON must be an object." };
+  }
+
+  const obj = parsed as ServiceAccountJson;
+
+  if (obj.configuration_version != null || obj.client != null || obj.project_info != null) {
+    return {
+      ok: false,
+      error:
+        "That looks like google-services.json (APK client file). Upload the Service Account key from Firebase → Project settings → Service accounts → Generate new private key.",
+    };
+  }
+
+  if (obj.type && obj.type !== "service_account") {
+    return { ok: false, error: `Expected type "service_account", got "${String(obj.type)}".` };
+  }
+
+  if (!obj.project_id || !obj.client_email || !obj.private_key) {
+    return {
+      ok: false,
+      error: "JSON must include project_id, client_email, and private_key (Firebase service account).",
+    };
+  }
+
+  return {
+    ok: true,
+    json: obj,
+    serialized: JSON.stringify(obj),
+  };
 }
 
-function getFirebaseApp(): { app: App; projectId: string } | null {
-  const sa = parseServiceAccount();
+function parseJsonString(raw: string | null | undefined): ServiceAccountJson | null {
+  if (!raw?.trim()) return null;
+  const result = parseAndValidateServiceAccount(raw.trim());
+  return result.ok ? result.json : null;
+}
+
+/** Prefer DB upload, then Vercel env. */
+export async function resolveServiceAccount(): Promise<ServiceAccountJson | null> {
+  try {
+    const row = await prisma.firebaseSettings.findUnique({
+      where: { id: FIREBASE_SETTINGS_ID },
+      select: { serviceAccountJson: true },
+    });
+    const fromDb = parseJsonString(row?.serviceAccountJson);
+    if (fromDb) return fromDb;
+  } catch (error) {
+    console.error("[admin-push] Failed reading FirebaseSettings:", error);
+  }
+
+  return parseJsonString(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+}
+
+export async function getFirebaseStatus(): Promise<{
+  configured: boolean;
+  projectId: string | null;
+  clientEmail: string | null;
+  source: "database" | "env" | null;
+}> {
+  try {
+    const row = await prisma.firebaseSettings.findUnique({
+      where: { id: FIREBASE_SETTINGS_ID },
+      select: { serviceAccountJson: true, projectId: true, clientEmail: true },
+    });
+    const fromDb = parseJsonString(row?.serviceAccountJson);
+    if (fromDb) {
+      return {
+        configured: true,
+        projectId: fromDb.project_id ?? row?.projectId ?? null,
+        clientEmail: fromDb.client_email ?? row?.clientEmail ?? null,
+        source: "database",
+      };
+    }
+  } catch {
+    /* table may not exist yet before migrate */
+  }
+
+  const fromEnv = parseJsonString(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+  if (fromEnv) {
+    return {
+      configured: true,
+      projectId: fromEnv.project_id ?? null,
+      clientEmail: fromEnv.client_email ?? null,
+      source: "env",
+    };
+  }
+
+  return { configured: false, projectId: null, clientEmail: null, source: null };
+}
+
+/** Drop cached Admin SDK app so new credentials take effect. */
+export async function resetFirebaseApp(): Promise<void> {
+  const apps = getApps();
+  await Promise.all(apps.map((app) => deleteApp(app).catch(() => undefined)));
+}
+
+async function getFirebaseApp(): Promise<{ app: App; projectId: string } | null> {
+  const sa = await resolveServiceAccount();
   if (!sa?.project_id || !sa.client_email || !sa.private_key) {
     return null;
   }
 
   const existing = getApps()[0];
   if (existing) {
-    return { app: existing, projectId: sa.project_id };
+    const existingProject = existing.options.projectId;
+    if (existingProject && existingProject !== sa.project_id) {
+      await deleteApp(existing).catch(() => undefined);
+    } else if (existing) {
+      return { app: existing, projectId: sa.project_id };
+    }
   }
 
   const app = initializeApp({
@@ -87,10 +198,10 @@ export type AdminPushPayload = {
 
 /** Send FCM to every registered admin device. Never throws. */
 export async function sendAdminPush(payload: AdminPushPayload): Promise<AdminPushResult> {
-  const firebase = getFirebaseApp();
+  const firebase = await getFirebaseApp();
   if (!firebase) {
     console.warn(
-      "[admin-push] Skipped: set FIREBASE_SERVICE_ACCOUNT_JSON to enable FCM (Firebase service account).",
+      "[admin-push] Skipped: upload Firebase service account in Admin → Settings (or set FIREBASE_SERVICE_ACCOUNT_JSON).",
     );
     return {
       sent: 0,
@@ -100,7 +211,8 @@ export async function sendAdminPush(payload: AdminPushPayload): Promise<AdminPus
       failures: [
         {
           code: "missing-credentials",
-          message: "FIREBASE_SERVICE_ACCOUNT_JSON is missing or invalid JSON",
+          message:
+            "Firebase service account is not configured. Upload it in Admin → Settings → Push notifications.",
         },
       ],
     };
@@ -119,7 +231,6 @@ export async function sendAdminPush(payload: AdminPushPayload): Promise<AdminPus
     };
   }
 
-  // FCM data values must be strings
   const data: Record<string, string> = {
     target_url: payload.targetUrl,
     click_action: payload.targetUrl,
@@ -212,6 +323,7 @@ export async function unregisterAdminDeviceToken(token: string) {
   return prisma.adminDeviceToken.deleteMany({ where: { token: trimmed } });
 }
 
-export function getFirebaseProjectId(): string | null {
-  return parseServiceAccount()?.project_id ?? null;
+export async function getFirebaseProjectId(): Promise<string | null> {
+  const status = await getFirebaseStatus();
+  return status.projectId;
 }

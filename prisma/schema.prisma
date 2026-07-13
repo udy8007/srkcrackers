@@ -265,3 +265,13 @@ model AdminDeviceToken {
 
   @@index([adminUserId])
 }
+
+/// Firebase service account for server-side FCM (uploaded in Admin → Settings).
+model FirebaseSettings {
+  id                 String   @id @default("default")
+  serviceAccountJson String   @default("")
+  projectId          String   @default("")
+  clientEmail        String   @default("")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}

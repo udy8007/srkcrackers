@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
-  getFirebaseProjectId,
+  getFirebaseStatus,
   registerAdminDeviceToken,
   sendAdminPush,
 } from "@/lib/admin-push";
@@ -23,7 +23,6 @@ export async function POST(request: NextRequest) {
     body = {};
   }
 
-  // Prefer the live APK token so we don't test against a stale DB row
   const liveToken = typeof body.token === "string" ? body.token.trim() : "";
   if (liveToken) {
     await registerAdminDeviceToken({
@@ -46,12 +45,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const projectId = getFirebaseProjectId();
-  if (!projectId) {
+  const status = await getFirebaseStatus();
+  if (!status.configured) {
     return NextResponse.json(
       {
         error:
-          "FIREBASE_SERVICE_ACCOUNT_JSON is not set or invalid. Add the Firebase service account JSON on Vercel (project must be srk-cracker).",
+          "Firebase service account is not configured. Upload the service-account JSON in Settings (not google-services.json).",
         deviceCount,
         sent: 0,
       },
@@ -113,14 +112,15 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [deviceCount, projectId] = await Promise.all([
+  const [deviceCount, status] = await Promise.all([
     prisma.adminDeviceToken.count(),
-    Promise.resolve(getFirebaseProjectId()),
+    getFirebaseStatus(),
   ]);
 
   return NextResponse.json({
     deviceCount,
-    configured: Boolean(projectId),
-    projectId,
+    configured: status.configured,
+    projectId: status.projectId,
+    source: status.source,
   });
 }

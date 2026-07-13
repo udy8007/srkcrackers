@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   describePushBridge,
   readBridgeToken,
@@ -11,11 +11,14 @@ export function PushTestForm() {
   const [deviceCount, setDeviceCount] = useState<number | null>(null);
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [source, setSource] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [registering, setRegistering] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [manualToken, setManualToken] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
   const [bridge, setBridge] = useState(() => ({
     hasToken: false,
     tokenPreview: null as string | null,
@@ -39,6 +42,7 @@ export function PushTestForm() {
       setDeviceCount(data.deviceCount ?? 0);
       setConfigured(Boolean(data.configured));
       setProjectId(typeof data.projectId === "string" ? data.projectId : null);
+      setSource(typeof data.source === "string" ? data.source : null);
       setError(null);
     } catch {
       setError("Network error while loading push status");
@@ -52,6 +56,57 @@ export function PushTestForm() {
     const id = window.setInterval(refreshBridge, 3000);
     return () => window.clearInterval(id);
   }, [refreshStatus, refreshBridge]);
+
+  const uploadServiceAccount = async (file: File | null) => {
+    if (!file) return;
+    setUploading(true);
+    setMessage(null);
+    setError(null);
+    try {
+      const text = await file.text();
+      const res = await fetch("/api/admin/settings/firebase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ serviceAccountJson: text }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Upload failed");
+        return;
+      }
+      setMessage(data.message ?? "Firebase service account saved.");
+      if (typeof data.projectId === "string") setProjectId(data.projectId);
+      setConfigured(true);
+      setSource("database");
+      await refreshStatus();
+    } catch {
+      setError("Network error while uploading service account");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  const clearServiceAccount = async () => {
+    if (!confirm("Remove the uploaded Firebase service account from the database?")) return;
+    setUploading(true);
+    setMessage(null);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/settings/firebase", { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Could not clear credentials");
+        return;
+      }
+      setMessage(data.message ?? "Cleared.");
+      await refreshStatus();
+    } catch {
+      setError("Network error while clearing credentials");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const sendTest = async () => {
     setLoading(true);
@@ -80,21 +135,21 @@ export function PushTestForm() {
     }
   };
 
-  const registerToken = async (source: "bridge" | "manual") => {
+  const registerToken = async (sourceKind: "bridge" | "manual") => {
     setRegistering(true);
     setMessage(null);
     setError(null);
     refreshBridge();
 
     const token =
-      source === "manual"
+      sourceKind === "manual"
         ? manualToken.trim()
         : readBridgeToken()?.trim() || manualToken.trim();
 
     if (!token) {
       setRegistering(false);
       setError(
-        source === "manual"
+        sourceKind === "manual"
           ? "Paste an FCM token in the box first."
           : "No FCM token on this device yet. The APK must inject it, or paste a token below.",
       );
@@ -108,7 +163,7 @@ export function PushTestForm() {
       return;
     }
     setMessage("Token registered. Registered devices should increase after refresh.");
-    if (source === "manual") setManualToken("");
+    if (sourceKind === "manual") setManualToken("");
     await refreshStatus();
   };
 
@@ -116,9 +171,47 @@ export function PushTestForm() {
     <section className="max-w-xl rounded-xl border border-line bg-white p-5 shadow-sm">
       <h2 className="font-display text-lg font-semibold text-ink">Push notifications (APK)</h2>
       <p className="mt-1 mb-4 text-sm text-ink-muted">
-        Opening the admin page alone does <strong>not</strong> create a token. The WebView APK must
-        inject the FCM token into the page (or paste it below for a one-time test).
+        Upload the Firebase <strong>service account</strong> JSON here (from Firebase → Service
+        accounts → Generate new private key). Do <strong>not</strong> upload{" "}
+        <code className="text-xs">google-services.json</code>.
       </p>
+
+      <div className="mb-4 space-y-2 rounded-lg border border-line bg-brandbg/50 p-3">
+        <label className="block text-xs font-semibold text-ink">
+          Firebase service account JSON
+        </label>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/json,.json"
+          className="block w-full text-sm text-ink file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
+          onChange={(e) => void uploadServiceAccount(e.target.files?.[0] ?? null)}
+          disabled={uploading}
+        />
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-ink transition hover:border-primary hover:text-primary disabled:opacity-50"
+          >
+            {uploading ? "Saving…" : "Choose JSON file"}
+          </button>
+          {configured && source === "database" && (
+            <button
+              type="button"
+              onClick={() => void clearServiceAccount()}
+              disabled={uploading}
+              className="rounded-lg border border-red/30 bg-red/5 px-3 py-2 text-sm font-semibold text-red disabled:opacity-50"
+            >
+              Remove uploaded key
+            </button>
+          )}
+        </div>
+        <p className="text-[0.7rem] text-ink-muted">
+          File stays in your database (admin-only). Prefer project <strong>srk-cracker</strong>.
+        </p>
+      </div>
 
       <dl className="mb-4 grid gap-2 text-sm sm:grid-cols-2">
         <div className="rounded-lg bg-brandbg px-3 py-2">
@@ -130,9 +223,9 @@ export function PushTestForm() {
               ? "…"
               : configured
                 ? projectId
-                  ? `Configured (${projectId})`
+                  ? `Configured (${projectId}${source ? ` · ${source}` : ""})`
                   : "Configured"
-                : "Not configured"}
+                : "Not configured — upload service account JSON above"}
           </dd>
         </div>
         <div className="rounded-lg bg-brandbg px-3 py-2">
