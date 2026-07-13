@@ -3,6 +3,7 @@ import "server-only";
 import {
   buildAdminNewOrderEmail,
   buildAdminPendingReminderEmail,
+  buildAdminStatusChangeEmail,
   buildCustomerOrderConfirmationEmail,
   buildCustomerStatusChangeEmail,
   buildDatabaseBackupPreviewEmail,
@@ -89,14 +90,12 @@ export function getEmailPreview(trigger: EmailPreviewTrigger): { subject: string
       });
     case "ORDER_PLACED_ADMIN":
       return buildAdminNewOrderEmail(ctx);
-    case "STATUS_CHANGE_ADMIN": {
-      const email = buildCustomerStatusChangeEmail({
+    case "STATUS_CHANGE_ADMIN":
+      return buildAdminStatusChangeEmail({
         ...sampleContext("DISPATCHED"),
         previousStatus: "PROCESSING",
         note: "Handed to postal — expected delivery in 3 days",
       });
-      return { subject: `[Admin] ${email.subject}`, html: email.html };
-    }
     case "PENDING_REMINDER_ADMIN":
       return buildAdminPendingReminderEmail(
         [

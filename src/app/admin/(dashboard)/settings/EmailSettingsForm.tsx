@@ -295,7 +295,8 @@ export function EmailSettingsForm() {
         </p>
 
         <div className="space-y-3">
-          {NOTIFICATION_TRIGGER_META.map((meta) => (
+          {NOTIFICATION_TRIGGER_META.filter((meta) => meta.formKey !== "notifyAdminStatusChange").map(
+            (meta) => (
             <NotificationTriggerCard
               key={meta.formKey}
               icon={meta.icon}

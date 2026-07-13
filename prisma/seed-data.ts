@@ -6,12 +6,12 @@ import { PRODUCT_IMAGES } from "./product-images";
 export const CATEGORY_IMAGES: Record<string, string> = {
   sparklers: "/products/sparklers.svg",
   fancy: "/products/fancy.svg",
+  rockets: "/products/fancy.svg",
   fountain: "/products/fountain.svg",
   bombs: "/products/bombs.svg",
   lakshmi: "/products/lakshmi.svg",
   kids: "/products/kids.svg",
   wala: "/products/wala.svg",
-  crackling: "/products/crackling.svg",
 };
 
 export const FALLBACK_IMAGE = "/products/default.svg";
@@ -51,14 +51,14 @@ function item(
 }
 
 export const CATEGORIES: SeedCategory[] = [
-  { key: "sparklers", label: "SPARKLERS (80% OFF)", sortOrder: 1 },
-  { key: "fancy", label: "FANCY / SKY SHOTS (80% OFF)", sortOrder: 2 },
-  { key: "fountain", label: "FOUNTAINS & FLOWER POTS (80% OFF)", sortOrder: 3 },
-  { key: "bombs", label: "BOMBS (80% OFF)", sortOrder: 4 },
-  { key: "lakshmi", label: "LAKSHMI & BIJILI (80% OFF)", sortOrder: 5 },
-  { key: "kids", label: "KIDS NOVELTIES (80% OFF)", sortOrder: 6 },
-  { key: "wala", label: "WALA / GARLAND (80% OFF)", sortOrder: 7 },
-  { key: "crackling", label: "CRACKLING (80% OFF)", sortOrder: 8 },
+  { key: "sparklers", label: "SPARKLERS", sortOrder: 1 },
+  { key: "fancy", label: "FANCY SKY SHOTS", sortOrder: 2 },
+  { key: "rockets", label: "ROCKETS", sortOrder: 3 },
+  { key: "fountain", label: "FOUNTAINS & FLOWER POTS", sortOrder: 4 },
+  { key: "bombs", label: "BOMBS", sortOrder: 5 },
+  { key: "lakshmi", label: "SOUND CRACKERS", sortOrder: 6 },
+  { key: "kids", label: "KIDS SPECIAL", sortOrder: 7 },
+  { key: "wala", label: "GARLAND (WALA)", sortOrder: 8 },
 ];
 
 export const PRODUCTS: SeedProduct[] = [
@@ -72,6 +72,7 @@ export const PRODUCTS: SeedProduct[] = [
   item("sparklers", "30 cm Electric Sparklers", "1 box (5 pcs)", 45, "30 cm mega electric sparklers — extra-long burn with shower of golden sparks. 5 pcs per box."),
   item("sparklers", "30 cm Colour Sparklers", "1 box (5 pcs)", 55, "30 cm colour sparklers — spectacular multi-colour shower effect. Premium long sparklers."),
   item("sparklers", "50 cm Electric Sparklers", "1 box (5 pcs)", 180, "50 cm jumbo electric sparklers — longest sparkler in our range. Dramatic golden cascade."),
+  item("sparklers", "10 Crackling", "1 box (10 pcs)", 22, "10 crackling sparklers — golden sparks with crackling sound effect."),
 
   item("fancy", "2\" Fancy", "1 pc", 120, "2 inch aerial fancy — shoots skyward and bursts with colourful stars. Single-piece sky shot."),
   item("fancy", "2\" Fancy (3 Pcs)", "1 box (3 pcs)", 280, "2 inch fancy sky shots — box of 3 aerial bursts with multi-colour display."),
@@ -82,14 +83,12 @@ export const PRODUCTS: SeedProduct[] = [
   item("fancy", "30 Shots Multi Colour", "1 box (1 set)", 450, "30-shot multi-colour aerial display — continuous sky shots with mixed colours."),
   item("fancy", "3 Pcs Sky Shot (2\")", "1 box (3 pcs)", 280, "Triple 2 inch sky shot pack — three consecutive aerial bursts."),
   item("fancy", "2\" Pipe (1 Piece)", "1 pc", 120, "2 inch pipe sky shot — cylindrical aerial cracker with sharp burst."),
-  item("fancy", "Sky Scrapper", "1 pc", 150, "Sky Scrapper rocket-style aerial — high altitude burst with trailing sparks."),
   item("fancy", "Green Flash", "1 box (5 pcs)", 70, "Green flash aerial novelty — bright green flash effect on burst. 5 pcs per box."),
-  item("fancy", "Selfie Stick", "1 box (5 pcs)", 170, "Selfie Stick photo flash — bright white flash effect for photos. 5 pcs per box."),
-  item("fancy", "Colour Smoke", "1 box (5 pcs)", 180, "Colour smoke fountain — releases coloured smoke plume. Daytime-friendly. 5 pcs per box."),
-  item("fancy", "Rocket Bomb", "1 box (10 pcs)", 120, "Rocket bomb crackers — launches with whistle and bursts in the sky. 10 per box."),
-  item("fancy", "Whistling Rocket", "1 box (10 pcs)", 240, "Whistling rockets — loud whistle on ascent followed by aerial burst. 10 pcs per box."),
-  item("fancy", "Photo Flash", "1 box (10 pcs)", 90, "Photo flash crackers — bright white strobe flash effect for night celebrations."),
   item("fancy", "7 Shots", "1 box (1 set)", 140, "7-shot multi-burst aerial display — sequential sky shots in one compact set."),
+
+  item("rockets", "Sky Scrapper", "1 pc", 150, "Sky Scrapper rocket-style aerial — high altitude burst with trailing sparks."),
+  item("rockets", "Rocket Bomb", "1 box (10 pcs)", 120, "Rocket bomb crackers — launches with whistle and bursts in the sky. 10 per box."),
+  item("rockets", "Whistling Rocket", "1 box (10 pcs)", 240, "Whistling rockets — loud whistle on ascent followed by aerial burst. 10 pcs per box."),
 
   item("fountain", "Mega Peacock (3 Face)", "1 box (5 pcs)", 280, "Mega Peacock 3-face fountain — three-directional colour fountain with peacock-tail effect."),
   item("fountain", "Bada Peacock (5 Face)", "1 box (5 pcs)", 420, "Bada Peacock 5-face fountain — five-way colour spray with golden and green sparks."),
@@ -118,6 +117,7 @@ export const PRODUCTS: SeedProduct[] = [
   item("lakshmi", "Red Bijili (100)", "1 bag (100 pcs)", 28, "Red bijili — small single-shot crackers, 100 pieces per bag."),
   item("lakshmi", "Kaki Ola Vedi (1 Packet)", "1 pkt (5 pcs)", 65, "Kaki Ola Vedi — traditional Tamil Nadu favourite with sharp double sound."),
   item("lakshmi", "Jallikattu DLX (1 Packet)", "1 pkt (5 pcs)", 65, "Jallikattu deluxe sound crackers — loud burst. 5 pcs per packet."),
+  item("lakshmi", "2¾ Kuruvi", "1 pkt (5 pcs)", 8, "2.75 inch Kuruvi crackers — classic small sound cracker. Budget-friendly."),
 
   item("kids", "Roll Cap", "1 box (10 pcs)", 85, "Roll cap strips — safe fun for kids, produces small popping sounds."),
   item("kids", "Wonder Throw Box", "1 box (10 pcs)", 120, "Wonder throw box — throw-and-pop novelty cracker. Safe for children with supervision."),
@@ -127,6 +127,9 @@ export const PRODUCTS: SeedProduct[] = [
   item("kids", "Gun with 3 Ring Caps", "1 set", 100, "Toy gun with 3 ring cap rolls — classic kids' firework toy."),
   item("kids", "Ring Cap (100 Packets)", "1 pack (100 pkt)", 750, "Ring caps bulk pack — 100 packets for toy guns."),
   item("kids", "Anaconda (10 Boxes)", "1 pack (10 boxes)", 50, "Anaconda snake novelty — expanding snake effect on ignition."),
+  item("kids", "Selfie Stick", "1 box (5 pcs)", 170, "Selfie Stick photo flash — bright white flash effect for photos. 5 pcs per box."),
+  item("kids", "Colour Smoke", "1 box (5 pcs)", 180, "Colour smoke fountain — releases coloured smoke plume. Daytime-friendly. 5 pcs per box."),
+  item("kids", "Photo Flash", "1 box (10 pcs)", 90, "Photo flash crackers — bright white strobe flash effect for night celebrations."),
 
   item("wala", "28 Wala", "1 string", 15, "28 crackers string (wala) — short garland for quick celebration burst."),
   item("wala", "100 Wala", "1 string", 45, "100 wala cracker garland — continuous chain firing."),
@@ -136,7 +139,4 @@ export const PRODUCTS: SeedProduct[] = [
   item("wala", "2000 Wala", "1 box", 440, "2000 wala mega garland — long continuous burst. Ideal for Diwali finale."),
   item("wala", "5000 Wala", "1 box", 1100, "5000 wala super garland — one of the longest ladi chains."),
   item("wala", "10000 Wala", "1 box", 2200, "10000 wala jumbo garland — maximum length continuous cracker chain."),
-
-  item("crackling", "10 Crackling", "1 box (10 pcs)", 22, "10 crackling sparklers — golden sparks with crackling sound effect."),
-  item("crackling", "2¾ Kuruvi", "1 pkt (5 pcs)", 8, "2.75 inch Kuruvi crackers — classic small sound cracker. Budget-friendly."),
 ];

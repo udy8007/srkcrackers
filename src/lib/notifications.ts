@@ -203,23 +203,8 @@ export async function notifyStatusChange(
       });
     }
 
-    if (settings.notifyAdminStatusChange) {
-      const adminTo = resolveAdminNotifyEmail(settings);
-      if (adminTo) {
-        const { subject, html } = buildCustomerStatusChangeEmail({
-          ...ctx,
-          previousStatus,
-          note,
-        });
-        await sendEmail({
-          to: adminTo,
-          subject: `[Admin] ${subject}`,
-          html,
-          trigger: "STATUS_CHANGE_ADMIN",
-          orderId,
-        });
-      }
-    }
+    // Status-update emails are customer-only. Admin is notified in-app below.
+    // (New-order and pending-reminder emails still go to admin separately.)
   }
 
   await createAdminNotification({

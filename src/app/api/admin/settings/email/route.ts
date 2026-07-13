@@ -70,10 +70,7 @@ export async function PATCH(request: NextRequest) {
       typeof body.notifyAdminNewOrder === "boolean"
         ? body.notifyAdminNewOrder
         : existing.notifyAdminNewOrder,
-    notifyAdminStatusChange:
-      typeof body.notifyAdminStatusChange === "boolean"
-        ? body.notifyAdminStatusChange
-        : existing.notifyAdminStatusChange,
+    notifyAdminStatusChange: false, // status emails go to customer only
     notifyAdminPendingReminder:
       typeof body.notifyAdminPendingReminder === "boolean"
         ? body.notifyAdminPendingReminder

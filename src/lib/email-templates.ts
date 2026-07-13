@@ -149,6 +149,38 @@ export function buildCustomerStatusChangeEmail(
   };
 }
 
+/** Admin-facing status change alert (not the customer copy). */
+export function buildAdminStatusChangeEmail(
+  ctx: OrderEmailContext & { previousStatus: OrderStatus; note?: string | null },
+): { subject: string; html: string } {
+  const body = `
+    <h2 style="margin-top:0;color:#9d0208">📋 Order Status Changed</h2>
+    <div class="alert">
+      Order <strong>${esc(ctx.orderNumber)}</strong> moved from
+      <strong>${esc(ORDER_STATUS_LABEL[ctx.previousStatus])}</strong> →
+      <strong>${esc(ORDER_STATUS_LABEL[ctx.status])}</strong>.
+    </div>
+    <div class="meta">
+      <p><strong>Customer:</strong> ${esc(ctx.customerName)}</p>
+      <p><strong>Phone:</strong> ${esc(ctx.phone)}</p>
+      ${ctx.email ? `<p><strong>Customer Email:</strong> ${esc(ctx.email)}</p>` : ""}
+      <p><strong>Previous Status:</strong> ${esc(ORDER_STATUS_LABEL[ctx.previousStatus])}</p>
+      <p><strong>New Status:</strong> ${esc(ORDER_STATUS_LABEL[ctx.status])}</p>
+      ${ctx.note ? `<p><strong>Note:</strong> ${esc(ctx.note)}</p>` : ""}
+      <p><strong>Items:</strong> ${ctx.itemCount}</p>
+      <p><strong>Total:</strong> ${formatPrice(ctx.total)}</p>
+    </div>
+    <p style="text-align:center">
+      <a class="btn" href="${esc(ctx.adminOrderUrl)}">View Order in Admin</a>
+    </p>
+  `;
+
+  return {
+    subject: `[Admin] ${ctx.orderNumber} — ${ORDER_STATUS_LABEL[ctx.previousStatus]} → ${ORDER_STATUS_LABEL[ctx.status]}`,
+    html: emailLayout(`Admin Status Update ${ctx.orderNumber}`, body),
+  };
+}
+
 export function buildAdminPendingReminderEmail(
   orders: OrderEmailContext[],
   adminOrdersUrl: string,

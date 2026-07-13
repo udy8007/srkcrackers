@@ -60,7 +60,7 @@ export function CategoryAddModal({ defaultSortOrder, saving, onClose, onSave }: 
               className="input py-2 text-sm"
               value={label}
               onChange={(e) => handleLabelChange(e.target.value)}
-              placeholder="e.g. SPARKLERS (80% OFF)"
+              placeholder="e.g. SPARKLERS"
               disabled={saving}
               autoFocus
             />

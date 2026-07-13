@@ -65,9 +65,10 @@ export const NOTIFICATION_TRIGGER_META: NotificationTriggerMeta[] = [
     formKey: "notifyAdminStatusChange",
     previewTrigger: "STATUS_CHANGE_ADMIN",
     label: "Admin — status change alert",
-    description: "Optional copy of status updates sent to admin inbox",
+    description:
+      "Disabled: status emails go to the customer only. Admins see status changes in the dashboard.",
     audience: "Admin",
-    timing: "Instant — on every status change (off by default)",
+    timing: "In-app only — no email copy to admin",
     icon: "📋",
   },
   {
