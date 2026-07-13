@@ -18,28 +18,43 @@ Without this env var, pushes are skipped (bell + email still work).
 
 ## Android: register FCM token with the website
 
+**Important:** merely opening `/admin` in the WebView does **not** register a device.
+The native APK must obtain an FCM token and inject it into JavaScript.
+
 After the admin user is logged in (cookie session on `https://www.srkcrackers.in`), inject the FCM token into the WebView so [`AdminPushRegistrar`](../src/components/admin/AdminPushRegistrar.tsx) can `POST /api/admin/push/register`.
 
 Any one of these works:
 
 ```kotlin
-// Preferred: CustomEvent
+// Preferred: CustomEvent (run after page load / onPageFinished for /admin*)
+val escaped = fcmToken.replace("\\", "\\\\").replace("'", "\\'")
 val js = """
+  window.__SRK_FCM_TOKEN__='$escaped';
   window.dispatchEvent(new CustomEvent('srk-fcm-token', {
-    detail: { token: '${fcmToken}' }
+    detail: { token: '$escaped' }
   }));
 """.trimIndent()
 webView.evaluateJavascript(js, null)
 ```
 
 ```kotlin
-// Or set a global
-webView.evaluateJavascript("window.__SRK_FCM_TOKEN__='${fcmToken}';", null)
+// Or JS bridge the web page can call
+class SrkAdminBridge {
+  @JavascriptInterface
+  fun getFcmToken(): String = fcmTokenStore.current()
+}
+webView.addJavascriptInterface(SrkAdminBridge(), "SrkAdmin")
+// Also works with interface names: Android, AndroidBridge, AndroidNotification
+// methods: getFcmToken / getToken / readToken
 ```
 
 Re-inject on every `onNewToken` refresh and after page load of `/admin*`.
 
-Also create notification channel id **`admin_orders`** (Android 8+) to match server payload.
+In **Admin → Settings → Push notifications**, check **APK bridge on this device**:
+- “No Android FCM bridge detected” → APK is not wired yet
+- “Token detected” → registration should bump **Registered devices**
+
+You can also paste a token manually there for a one-time test.
 
 ## Android: open order on notification tap
 

@@ -1,13 +1,28 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import {
+  describePushBridge,
+  registerAdminFcmToken,
+} from "@/components/admin/AdminPushRegistrar";
 
 export function PushTestForm() {
   const [deviceCount, setDeviceCount] = useState<number | null>(null);
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
+  const [registering, setRegistering] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [manualToken, setManualToken] = useState("");
+  const [bridge, setBridge] = useState(() => ({
+    hasToken: false,
+    tokenPreview: null as string | null,
+    bridgesFound: [] as string[],
+  }));
+
+  const refreshBridge = useCallback(() => {
+    setBridge(describePushBridge());
+  }, []);
 
   const refreshStatus = useCallback(async () => {
     try {
@@ -22,12 +37,16 @@ export function PushTestForm() {
       setError(null);
     } catch {
       setError("Network error while loading push status");
+    } finally {
+      refreshBridge();
     }
-  }, []);
+  }, [refreshBridge]);
 
   useEffect(() => {
     void refreshStatus();
-  }, [refreshStatus]);
+    const id = window.setInterval(refreshBridge, 3000);
+    return () => window.clearInterval(id);
+  }, [refreshStatus, refreshBridge]);
 
   const sendTest = async () => {
     setLoading(true);
@@ -51,12 +70,27 @@ export function PushTestForm() {
     }
   };
 
+  const registerManual = async () => {
+    setRegistering(true);
+    setMessage(null);
+    setError(null);
+    const result = await registerAdminFcmToken(manualToken);
+    setRegistering(false);
+    if (!result.ok) {
+      setError(result.error ?? "Could not register token");
+      return;
+    }
+    setMessage("Token registered. Registered devices should increase after refresh.");
+    setManualToken("");
+    await refreshStatus();
+  };
+
   return (
     <section className="max-w-xl rounded-xl border border-line bg-white p-5 shadow-sm">
       <h2 className="font-display text-lg font-semibold text-ink">Push notifications (APK)</h2>
       <p className="mt-1 mb-4 text-sm text-ink-muted">
-        Sends a Firebase test notification to registered admin APK devices. Open the APK and sign in
-        once so the FCM token is saved.
+        Opening the admin page alone does <strong>not</strong> create a token. The WebView APK must
+        inject the FCM token into the page (or paste it below for a one-time test).
       </p>
 
       <dl className="mb-4 grid gap-2 text-sm sm:grid-cols-2">
@@ -76,7 +110,40 @@ export function PushTestForm() {
             {deviceCount == null ? "…" : deviceCount}
           </dd>
         </div>
+        <div className="rounded-lg bg-brandbg px-3 py-2 sm:col-span-2">
+          <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            APK bridge on this device
+          </dt>
+          <dd className="mt-0.5 font-medium text-ink">
+            {bridge.hasToken
+              ? `Token detected (${bridge.tokenPreview})`
+              : bridge.bridgesFound.length > 0
+                ? `Bridge found (${bridge.bridgesFound.join(", ")}) but no token method`
+                : "No Android FCM bridge detected — APK is not injecting a token"}
+          </dd>
+        </div>
       </dl>
+
+      <div className="mb-4 space-y-2">
+        <label className="block text-xs font-semibold text-ink">
+          Manual FCM token (optional test)
+        </label>
+        <textarea
+          value={manualToken}
+          onChange={(e) => setManualToken(e.target.value)}
+          rows={3}
+          placeholder="Paste device FCM token from Android Logcat / Firebase…"
+          className="input font-mono text-xs"
+        />
+        <button
+          type="button"
+          onClick={() => void registerManual()}
+          disabled={registering || !manualToken.trim()}
+          className="rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-ink transition hover:border-primary hover:text-primary disabled:opacity-50"
+        >
+          {registering ? "Registering…" : "Register this token"}
+        </button>
+      </div>
 
       <div className="flex flex-wrap gap-2">
         <button
