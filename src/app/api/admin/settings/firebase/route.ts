@@ -59,20 +59,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: validated.error }, { status: 400 });
   }
 
-  await prisma.firebaseSettings.upsert({
-    where: { id: FIREBASE_SETTINGS_ID },
-    create: {
-      id: FIREBASE_SETTINGS_ID,
-      serviceAccountJson: validated.serialized,
-      projectId: validated.json.project_id ?? "",
-      clientEmail: validated.json.client_email ?? "",
-    },
-    update: {
-      serviceAccountJson: validated.serialized,
-      projectId: validated.json.project_id ?? "",
-      clientEmail: validated.json.client_email ?? "",
-    },
-  });
+  try {
+    await prisma.firebaseSettings.upsert({
+      where: { id: FIREBASE_SETTINGS_ID },
+      create: {
+        id: FIREBASE_SETTINGS_ID,
+        serviceAccountJson: validated.serialized,
+        projectId: validated.json.project_id ?? "",
+        clientEmail: validated.json.client_email ?? "",
+      },
+      update: {
+        serviceAccountJson: validated.serialized,
+        projectId: validated.json.project_id ?? "",
+        clientEmail: validated.json.client_email ?? "",
+      },
+    });
+  } catch (error) {
+    console.error("[firebase-settings] Save failed:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json(
+      {
+        error: message.includes("FirebaseSettings") || message.includes("does not exist")
+          ? "Database table missing. Wait for the latest deploy (db sync), then try again."
+          : `Could not save: ${message}`,
+      },
+      { status: 500 },
+    );
+  }
 
   await resetFirebaseApp();
 
@@ -80,7 +93,7 @@ export async function POST(request: NextRequest) {
     ok: true,
     projectId: validated.json.project_id,
     clientEmail: validated.json.client_email,
-    message: "Firebase service account saved. You can send a test push now.",
+    message: `Firebase service account saved for ${validated.json.project_id}. You can send a test push now.`,
   });
 }
 

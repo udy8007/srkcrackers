@@ -7,6 +7,18 @@ import {
   registerAdminFcmToken,
 } from "@/components/admin/AdminPushRegistrar";
 
+async function readFileText(file: File): Promise<string> {
+  if (typeof file.text === "function") {
+    return file.text();
+  }
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(reader.error ?? new Error("Could not read file"));
+    reader.readAsText(file);
+  });
+}
+
 export function PushTestForm() {
   const [deviceCount, setDeviceCount] = useState<number | null>(null);
   const [configured, setConfigured] = useState<boolean | null>(null);
@@ -18,6 +30,7 @@ export function PushTestForm() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [manualToken, setManualToken] = useState("");
+  const [pasteJson, setPasteJson] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const [bridge, setBridge] = useState(() => ({
     hasToken: false,
@@ -43,7 +56,6 @@ export function PushTestForm() {
       setConfigured(Boolean(data.configured));
       setProjectId(typeof data.projectId === "string" ? data.projectId : null);
       setSource(typeof data.source === "string" ? data.source : null);
-      setError(null);
     } catch {
       setError("Network error while loading push status");
     } finally {
@@ -57,33 +69,49 @@ export function PushTestForm() {
     return () => window.clearInterval(id);
   }, [refreshStatus, refreshBridge]);
 
-  const uploadServiceAccount = async (file: File | null) => {
-    if (!file) return;
+  const saveServiceAccountJson = async (raw: string) => {
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      setError("Paste or choose a Firebase service account JSON file first.");
+      return;
+    }
+
     setUploading(true);
     setMessage(null);
     setError(null);
     try {
-      const text = await file.text();
       const res = await fetch("/api/admin/settings/firebase", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ serviceAccountJson: text }),
+        body: JSON.stringify({ serviceAccountJson: trimmed }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data.error ?? "Upload failed");
+        setError(data.error ?? `Save failed (HTTP ${res.status})`);
         return;
       }
-      setMessage(data.message ?? "Firebase service account saved.");
-      if (typeof data.projectId === "string") setProjectId(data.projectId);
+      setPasteJson("");
       setConfigured(true);
       setSource("database");
+      if (typeof data.projectId === "string") setProjectId(data.projectId);
+      setMessage(data.message ?? `Saved for project ${data.projectId ?? ""}.`);
       await refreshStatus();
     } catch {
-      setError("Network error while uploading service account");
+      setError("Network error while saving service account");
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  const onPickFile = async (file: File | null) => {
+    if (!file) return;
+    try {
+      const text = await readFileText(file);
+      setPasteJson(text);
+      await saveServiceAccountJson(text);
+    } catch {
+      setError("Could not read that file. Paste the JSON below instead.");
     }
   };
 
@@ -94,12 +122,15 @@ export function PushTestForm() {
     setError(null);
     try {
       const res = await fetch("/api/admin/settings/firebase", { method: "DELETE" });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(data.error ?? "Could not clear credentials");
         return;
       }
       setMessage(data.message ?? "Cleared.");
+      setConfigured(false);
+      setProjectId(null);
+      setSource(null);
       await refreshStatus();
     } catch {
       setError("Network error while clearing credentials");
@@ -171,45 +202,68 @@ export function PushTestForm() {
     <section className="max-w-xl rounded-xl border border-line bg-white p-5 shadow-sm">
       <h2 className="font-display text-lg font-semibold text-ink">Push notifications (APK)</h2>
       <p className="mt-1 mb-4 text-sm text-ink-muted">
-        Upload the Firebase <strong>service account</strong> JSON here (from Firebase → Service
-        accounts → Generate new private key). Do <strong>not</strong> upload{" "}
-        <code className="text-xs">google-services.json</code>.
+        Upload the Firebase <strong>service account</strong> key (Service accounts → Generate new
+        private key). Not <code className="text-xs">google-services.json</code>.
       </p>
 
-      <div className="mb-4 space-y-2 rounded-lg border border-line bg-brandbg/50 p-3">
-        <label className="block text-xs font-semibold text-ink">
-          Firebase service account JSON
-        </label>
+      <div className="mb-4 space-y-3 rounded-lg border border-line bg-brandbg/50 p-3">
+        <div className="text-xs font-semibold text-ink">Firebase service account JSON</div>
+
         <input
           ref={fileRef}
           type="file"
-          accept="application/json,.json"
-          className="block w-full text-sm text-ink file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
-          onChange={(e) => void uploadServiceAccount(e.target.files?.[0] ?? null)}
+          accept=".json,application/json,text/json,text/plain"
+          className="hidden"
+          onChange={(e) => void onPickFile(e.target.files?.[0] ?? null)}
           disabled={uploading}
         />
-        <div className="flex flex-wrap gap-2">
+
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          className="btn-primary w-full disabled:opacity-50 sm:w-auto"
+        >
+          {uploading ? "Saving…" : "Choose JSON file"}
+        </button>
+
+        <div className="space-y-2">
+          <label className="block text-xs font-semibold text-ink">
+            Or paste JSON here (recommended on APK)
+          </label>
+          <textarea
+            value={pasteJson}
+            onChange={(e) => setPasteJson(e.target.value)}
+            rows={5}
+            placeholder='{"type":"service_account","project_id":"srk-cracker",...}'
+            className="input min-h-[7rem] w-full font-mono text-[0.7rem]"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+          />
           <button
             type="button"
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
+            onClick={() => void saveServiceAccountJson(pasteJson)}
+            disabled={uploading || !pasteJson.trim()}
             className="rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-ink transition hover:border-primary hover:text-primary disabled:opacity-50"
           >
-            {uploading ? "Saving…" : "Choose JSON file"}
+            {uploading ? "Saving…" : "Save service account"}
           </button>
-          {configured && source === "database" && (
-            <button
-              type="button"
-              onClick={() => void clearServiceAccount()}
-              disabled={uploading}
-              className="rounded-lg border border-red/30 bg-red/5 px-3 py-2 text-sm font-semibold text-red disabled:opacity-50"
-            >
-              Remove uploaded key
-            </button>
-          )}
         </div>
+
+        {configured && source === "database" && (
+          <button
+            type="button"
+            onClick={() => void clearServiceAccount()}
+            disabled={uploading}
+            className="rounded-lg border border-red/30 bg-red/5 px-3 py-2 text-sm font-semibold text-red disabled:opacity-50"
+          >
+            Remove saved key
+          </button>
+        )}
+
         <p className="text-[0.7rem] text-ink-muted">
-          File stays in your database (admin-only). Prefer project <strong>srk-cracker</strong>.
+          Saved in your database (admin-only). Project should be <strong>srk-cracker</strong>.
         </p>
       </div>
 
@@ -225,7 +279,7 @@ export function PushTestForm() {
                 ? projectId
                   ? `Configured (${projectId}${source ? ` · ${source}` : ""})`
                   : "Configured"
-                : "Not configured — upload service account JSON above"}
+                : "Not configured — save service account JSON above"}
           </dd>
         </div>
         <div className="rounded-lg bg-brandbg px-3 py-2">
@@ -278,7 +332,7 @@ export function PushTestForm() {
 
       <div className="mb-4 space-y-2">
         <label className="block text-xs font-semibold text-ink">
-          Or paste FCM token manually
+          Or paste FCM device token manually
         </label>
         <textarea
           value={manualToken}
