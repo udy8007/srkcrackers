@@ -2,16 +2,14 @@ import "server-only";
 import { cert, deleteApp, getApps, initializeApp, type App } from "firebase-admin/app";
 import { getMessaging } from "firebase-admin/messaging";
 import { prisma } from "@/lib/prisma";
+import {
+  parseAndValidateServiceAccount,
+  type ServiceAccountJson,
+} from "@/lib/firebase-service-account";
 
 export const FIREBASE_SETTINGS_ID = "default";
-
-export type ServiceAccountJson = {
-  type?: string;
-  project_id?: string;
-  client_email?: string;
-  private_key?: string;
-  [key: string]: unknown;
-};
+export type { ServiceAccountJson };
+export { parseAndValidateServiceAccount };
 
 export type AdminPushFailure = {
   code: string;
@@ -25,54 +23,6 @@ export type AdminPushResult = {
   projectId: string | null;
   failures: AdminPushFailure[];
 };
-
-/** Validate service-account JSON (reject google-services.json). */
-export function parseAndValidateServiceAccount(raw: string): {
-  ok: true;
-  json: ServiceAccountJson;
-  serialized: string;
-} | {
-  ok: false;
-  error: string;
-} {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    return { ok: false, error: "File is not valid JSON." };
-  }
-
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-    return { ok: false, error: "JSON must be an object." };
-  }
-
-  const obj = parsed as ServiceAccountJson;
-
-  if (obj.configuration_version != null || obj.client != null || obj.project_info != null) {
-    return {
-      ok: false,
-      error:
-        "That looks like google-services.json (APK client file). Upload the Service Account key from Firebase → Project settings → Service accounts → Generate new private key.",
-    };
-  }
-
-  if (obj.type && obj.type !== "service_account") {
-    return { ok: false, error: `Expected type "service_account", got "${String(obj.type)}".` };
-  }
-
-  if (!obj.project_id || !obj.client_email || !obj.private_key) {
-    return {
-      ok: false,
-      error: "JSON must include project_id, client_email, and private_key (Firebase service account).",
-    };
-  }
-
-  return {
-    ok: true,
-    json: obj,
-    serialized: JSON.stringify(obj),
-  };
-}
 
 function parseJsonString(raw: string | null | undefined): ServiceAccountJson | null {
   if (!raw?.trim()) return null;

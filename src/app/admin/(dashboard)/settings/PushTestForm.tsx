@@ -6,6 +6,7 @@ import {
   readBridgeToken,
   registerAdminFcmToken,
 } from "@/components/admin/AdminPushRegistrar";
+import { parseAndValidateServiceAccount } from "@/lib/firebase-service-account";
 
 async function readFileText(file: File): Promise<string> {
   if (typeof file.text === "function") {
@@ -73,6 +74,14 @@ export function PushTestForm() {
     const trimmed = raw.trim();
     if (!trimmed) {
       setError("Paste or choose a Firebase service account JSON file first.");
+      setMessage(null);
+      return;
+    }
+
+    const localCheck = parseAndValidateServiceAccount(trimmed);
+    if (!localCheck.ok) {
+      setError(localCheck.error);
+      setMessage(null);
       return;
     }
 
@@ -88,16 +97,19 @@ export function PushTestForm() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(data.error ?? `Save failed (HTTP ${res.status})`);
+        setMessage(null);
         return;
       }
       setPasteJson("");
       setConfigured(true);
       setSource("database");
       if (typeof data.projectId === "string") setProjectId(data.projectId);
+      setError(null);
       setMessage(data.message ?? `Saved for project ${data.projectId ?? ""}.`);
       await refreshStatus();
     } catch {
       setError("Network error while saving service account");
+      setMessage(null);
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -208,6 +220,24 @@ export function PushTestForm() {
 
       <div className="mb-4 space-y-3 rounded-lg border border-line bg-brandbg/50 p-3">
         <div className="text-xs font-semibold text-ink">Firebase service account JSON</div>
+        <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          <strong>Wrong file = not saved.</strong> Do not use <code>google-services.json</code>{" "}
+          (has <code>mobilesdk_app_id</code> / <code>package_name</code>).
+          Download from Firebase → Project settings → <strong>Service accounts</strong> →{" "}
+          <strong>Generate new private key</strong>. That file has <code>private_key</code> and{" "}
+          <code>client_email</code>.
+        </p>
+
+        {error && (
+          <p className="rounded-md border border-red/30 bg-red/5 px-3 py-2 text-sm font-medium text-red">
+            {error}
+          </p>
+        )}
+        {message && (
+          <p className="rounded-md border border-green/30 bg-green/5 px-3 py-2 text-sm font-medium text-green">
+            {message}
+          </p>
+        )}
 
         <input
           ref={fileRef}
@@ -229,13 +259,13 @@ export function PushTestForm() {
 
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-ink">
-            Or paste JSON here (recommended on APK)
+            Or paste service account JSON here (recommended on APK)
           </label>
           <textarea
             value={pasteJson}
             onChange={(e) => setPasteJson(e.target.value)}
             rows={5}
-            placeholder='{"type":"service_account","project_id":"srk-cracker",...}'
+            placeholder='{"type":"service_account","project_id":"srk-cracker","private_key":"-----BEGIN PRIVATE KEY-----...","client_email":"...@srk-cracker.iam.gserviceaccount.com"}'
             className="input min-h-[7rem] w-full font-mono text-[0.7rem]"
             autoComplete="off"
             autoCorrect="off"
@@ -364,9 +394,6 @@ export function PushTestForm() {
           {loading ? "Sending…" : "Send test push"}
         </button>
       </div>
-
-      {message && <p className="mt-3 text-sm font-medium text-green">{message}</p>}
-      {error && <p className="mt-3 text-sm font-medium text-red">{error}</p>}
     </section>
   );
 }
