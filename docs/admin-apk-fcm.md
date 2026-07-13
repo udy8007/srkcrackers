@@ -56,6 +56,33 @@ In **Admin → Settings → Push notifications**, check **APK bridge on this dev
 
 You can also paste a token manually there for a one-time test.
 
+### If Settings shows `Android` / `AndroidNotification` but no token
+
+Your APK likely only exposes **local** alerts, e.g. `AndroidNotification.showNotification(title, body, url)`.
+That works only while the WebView is open — it does **not** expose an FCM token for server push when the app is closed.
+
+Add on the Android side (AI Studio / native):
+
+```kotlin
+@JavascriptInterface
+fun getFcmToken(): String = cachedFcmToken  // from FirebaseMessaging onNewToken
+```
+
+Register it on the same interface:
+
+```kotlin
+webView.addJavascriptInterface(bridge, "AndroidNotification")
+// so the page can call AndroidNotification.getFcmToken()
+```
+
+Or inject after page load:
+
+```kotlin
+webView.evaluateJavascript("window.__SRK_FCM_TOKEN__='$token'; …", null)
+```
+
+Then reopen Admin → Settings → **Register this device**.
+
 ## Android: open order on notification tap
 
 FCM data payload includes:

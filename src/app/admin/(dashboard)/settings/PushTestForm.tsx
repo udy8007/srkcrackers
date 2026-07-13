@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   describePushBridge,
+  readBridgeToken,
   registerAdminFcmToken,
 } from "@/components/admin/AdminPushRegistrar";
 
@@ -18,6 +19,8 @@ export function PushTestForm() {
     hasToken: false,
     tokenPreview: null as string | null,
     bridgesFound: [] as string[],
+    bridgeMethods: [] as string[],
+    hint: "",
   }));
 
   const refreshBridge = useCallback(() => {
@@ -70,18 +73,35 @@ export function PushTestForm() {
     }
   };
 
-  const registerManual = async () => {
+  const registerToken = async (source: "bridge" | "manual") => {
     setRegistering(true);
     setMessage(null);
     setError(null);
-    const result = await registerAdminFcmToken(manualToken);
+    refreshBridge();
+
+    const token =
+      source === "manual"
+        ? manualToken.trim()
+        : readBridgeToken()?.trim() || manualToken.trim();
+
+    if (!token) {
+      setRegistering(false);
+      setError(
+        source === "manual"
+          ? "Paste an FCM token in the box first."
+          : "No FCM token on this device yet. The APK must inject it, or paste a token below.",
+      );
+      return;
+    }
+
+    const result = await registerAdminFcmToken(token);
     setRegistering(false);
     if (!result.ok) {
       setError(result.error ?? "Could not register token");
       return;
     }
     setMessage("Token registered. Registered devices should increase after refresh.");
-    setManualToken("");
+    if (source === "manual") setManualToken("");
     await refreshStatus();
   };
 
@@ -118,30 +138,59 @@ export function PushTestForm() {
             {bridge.hasToken
               ? `Token detected (${bridge.tokenPreview})`
               : bridge.bridgesFound.length > 0
-                ? `Bridge found (${bridge.bridgesFound.join(", ")}) but no token method`
-                : "No Android FCM bridge detected — APK is not injecting a token"}
+                ? `Bridges: ${bridge.bridgesFound.join(", ")}`
+                : "No Android FCM bridge detected"}
           </dd>
+          {bridge.bridgeMethods.length > 0 && (
+            <dd className="mt-1 break-all font-mono text-[0.7rem] text-ink-muted">
+              Methods: {bridge.bridgeMethods.join(", ")}
+            </dd>
+          )}
+          {bridge.hint && (
+            <dd className="mt-2 text-xs leading-relaxed text-ink-muted">{bridge.hint}</dd>
+          )}
         </div>
       </dl>
 
+      <div className="mb-4 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => void registerToken("bridge")}
+          disabled={registering}
+          className="btn-primary disabled:opacity-50"
+        >
+          {registering ? "Registering…" : "Register this device"}
+        </button>
+        <button
+          type="button"
+          onClick={() => void refreshStatus()}
+          className="rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-ink transition hover:border-primary hover:text-primary"
+        >
+          Refresh status
+        </button>
+      </div>
+
       <div className="mb-4 space-y-2">
         <label className="block text-xs font-semibold text-ink">
-          Manual FCM token (optional test)
+          Or paste FCM token manually
         </label>
         <textarea
           value={manualToken}
           onChange={(e) => setManualToken(e.target.value)}
           rows={3}
           placeholder="Paste device FCM token from Android Logcat / Firebase…"
-          className="input font-mono text-xs"
+          className="input min-h-[5rem] w-full font-mono text-xs"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
         />
         <button
           type="button"
-          onClick={() => void registerManual()}
-          disabled={registering || !manualToken.trim()}
+          onClick={() => void registerToken("manual")}
+          disabled={registering}
           className="rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-ink transition hover:border-primary hover:text-primary disabled:opacity-50"
         >
-          {registering ? "Registering…" : "Register this token"}
+          {registering ? "Registering…" : "Register pasted token"}
         </button>
       </div>
 
@@ -150,16 +199,9 @@ export function PushTestForm() {
           type="button"
           onClick={() => void sendTest()}
           disabled={loading}
-          className="btn-primary disabled:opacity-50"
+          className="rounded-lg border border-primary bg-primary/10 px-3 py-2 text-sm font-semibold text-primary transition hover:bg-primary hover:text-white disabled:opacity-50"
         >
           {loading ? "Sending…" : "Send test push"}
-        </button>
-        <button
-          type="button"
-          onClick={() => void refreshStatus()}
-          className="rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-ink transition hover:border-primary hover:text-primary"
-        >
-          Refresh status
         </button>
       </div>
 
