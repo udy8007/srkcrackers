@@ -1,5 +1,5 @@
 // Vercel build entrypoint.
-// Ensures the database schema exists, creates admin if needed, then builds.
+// Schema sync only — never seed/overwrite catalog on deploy (admin edits must persist).
 import { execSync } from "node:child_process";
 
 function firstEnv(...names) {
@@ -17,7 +17,7 @@ const runtimeUrl = firstEnv(
   "skr_DATABASE_URL",
 );
 
-// Prefer an explicit direct/unpooled URL for migrations + seed.
+// Prefer an explicit direct/unpooled URL for schema sync.
 let migrateUrl =
   firstEnv(
     "DIRECT_URL",
@@ -37,7 +37,7 @@ if (!migrateUrl) {
   process.exit(1);
 }
 
-// Neon: migrations must use a direct connection (pgbouncer/pooler breaks advisory
+// Neon: schema sync must use a direct connection (pgbouncer/pooler breaks advisory
 // locks, and channel_binding can break the connection). Normalise to a direct URL.
 function toDirect(urlStr) {
   try {
@@ -55,7 +55,7 @@ function toDirect(urlStr) {
 migrateUrl = toDirect(migrateUrl);
 
 const mask = (u) => u.replace(/:\/\/([^:]+):[^@]+@/, "://$1:****@");
-console.log(`[vercel-build] migrate/seed target: ${mask(migrateUrl)}`);
+console.log(`[vercel-build] schema sync target: ${mask(migrateUrl)}`);
 
 const migrateEnv = { ...process.env, DATABASE_URL: migrateUrl, DIRECT_URL: migrateUrl };
 
@@ -65,16 +65,7 @@ function run(cmd, env = process.env) {
 }
 
 run("npx prisma generate");
-// `db push` (not `migrate deploy`) syncs the schema to whatever state the DB is
-// in — it creates our app tables even when the DB already has unrelated tables
-// (e.g. Neon Auth) and no Prisma migration history. Additive + idempotent.
-run("npx prisma db push --skip-generate --accept-data-loss", migrateEnv);
-
-// One-time: set WIPE_CATALOG=true in Vercel env, redeploy, then remove the variable.
-if (process.env.WIPE_CATALOG === "true") {
-  console.log("[vercel-build] WIPE_CATALOG=true — clearing product catalog");
-  run("npx tsx prisma/clear-catalog.ts", migrateEnv);
-}
-
-run("npx prisma db seed", migrateEnv);
+// Additive schema sync only. No seed, no --accept-data-loss, no catalog wipe.
+// Product/category data is managed in Admin and must survive deploys.
+run("npx prisma db push --skip-generate", migrateEnv);
 run("npx next build");

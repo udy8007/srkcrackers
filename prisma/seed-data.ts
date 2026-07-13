@@ -1,4 +1,5 @@
-// SRK Crackers catalog — seeded into the database on deploy.
+// Catalog reference data only — seed is DISABLED (not run on deploy or via npm).
+// Kept for scripts that import product lists (e.g. image download helpers).
 // Images: real product pack photos (hosted locally under /products/photos/).
 
 import { PRODUCT_IMAGES } from "./product-images";

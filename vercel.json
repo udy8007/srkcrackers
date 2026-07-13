@@ -8,20 +8,5 @@
       "path": "/api/cron/notifications",
       "schedule": "30 20 * * *"
     }
-  ],
-  "headers": [
-    {
-      "source": "/srk-crackers.apk",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/vnd.android.package-archive"
-        },
-        {
-          "key": "Content-Disposition",
-          "value": "attachment; filename=\"srk-crackers.apk\""
-        }
-      ]
-    }
   ]
 }

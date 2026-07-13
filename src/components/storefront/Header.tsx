@@ -3,10 +3,7 @@
 import Image from "next/image";
 import { useCart, selectCartCount } from "@/store/cart";
 import { useUI } from "@/store/ui";
-import { useToast } from "@/store/toast";
 import { useMounted } from "@/lib/hooks";
-import { ApkDownloadIcon } from "@/components/icons/ApkDownloadIcon";
-import { downloadApk } from "@/lib/client-actions";
 import { BUSINESS } from "@/lib/constants";
 import { NAV_LINKS } from "./nav";
 
@@ -17,14 +14,8 @@ export function Header() {
   const closeMobileNav = useUI((state) => state.closeMobileNav);
   const toggleCart = useUI((state) => state.toggleCart);
   const cartOpen = useUI((state) => state.cartOpen);
-  const showToast = useToast((state) => state.show);
   const mounted = useMounted();
   const count = mounted ? selectCartCount(items) : 0;
-
-  const handleApk = () => {
-    downloadApk();
-    showToast("Downloading SRK Crackers App...");
-  };
 
   return (
     <header className="sticky top-0 z-50 bg-gradient-to-r from-primary-dark via-primary to-primary-dark shadow-[0_2px_14px_rgba(157,2,8,0.4)]">
@@ -95,16 +86,6 @@ export function Header() {
 
           <button
             type="button"
-            onClick={handleApk}
-            title="Download SRK Crackers Android App (APK)"
-            aria-label="Download SRK Crackers Android App APK"
-            className="hidden h-11 w-11 items-center justify-center rounded-lg border-2 border-yellow bg-white text-primary-dark shadow-sm transition hover:bg-yellow hover:text-black lg:flex"
-          >
-            <ApkDownloadIcon className="h-6 w-6" />
-          </button>
-
-          <button
-            type="button"
             onClick={toggleMobileNav}
             aria-label="Open menu"
             className="flex h-11 w-11 items-center justify-center rounded-lg bg-yellow text-primary-dark shadow-md lg:hidden"
@@ -130,17 +111,6 @@ export function Header() {
               {link.label}
             </a>
           ))}
-          <button
-            type="button"
-            onClick={() => {
-              handleApk();
-              closeMobileNav();
-            }}
-            className="flex items-center gap-2.5 rounded-md px-3 py-2.5 text-[0.9rem] text-white hover:bg-white/10"
-          >
-            <ApkDownloadIcon className="h-5 w-5 shrink-0 text-yellow" />
-            Download APK
-          </button>
         </div>
       )}
     </header>

@@ -3,7 +3,7 @@ import { gzipSync } from "node:zlib";
 import type { BackupSettings } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { BUSINESS } from "@/lib/constants";
-import { getEmailSettings } from "@/lib/email-settings";
+import { getEmailSettings, resolveSiteOrigin } from "@/lib/email-settings";
 import { sendEmailWithAttachment } from "@/lib/email";
 import { createAdminNotification } from "@/lib/notifications";
 
@@ -234,6 +234,9 @@ export async function runDatabaseBackup(
       type: "DB_BACKUP",
       title: "Database backup failed",
       message: error,
+      targetUrl: `${resolveSiteOrigin()}/admin/settings`,
+      pushTitle: "Database backup failed",
+      pushBody: error.slice(0, 180),
     });
     return { ok: false, error };
   }
@@ -275,6 +278,11 @@ export async function runDatabaseBackup(
     message: result.ok
       ? `${filename} (${sizeMb} MB) emailed to ${recipient}`
       : result.error ?? "Backup email failed",
+    targetUrl: `${resolveSiteOrigin()}/admin/settings`,
+    pushTitle: result.ok ? "Database backup sent" : "Database backup failed",
+    pushBody: result.ok
+      ? `${filename} (${sizeMb} MB)`
+      : (result.error ?? "Backup email failed").slice(0, 180),
   });
 
   return result.ok

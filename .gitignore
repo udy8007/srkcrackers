@@ -40,3 +40,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Capacitor / Android local build artifacts
+mobile-admin/node_modules/
+mobile-admin/android/.gradle/
+mobile-admin/android/app/build/
+mobile-admin/android/build/
+mobile-admin/android/app/google-services.json
+mobile-admin/android/local.properties
+mobile-admin/android/capacitor-cordova-android-plugins/
+
+# Firebase client config (Android APK only — do not commit service account keys)
+**/google-services.json
+

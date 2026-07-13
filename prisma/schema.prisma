@@ -36,13 +36,14 @@ enum BackupFrequency {
 
 /// Admin/staff accounts for the dashboard (credentials login).
 model AdminUser {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id           String             @id @default(cuid())
+  email        String             @unique
   name         String?
   passwordHash String
-  role         UserRole @default(ADMIN)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  role         UserRole           @default(ADMIN)
+  deviceTokens AdminDeviceToken[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
 }
 
 /// Product categories (One Sound, Flower Pots, Rockets, ...).
@@ -250,4 +251,17 @@ model SchedulerState {
   lastDeliverAt       DateTime?
   lastReminderAt      DateTime?
   updatedAt           DateTime  @updatedAt
+}
+
+/// FCM device tokens for the admin WebView APK (push on new orders, etc.).
+model AdminDeviceToken {
+  id          String     @id @default(cuid())
+  token       String     @unique
+  platform    String     @default("android")
+  adminUserId String?
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([adminUserId])
 }

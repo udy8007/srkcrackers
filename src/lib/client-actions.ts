@@ -3,16 +3,6 @@ import { BUSINESS } from "@/lib/constants";
 export { buildUpiPayLink, openUpiApp, UPI_PAYMENT_APPS, upiAppPaymentMethodLabel } from "@/lib/upi-apps";
 export type { UpiAppId, UpiPaymentApp } from "@/lib/upi-apps";
 
-/** Trigger a download of the SRK Crackers Android APK (served from /public). */
-export function downloadApk() {
-  const link = document.createElement("a");
-  link.href = BUSINESS.apkUrl;
-  link.download = "srk-crackers.apk";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
 /** Smooth-scroll to a section id. */
 export function scrollToId(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { ORDER_STATUS_LABEL } from "@/lib/constants";
 import { getEmailSettings, resolveAdminNotifyEmail, resolveSiteOrigin } from "@/lib/email-settings";
 import { sendEmail } from "@/lib/email";
+import { sendAdminPush } from "@/lib/admin-push";
 import {
   buildAdminNewOrderEmail,
   buildAdminPendingReminderEmail,
@@ -70,14 +71,38 @@ function buildContext(order: NonNullable<OrderWithItems>, origin: string): Order
   };
 }
 
+function formatInr(amount: number) {
+  return `₹${amount.toLocaleString("en-IN")}`;
+}
+
 export async function createAdminNotification(input: {
   type: string;
   title: string;
   message: string;
   orderId?: string;
   orderNumber?: string;
+  /** Deep link for FCM tap (defaults to /admin). */
+  targetUrl?: string;
+  /** Optional FCM title/body override (bell still uses title/message). */
+  pushTitle?: string;
+  pushBody?: string;
 }) {
-  await prisma.adminNotification.create({ data: input });
+  const { targetUrl, pushTitle, pushBody, ...bell } = input;
+  await prisma.adminNotification.create({ data: bell });
+
+  const origin = resolveSiteOrigin();
+  await sendAdminPush({
+    title: pushTitle ?? input.title,
+    body: pushBody ?? input.message,
+    targetUrl: targetUrl ?? `${origin}/admin`,
+    data: {
+      type: input.type,
+      ...(input.orderId ? { order_id: input.orderId } : {}),
+      ...(input.orderNumber ? { order_number: input.orderNumber } : {}),
+    },
+  }).catch((error) => {
+    console.error("[createAdminNotification] FCM push failed:", error);
+  });
 }
 
 /** Schedule notification work after the HTTP response (Vercel-safe). Never throws to callers. */
@@ -159,12 +184,16 @@ export async function notifyOrderPlaced(orderId: string) {
     }
   }
 
+  const place = order.city?.trim() || order.state?.trim() || "India";
   await createAdminNotification({
     type: "NEW_ORDER",
     title: `New order ${order.orderNumber}`,
-    message: `${order.customerName} placed an order for ₹${order.total.toLocaleString("en-IN")} — status: ${ORDER_STATUS_LABEL[order.status]}`,
+    message: `${order.customerName} placed an order for ${formatInr(order.total)} — status: ${ORDER_STATUS_LABEL[order.status]}`,
     orderId: order.id,
     orderNumber: order.orderNumber,
+    targetUrl: ctx.adminOrderUrl,
+    pushTitle: "New Order Received!",
+    pushBody: `Order #${order.orderNumber} from ${place} - ${formatInr(order.total)}`,
   });
 }
 
@@ -207,14 +236,18 @@ export async function notifyStatusChange(
     // (New-order and pending-reminder emails still go to admin separately.)
   }
 
+  const statusLabel = ORDER_STATUS_LABEL[order.status];
   await createAdminNotification({
     type: "STATUS_CHANGE",
-    title: `Order ${order.orderNumber} → ${ORDER_STATUS_LABEL[order.status]}`,
+    title: `Order ${order.orderNumber} → ${statusLabel}`,
     message:
       note ||
-      `Status changed from ${ORDER_STATUS_LABEL[previousStatus]} to ${ORDER_STATUS_LABEL[order.status]}`,
+      `Status changed from ${ORDER_STATUS_LABEL[previousStatus]} to ${statusLabel}`,
     orderId: order.id,
     orderNumber: order.orderNumber,
+    targetUrl: ctx.adminOrderUrl,
+    pushTitle: `Order ${order.orderNumber}`,
+    pushBody: note?.trim() || `Status → ${statusLabel} · ${formatInr(order.total)}`,
   });
 }
 
@@ -250,12 +283,10 @@ export async function sendPendingOrderReminders(): Promise<{ reminded: number }>
 
   const origin = resolveSiteOrigin();
   const contexts = pending.map((o) => buildContext(o, origin));
+  const ordersUrl = `${origin}/admin/orders`;
 
   let reminded = 0;
-  const { subject, html } = buildAdminPendingReminderEmail(
-    contexts,
-    `${origin}/admin/orders`,
-  );
+  const { subject, html } = buildAdminPendingReminderEmail(contexts, ordersUrl);
 
   const result = await sendEmail({
     to: adminTo,
@@ -277,6 +308,9 @@ export async function sendPendingOrderReminders(): Promise<{ reminded: number }>
     type: "PENDING_REMINDER",
     title: `${pending.length} pending order(s) need action`,
     message: "Reminder for orders awaiting verification or confirmation.",
+    targetUrl: ordersUrl,
+    pushTitle: "Pending orders need action",
+    pushBody: `${pending.length} order(s) still awaiting verification.`,
   });
 
   return { reminded };

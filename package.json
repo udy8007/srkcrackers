@@ -12,7 +12,6 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:seed": "prisma db seed",
     "db:clear": "tsx prisma/clear-db.ts",
     "db:clear-orders": "tsx prisma/clear-orders.ts",
     "db:clear-catalog": "tsx prisma/clear-catalog.ts",
@@ -20,13 +19,11 @@
     "db:reset": "prisma migrate reset",
     "icons": "node scripts/generate-favicons.mjs"
   },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
     "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
+    "firebase-admin": "^14.1.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "next": "^15.5.20",
