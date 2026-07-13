@@ -10,6 +10,7 @@ import {
 export function PushTestForm() {
   const [deviceCount, setDeviceCount] = useState<number | null>(null);
   const [configured, setConfigured] = useState<boolean | null>(null);
+  const [projectId, setProjectId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [registering, setRegistering] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -37,6 +38,7 @@ export function PushTestForm() {
       }
       setDeviceCount(data.deviceCount ?? 0);
       setConfigured(Boolean(data.configured));
+      setProjectId(typeof data.projectId === "string" ? data.projectId : null);
       setError(null);
     } catch {
       setError("Network error while loading push status");
@@ -56,15 +58,20 @@ export function PushTestForm() {
     setMessage(null);
     setError(null);
     try {
-      const res = await fetch("/api/admin/push/test", { method: "POST" });
+      const liveToken = readBridgeToken()?.trim() || manualToken.trim() || undefined;
+      const res = await fetch("/api/admin/push/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(liveToken ? { token: liveToken } : {}),
+      });
       const data = await res.json();
-      if (!res.ok) {
+      if (typeof data.deviceCount === "number") setDeviceCount(data.deviceCount);
+      if (typeof data.projectId === "string") setProjectId(data.projectId);
+      if (!res.ok || data.ok === false) {
         setError(data.error ?? "Test push failed");
-        if (typeof data.deviceCount === "number") setDeviceCount(data.deviceCount);
         return;
       }
       setMessage(data.message ?? `Sent to ${data.sent} device(s)`);
-      if (typeof data.deviceCount === "number") setDeviceCount(data.deviceCount);
       await refreshStatus();
     } catch {
       setError("Network error while sending test push");
@@ -119,7 +126,13 @@ export function PushTestForm() {
             Firebase server
           </dt>
           <dd className="mt-0.5 font-medium text-ink">
-            {configured == null ? "…" : configured ? "Configured" : "Not configured"}
+            {configured == null
+              ? "…"
+              : configured
+                ? projectId
+                  ? `Configured (${projectId})`
+                  : "Configured"
+                : "Not configured"}
           </dd>
         </div>
         <div className="rounded-lg bg-brandbg px-3 py-2">
