@@ -28,13 +28,13 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const shipping = getStoredShipping(order.subtotal, order.total);
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 max-w-full space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <Link href="/admin/orders" className="text-sm text-primary hover:underline">
             ← Back to orders
           </Link>
-          <h1 className="mt-1 font-mono text-2xl font-bold text-ink">{order.orderNumber}</h1>
+          <h1 className="mt-1 break-all font-mono text-xl font-bold text-ink sm:text-2xl">{order.orderNumber}</h1>
           <p className="text-sm text-ink-muted">Placed {formatDateTime(order.createdAt)}</p>
         </div>
         <StatusBadge status={order.status} />
@@ -74,11 +74,43 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         }))}
       />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          {/* Items */}
+      <div className="grid min-w-0 gap-6 lg:grid-cols-3">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
+          {/* Items — stacked on mobile so nothing is clipped; table from sm up */}
           <Card title="Items">
-            <div className="overflow-x-auto">
+            <ul className="space-y-3 sm:hidden">
+              {order.items.map((item) => (
+                <li
+                  key={item.id}
+                  className="rounded-lg border border-line bg-brandbg/60 px-3 py-2.5"
+                >
+                  <div className="font-medium text-ink">{item.name}</div>
+                  <div className="text-xs text-ink-muted">{item.pack}</div>
+                  <div className="mt-2 flex items-center justify-between gap-2 text-sm">
+                    <span className="text-ink-muted">
+                      {formatPrice(item.price)} × {item.qty}
+                    </span>
+                    <span className="font-semibold text-ink">{formatPrice(item.amount)}</span>
+                  </div>
+                </li>
+              ))}
+              <li className="space-y-1 border-t border-line pt-3 text-sm">
+                <div className="flex justify-between text-ink-muted">
+                  <span>Subtotal</span>
+                  <span>{formatPrice(order.subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-ink-muted">
+                  <span>Shipping</span>
+                  <span>{shipping > 0 ? formatPrice(shipping) : "FREE"}</span>
+                </div>
+                <div className="flex justify-between pt-1 text-base font-bold text-primary">
+                  <span>Grand Total</span>
+                  <span>{formatPrice(order.total)}</span>
+                </div>
+              </li>
+            </ul>
+
+            <div className="hidden max-w-full overflow-x-auto overscroll-x-contain sm:block">
               <table className="w-full min-w-[420px] text-sm">
                 <thead>
                   <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-ink-muted">
@@ -169,7 +201,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           </Card>
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <Card title="Update Status">
             <StatusUpdater
               orderId={order.id}
@@ -215,7 +247,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-line bg-white p-5 shadow-sm">
+    <section className="min-w-0 max-w-full overflow-hidden rounded-xl border border-line bg-white p-4 shadow-sm sm:p-5">
       <h2 className="mb-4 font-display text-lg font-semibold text-ink">{title}</h2>
       {children}
     </section>
@@ -226,7 +258,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex gap-2">
       <span className="w-24 shrink-0 text-ink-muted">{label}</span>
-      <span className="font-medium text-ink">{value}</span>
+      <span className="min-w-0 break-words font-medium text-ink">{value}</span>
     </div>
   );
 }
