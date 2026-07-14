@@ -148,7 +148,12 @@ function sortRows<T extends Record<string, unknown>>(
   });
 }
 
-export type CollectionDelegate<T extends { id: string }> = {
+/** Loose document shape returned by Firestore delegates (includes/select vary per call). */
+// Prisma-compatible facade uses flexible documents; callers cast when needed.
+export type LooseDoc = Record<string, unknown> & { id?: string };
+
+/* eslint-disable @typescript-eslint/no-explicit-any -- facade mirrors Prisma's flexible include/select payloads */
+export type CollectionDelegate = {
   findMany: (args?: {
     where?: WhereFilter;
     orderBy?: Record<string, "asc" | "desc"> | Array<Record<string, "asc" | "desc">>;
@@ -204,6 +209,7 @@ export type CollectionDelegate<T extends { id: string }> = {
     _count?: boolean | { _all?: boolean; [k: string]: boolean | undefined };
   }) => Promise<any[]>;
 };
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 type HydrateFn<T> = (id: string, data: DocumentData) => T;
 
@@ -220,7 +226,7 @@ export function createCollection<T extends { id: string }>(
     ) => Promise<T>;
     dateFields?: string[];
   },
-): CollectionDelegate<T> {
+): CollectionDelegate {
   const dateFields = new Set(options?.dateFields ?? ["createdAt", "updatedAt"]);
 
   async function fs() {

@@ -139,7 +139,6 @@ async function loadOrderRelations(
 async function loadCategoryProducts(
   row: Category,
   include: Record<string, unknown>,
-  _firestore: Firestore,
 ): Promise<Category & { products?: Product[] }> {
   if (!include.products) return row;
   const productWhere =
@@ -168,7 +167,7 @@ const productDelegate = createCollection<Product>("products", hydrateProduct, {
 
 const categoryDelegate = createCollection<Category>("categories", hydrateCategory, {
   uniqueFields: ["key"],
-  include: loadCategoryProducts,
+  include: (row, include) => loadCategoryProducts(row, include),
 });
 
 const orderDelegate = createCollection<Order>("orders", hydrateOrder, {

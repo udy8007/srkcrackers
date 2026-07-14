@@ -1,6 +1,6 @@
 import { BUSINESS, LICENSE_INFO, ORDER_STATUS_LABEL } from "@/lib/constants";
 import { buildUpiQrImageUrl } from "@/lib/pdf-helpers";
-import { formatDateTime, formatInvoiceAddressLines, formatPrice } from "@/lib/utils";
+import { formatInvoiceAddressLines, formatPrice } from "@/lib/utils";
 import type { OrderStatus } from "@/lib/db/types";
 
 export interface PrintInvoiceItem {
