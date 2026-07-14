@@ -67,7 +67,7 @@ function run(cmd, env = process.env) {
   execSync(cmd, { stdio: "inherit", env });
 }
 
-async function runDbPushWithRetries(attempts = 5) {
+async function runDbPushWithRetries(attempts = 3) {
   let lastError;
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
@@ -95,5 +95,19 @@ async function runDbPushWithRetries(attempts = 5) {
 run("npx prisma generate");
 // Additive schema sync only. No seed, no --accept-data-loss, no catalog wipe.
 // Product/category data is managed in Admin and must survive deploys.
-await runDbPushWithRetries();
+// Neon scale-to-zero often causes P1001 during Vercel builds — retry, then continue
+// so UI deploys are not blocked. Set REQUIRE_DB_PUSH=1 to fail the build instead.
+try {
+  await runDbPushWithRetries();
+} catch (err) {
+  const requirePush = process.env.REQUIRE_DB_PUSH === "1";
+  console.warn(
+    "[vercel-build] prisma db push failed after retries (Neon unreachable or still waking).",
+  );
+  console.warn(
+    "[vercel-build] Open the Neon console to wake the project, then redeploy if you changed schema.",
+  );
+  if (requirePush) throw err;
+  console.warn("[vercel-build] Continuing with next build without schema sync.");
+}
 run("npx next build");
