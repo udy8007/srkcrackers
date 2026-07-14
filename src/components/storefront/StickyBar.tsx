@@ -30,7 +30,7 @@ export function StickyBar() {
   };
 
   return (
-    <div className="sticky-order-bar fixed inset-x-0 bottom-0 z-40 flex flex-wrap items-center justify-between gap-3 bg-yellow px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.15)] max-sm:flex-col max-sm:text-center sm:pr-4">
+    <div className="sticky-order-bar fixed inset-x-0 bottom-0 z-40 flex w-full max-w-[100vw] flex-wrap items-center justify-between gap-3 bg-yellow px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.15)] max-sm:flex-col max-sm:text-center">
       <div className="text-base font-bold text-black">
         Cart Total:{" "}
         <span className="text-[1.35rem] text-primary">{formatPrice(displayTotal)}</span>

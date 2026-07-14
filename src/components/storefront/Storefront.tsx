@@ -49,11 +49,11 @@ export function Storefront({ categories }: { categories: CategoryWithProductsDTO
       <Suspense fallback={null}>
         <TrackOrderDeepLink />
       </Suspense>
-      <div className="pb-sticky">
+      <div className="overflow-x-hidden pb-sticky">
         <TopBar />
         <Header />
         <MarqueeBars />
-        <main>
+        <main className="min-w-0">
           <Hero />
           <Highlights />
           <ProductsSection />

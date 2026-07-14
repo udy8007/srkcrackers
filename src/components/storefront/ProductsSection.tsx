@@ -58,7 +58,7 @@ function QtyControl({ product }: { product: ProductDTO }) {
   );
 }
 
-/** One product per row — large thumb so packaging is readable. */
+/** One product per row — large thumb; qty stays on the right (no empty gutter). */
 function ProductListRow({ product }: { product: ProductDTO }) {
   const openProduct = useUI((s) => s.openProduct);
   const qty = useCart((s) => s.items[product.id] ?? 0);
@@ -69,7 +69,7 @@ function ProductListRow({ product }: { product: ProductDTO }) {
 
   return (
     <article
-      className={`group flex items-stretch gap-3 px-3 py-4 transition sm:gap-4 sm:px-4 ${
+      className={`group flex w-full items-center gap-3 px-3 py-3.5 transition sm:gap-4 sm:px-4 ${
         inCart ? "bg-primary/[0.04]" : "bg-white hover:bg-[#fffaf5]"
       } border-b border-line/70 last:border-0`}
     >
@@ -83,7 +83,7 @@ function ProductListRow({ product }: { product: ProductDTO }) {
           alt={product.name}
           width={160}
           height={160}
-          className="h-[7.25rem] w-[7.25rem] object-cover sm:h-36 sm:w-36"
+          className="h-[6.5rem] w-[6.5rem] object-cover sm:h-32 sm:w-32"
         />
         {off != null && off >= 40 && (
           <span className="absolute left-1.5 top-1.5 rounded-md bg-yellow px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-primary-dark shadow-sm">
@@ -92,32 +92,30 @@ function ProductListRow({ product }: { product: ProductDTO }) {
         )}
       </button>
 
-      <div className="flex min-w-0 flex-1 flex-col justify-between gap-2 py-0.5">
-        <div>
-          <button
-            type="button"
-            onClick={() => openProduct(product.id)}
-            className="text-left font-display text-[0.95rem] font-semibold leading-snug tracking-tight text-ink transition hover:text-primary sm:text-[1.05rem]"
-          >
-            {product.name}
-          </button>
-          <p className="mt-1 text-xs text-ink-muted">{product.pack}</p>
-          <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-            <span className="text-xs text-ink-muted/80 line-through">{formatPrice(product.mrp)}</span>
-            <span className="text-lg font-extrabold tracking-tight text-green sm:text-xl">
-              {formatPrice(product.price)}
+      <div className="min-w-0 flex-1">
+        <button
+          type="button"
+          onClick={() => openProduct(product.id)}
+          className="text-left font-display text-[0.95rem] font-semibold leading-snug tracking-tight text-ink transition hover:text-primary sm:text-[1.05rem]"
+        >
+          {product.name}
+        </button>
+        <p className="mt-0.5 text-xs text-ink-muted">{product.pack}</p>
+        <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <span className="text-xs text-ink-muted/80 line-through">{formatPrice(product.mrp)}</span>
+          <span className="text-lg font-extrabold tracking-tight text-green sm:text-xl">
+            {formatPrice(product.price)}
+          </span>
+          {inCart && (
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[0.7rem] font-bold text-primary">
+              Cart {formatPrice(amount)}
             </span>
-            {inCart && (
-              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[0.7rem] font-bold text-primary">
-                Cart {formatPrice(amount)}
-              </span>
-            )}
-          </div>
+          )}
         </div>
+      </div>
 
-        <div className="flex items-center justify-end sm:justify-start">
-          <QtyControl product={product} />
-        </div>
+      <div className="shrink-0 self-center">
+        <QtyControl product={product} />
       </div>
     </article>
   );
