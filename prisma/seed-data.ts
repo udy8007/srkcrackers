@@ -1,6 +1,6 @@
-// Catalog reference data only — seed is DISABLED (not run on deploy or via npm).
-// Kept for scripts that import product lists (e.g. image download helpers).
-// Images: real product pack photos (hosted locally under /products/photos/).
+// Catalog reference data for create-only seed (`npm run db:seed` on a fresh DB).
+// Never run on Vercel deploy — products are not overwritten on re-seed.
+// Images: local paths under /products/photos/ (and category SVGs).
 
 import { PRODUCT_IMAGES } from "./product-images";
 

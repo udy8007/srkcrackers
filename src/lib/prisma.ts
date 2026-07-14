@@ -1,9 +1,47 @@
+import { PrismaClient } from "@prisma/client";
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
 /**
- * Firestore-backed data client (replaces Prisma / Neon).
- * Existing callers keep `import { prisma } from "@/lib/prisma"`.
+ * Prefer DATABASE_URL (local / Vercel); fall back to Supabase integration vars (`srk_POSTGRES_*`).
  */
-import { firestoreDb } from "@/lib/db/client";
+const connectionUrl =
+  process.env.DATABASE_URL ??
+  process.env.srk_POSTGRES_PRISMA_URL ??
+  process.env.srk_POSTGRES_URL ??
+  process.env.POSTGRES_PRISMA_URL ??
+  process.env.POSTGRES_URL;
 
-export const prisma = firestoreDb;
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    ...(connectionUrl ? { datasourceUrl: connectionUrl } : {}),
+    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+  });
 
-export * from "@/lib/db/types";
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}
+
+export type {
+  AdminUser,
+  Category,
+  Product,
+  Order,
+  OrderItem,
+  OrderStatusHistory,
+  SiteVisit,
+  EmailSettings,
+  EmailLog,
+  AdminNotification,
+  BackupSettings,
+  DbBackupLog,
+  SchedulerState,
+  AdminDeviceToken,
+  FirebaseSettings,
+  OrderStatus,
+  UserRole,
+  BackupFrequency,
+} from "@prisma/client";

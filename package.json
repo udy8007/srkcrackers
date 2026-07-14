@@ -4,16 +4,21 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "node -e \"process.exit(0)\"",
-    "db:import-firebase": "tsx scripts/import-backup-to-firebase.ts",
-    "db:probe-firebase": "tsx scripts/probe-firebase.ts",
-    "db:ensure-storage": "tsx scripts/ensure-firebase-storage.ts",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio",
     "icons": "node scripts/generate-favicons.mjs"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
     "firebase-admin": "^14.1.0",
     "jspdf": "^4.2.1",
@@ -34,6 +39,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^15.5.20",
+    "prisma": "^6.19.3",
     "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "tsx": "^4.23.0",

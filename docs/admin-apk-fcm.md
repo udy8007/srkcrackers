@@ -1,20 +1,22 @@
 # Admin WebView APK — FCM push wiring
 
+App **data** lives in Supabase Postgres (see [supabase.md](./supabase.md)). Firebase is used **only for FCM** admin push — not Firestore or Storage.
+
 Server side is ready in this repo. Your AI Studio / Android WebView APK must do the steps below so devices can receive order pushes.
 
-## Firebase project
+## Firebase project (messaging)
 
 - Project ID: `srk-cracker`
 - Android package: `com.aistudio.srkcrackers.qzkrm`
-- Place `google-services.json` in the Android app module (same package name).
+- Place `google-services.json` in the Android app module (same package name). Do **not** upload that file to Admin Settings — use a **service account** private key for the server.
 
-## Vercel (server send)
+## Vercel / server send (FCM credentials)
 
 1. Firebase Console → Project settings → Service accounts → **Generate new private key**.
-2. Set Vercel env `FIREBASE_SERVICE_ACCOUNT_JSON` to the **entire JSON as one line** (escape newlines in `private_key` as `\n`).
-3. Redeploy.
+2. Set Vercel env `FIREBASE_SERVICE_ACCOUNT_JSON` to the **entire JSON as one line** (escape newlines in `private_key` as `\n`), **or** upload the same JSON in Admin → Settings → Push notifications (stored in Postgres `FirebaseSettings`).
+3. Redeploy if you only changed env vars.
 
-Without this env var, pushes are skipped (bell + email still work).
+Without credentials, pushes are skipped (bell + email still work). Catalog and orders do **not** depend on Firebase.
 
 ## Android: register FCM token with the website
 

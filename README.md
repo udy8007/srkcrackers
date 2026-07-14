@@ -13,7 +13,7 @@ from a secure dashboard.
 | Language         | TypeScript                                    |
 | Styling          | Tailwind CSS v4                               |
 | ORM              | Prisma 6                                      |
-| Database         | PostgreSQL (Neon serverless)                  |
+| Database         | PostgreSQL (Supabase) + Firebase FCM only     |
 | Auth             | NextAuth / Auth.js v5 (credentials, JWT)      |
 | State            | Zustand (cart + UI, localStorage persistence) |
 | Hosting          | Vercel (free tier + free SSL)                 |
@@ -73,8 +73,7 @@ npm install
 
 ### 2. Configure environment
 
-Copy `.env.example` to `.env` and fill in the values (a working `.env` with the provided Neon
-database is already included for local development):
+Copy `.env.example` to `.env` and fill in Supabase Postgres + auth values (see [docs/supabase.md](docs/supabase.md)):
 
 ```bash
 cp .env.example .env
@@ -82,18 +81,19 @@ cp .env.example .env
 
 | Variable         | Purpose                                                      |
 | ---------------- | ----------------------------------------------------------- |
-| `DATABASE_URL`   | Neon **pooled** connection (runtime, `pgbouncer=true`)      |
-| `DIRECT_URL`     | Neon **unpooled** connection (used by Prisma Migrate)       |
+| `DATABASE_URL`   | Supabase **pooled** URL (runtime, port `6543` / pgbouncer)  |
+| `DIRECT_URL`     | Supabase **direct** URL (schema push, port `5432`)          |
 | `AUTH_SECRET`    | NextAuth secret — generate with `openssl rand -base64 32`   |
 | `NEXTAUTH_SECRET`| Same value as `AUTH_SECRET` (compatibility)                 |
 | `ADMIN_EMAIL`    | Seed admin email                                            |
 | `ADMIN_PASSWORD` | Seed admin password                                         |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | Optional — FCM push only (or upload in Admin Settings) |
 
 ### 3. Set up the database
 
 ```bash
-npm run db:migrate     # apply migrations to Neon
-npm run db:seed        # seed categories, products, and the admin user
+npm run db:push        # sync schema to Supabase
+npm run db:seed        # create-only: categories, products, admin (safe re-run)
 ```
 
 ### 4. Run the dev server
@@ -122,25 +122,23 @@ Password: Srk@Admin2026
 | `npm run build`    | `prisma generate` + production build     |
 | `npm run start`    | Start the production server              |
 | `npm run lint`     | Run ESLint                               |
-| `npm run db:migrate` | Create/apply a dev migration           |
-| `npm run db:deploy`  | Apply migrations in production/CI       |
-| `npm run db:seed`    | Seed the database                      |
-| `npm run db:studio`  | Open Prisma Studio                     |
+| `npm run db:push`    | Sync Prisma schema to Supabase          |
+| `npm run db:seed`    | Create-only seed (no product overwrite) |
+| `npm run db:studio`  | Open Prisma Studio                      |
 
 ## Deploying to Vercel (free + free SSL)
 
 1. Push this repo to GitHub.
 2. Import the project on [vercel.com](https://vercel.com).
-3. Add the environment variables from your `.env` in **Project → Settings → Environment Variables**
-   (`DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, `NEXTAUTH_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`).
+3. Add env vars: `DATABASE_URL`, `DIRECT_URL` (or `srk_POSTGRES_*`), `AUTH_SECRET`, `NEXTAUTH_SECRET`, and optionally `FIREBASE_SERVICE_ACCOUNT_JSON` for FCM.
    Set `NEXTAUTH_URL`/`AUTH_URL` to your Vercel domain (or rely on `AUTH_TRUST_HOST=true`).
-4. The `postinstall` and `build` scripts run `prisma generate` automatically.
-5. After the first deploy, apply migrations and seed against the production database:
+4. Build command uses `scripts/vercel-build.mjs` (`prisma generate` + `db push` + `next build`). **No seed on deploy.**
+5. After the first deploy, run create-only seed once against production:
    ```bash
-   npx prisma migrate deploy
    npm run db:seed
    ```
 6. Vercel provisions HTTPS with a free, auto-renewing SSL certificate.
+
 
 ## Notes & Production Hardening
 

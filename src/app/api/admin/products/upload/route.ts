@@ -4,7 +4,7 @@ import { uploadDataUrl } from "@/lib/db/storage";
 
 export const dynamic = "force-dynamic";
 
-/** Accept compressed JPEG data URL and upload to Firebase Storage. */
+/** Accept compressed JPEG data URL and persist as data URL / path (no object storage). */
 export async function POST(request: NextRequest) {
   const session = await auth();
   if (!session?.user) {
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Product image upload failed:", error);
     return NextResponse.json(
-      { error: "Failed to upload image to Firebase Storage" },
+      { error: "Failed to save product image" },
       { status: 500 },
     );
   }

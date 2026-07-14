@@ -2,15 +2,15 @@ import "server-only";
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { cert, deleteApp, getApps, initializeApp, type App } from "firebase-admin/app";
-import { getFirestore, type Firestore } from "firebase-admin/firestore";
-import { getStorage, type Storage } from "firebase-admin/storage";
 import { getMessaging } from "firebase-admin/messaging";
 import {
   parseAndValidateServiceAccount,
   type ServiceAccountJson,
 } from "@/lib/firebase-service-account";
+import { prisma } from "@/lib/prisma";
 
 const APP_NAME = "srk-cracker-admin";
+const FIREBASE_SETTINGS_ID = "default";
 
 function parseJsonString(raw: string | null | undefined): ServiceAccountJson | null {
   if (!raw?.trim()) return null;
@@ -37,8 +37,8 @@ function loadServiceAccountFromFile(): ServiceAccountJson | null {
 }
 
 /**
- * Resolve service account for Admin SDK.
- * Order: env JSON → credentials file → Firestore `firebaseSettings/default`.
+ * Resolve service account for FCM only.
+ * Order: env JSON → credentials file → Postgres `FirebaseSettings` row.
  */
 export async function resolveServiceAccount(): Promise<ServiceAccountJson | null> {
   const fromEnv = parseJsonString(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
@@ -48,16 +48,15 @@ export async function resolveServiceAccount(): Promise<ServiceAccountJson | null
   if (fromFile) return fromFile;
 
   try {
-    if (getApps().length > 0) {
-      const snap = await getFirestore().collection("firebaseSettings").doc("default").get();
-      const data = snap.data();
-      return parseJsonString(data?.serviceAccountJson as string | undefined);
-    }
+    const row = await prisma.firebaseSettings.findUnique({
+      where: { id: FIREBASE_SETTINGS_ID },
+      select: { serviceAccountJson: true },
+    });
+    return parseJsonString(row?.serviceAccountJson);
   } catch (error) {
-    console.error("[firebase-admin] Failed reading firebaseSettings:", error);
+    console.error("[firebase-admin] Failed reading FirebaseSettings:", error);
+    return null;
   }
-
-  return null;
 }
 
 export async function getFirebaseStatus(): Promise<{
@@ -87,15 +86,20 @@ export async function getFirebaseStatus(): Promise<{
   }
 
   try {
-    await ensureFirebaseApp();
-    const snap = await getFirestore().collection("firebaseSettings").doc("default").get();
-    const data = snap.data();
-    const fromDb = parseJsonString(data?.serviceAccountJson as string | undefined);
+    const row = await prisma.firebaseSettings.findUnique({
+      where: { id: FIREBASE_SETTINGS_ID },
+      select: {
+        serviceAccountJson: true,
+        projectId: true,
+        clientEmail: true,
+      },
+    });
+    const fromDb = parseJsonString(row?.serviceAccountJson);
     if (fromDb) {
       return {
         configured: true,
-        projectId: fromDb.project_id ?? (data?.projectId as string) ?? null,
-        clientEmail: fromDb.client_email ?? (data?.clientEmail as string) ?? null,
+        projectId: fromDb.project_id ?? row?.projectId ?? null,
+        clientEmail: fromDb.client_email ?? row?.clientEmail ?? null,
         source: "database",
       };
     }
@@ -115,7 +119,7 @@ export async function ensureFirebaseApp(): Promise<{ app: App; projectId: string
   const sa = await resolveServiceAccount();
   if (!sa?.project_id || !sa.client_email || !sa.private_key) {
     throw new Error(
-      "Firebase is not configured. Set FIREBASE_SERVICE_ACCOUNT_JSON in env (project srk-cracker).",
+      "Firebase is not configured for FCM. Upload a service account in Admin → Settings, or set FIREBASE_SERVICE_ACCOUNT_JSON.",
     );
   }
 
@@ -129,9 +133,6 @@ export async function ensureFirebaseApp(): Promise<{ app: App; projectId: string
     }
   }
 
-  const bucket =
-    process.env.FIREBASE_STORAGE_BUCKET || `${sa.project_id}.appspot.com`;
-
   const app = initializeApp(
     {
       credential: cert({
@@ -140,7 +141,6 @@ export async function ensureFirebaseApp(): Promise<{ app: App; projectId: string
         privateKey: sa.private_key.replace(/\\n/g, "\n"),
       }),
       projectId: sa.project_id,
-      storageBucket: bucket,
     },
     APP_NAME,
   );
@@ -154,16 +154,6 @@ export async function getFirebaseAppOrNull(): Promise<{ app: App; projectId: str
   } catch {
     return null;
   }
-}
-
-export async function db(): Promise<Firestore> {
-  const { app } = await ensureFirebaseApp();
-  return getFirestore(app);
-}
-
-export async function storage(): Promise<Storage> {
-  const { app } = await ensureFirebaseApp();
-  return getStorage(app);
 }
 
 export async function messaging() {

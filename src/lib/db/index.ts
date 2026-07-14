@@ -1,3 +1,21 @@
-export * from "./types";
-export { firestoreDb } from "./client";
+export type {
+  AdminUser,
+  Category,
+  Product,
+  Order,
+  OrderItem,
+  OrderStatusHistory,
+  SiteVisit,
+  EmailSettings,
+  EmailLog,
+  AdminNotification,
+  BackupSettings,
+  DbBackupLog,
+  SchedulerState,
+  AdminDeviceToken,
+  FirebaseSettings,
+  OrderStatus,
+  UserRole,
+  BackupFrequency,
+} from "./types";
 export { uploadBytes, uploadDataUrl, uploadLocalPublicFile } from "./storage";
