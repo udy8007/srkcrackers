@@ -241,7 +241,9 @@ export function ProductsSection() {
           />
         </div>
 
-        <div className="mx-auto mb-7 flex max-w-md items-center gap-2.5 rounded-2xl border border-line/80 bg-white/95 px-4 py-3 shadow-[0_4px_18px_rgba(0,0,0,0.06)] backdrop-blur">
+        <OrderOffersBanner />
+
+        <div className="mx-auto mb-6 flex max-w-md items-center gap-2.5 rounded-full border border-line/80 bg-white px-4 py-3 shadow-[0_4px_18px_rgba(0,0,0,0.06)]">
           <span className="text-primary/70" aria-hidden>
             🔍
           </span>
@@ -264,9 +266,7 @@ export function ProductsSection() {
           )}
         </div>
 
-        <OrderOffersBanner />
-
-        <div className="mt-2 space-y-5">
+        <div className="space-y-5">
           {loading && filtered.length === 0 && (
             <p className="rounded-2xl border border-line bg-white/90 py-10 text-center text-sm text-ink-muted shadow-sm">
               Loading products…
