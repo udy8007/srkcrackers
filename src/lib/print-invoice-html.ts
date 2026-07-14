@@ -52,8 +52,20 @@ function formatInvoiceDate(value: string | Date): string {
   });
 }
 
+const SCREEN_TOOLBAR_HTML = `
+  <div class="invoice-toolbar">
+    <h2>Order Invoice Preview</h2>
+    <div class="actions">
+      <button type="button" class="btn-back" onclick="window.close()">← Back</button>
+      <button type="button" class="btn-print" onclick="window.print()">Print</button>
+    </div>
+  </div>`;
+
 /** Branded HTML invoice for admin print (matches customer PDF style). */
-export function buildPrintInvoiceHtml(data: PrintInvoiceData): string {
+export function buildPrintInvoiceHtml(
+  data: PrintInvoiceData,
+  options?: { screenToolbar?: boolean },
+): string {
   const statusLabel = data.status ? ORDER_STATUS_LABEL[data.status] : "—";
   const logoUrl = `${data.origin.replace(/\/$/, "")}/logo.png`;
   const qrUrl = buildUpiQrImageUrl(data.total, 140);
@@ -76,6 +88,7 @@ export function buildPrintInvoiceHtml(data: PrintInvoiceData): string {
       </tr>`,
     )
     .join("");
+  const toolbar = options?.screenToolbar ? SCREEN_TOOLBAR_HTML : "";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -240,13 +253,46 @@ export function buildPrintInvoiceHtml(data: PrintInvoiceData): string {
       font-style: italic;
       text-align: center;
     }
+    .invoice-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin: -24px -24px 20px;
+      padding: 12px 16px;
+      background: #9d0208;
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+    }
+    .invoice-toolbar h2 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .invoice-toolbar .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .invoice-toolbar button {
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .invoice-toolbar .btn-back { background: #fff; color: #9d0208; }
+    .invoice-toolbar .btn-print { background: #fff3c4; color: #7a1a00; }
     @media print {
       body { padding: 0; }
       .page { max-width: none; }
+      .invoice-toolbar { display: none !important; }
     }
   </style>
 </head>
 <body>
+  ${toolbar}
   <div class="page">
     <div class="header">
       <div class="header-main">
@@ -333,9 +379,9 @@ export function buildPrintInvoiceHtml(data: PrintInvoiceData): string {
 </html>`;
 }
 
-/** Open branded invoice in a new window and trigger print. */
+/** Open branded invoice in a new window with Back/Print controls, then open the print dialog. */
 export function openPrintInvoice(data: PrintInvoiceData): void {
-  const html = buildPrintInvoiceHtml(data);
+  const html = buildPrintInvoiceHtml(data, { screenToolbar: true });
   const win = window.open("", "_blank");
   if (!win) return;
   win.document.write(html);
