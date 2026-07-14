@@ -1,6 +1,7 @@
 // Vercel build entrypoint.
 // Schema sync only — never seed/overwrite catalog on deploy (admin edits must persist).
 import { execSync } from "node:child_process";
+import { setTimeout as sleep } from "node:timers/promises";
 
 function firstEnv(...names) {
   for (const name of names) {
@@ -39,6 +40,7 @@ if (!migrateUrl) {
 
 // Neon: schema sync must use a direct connection (pgbouncer/pooler breaks advisory
 // locks, and channel_binding can break the connection). Normalise to a direct URL.
+// Raise connect_timeout so idle Neon compute can wake during cold starts.
 function toDirect(urlStr) {
   try {
     const u = new URL(urlStr);
@@ -46,6 +48,7 @@ function toDirect(urlStr) {
     u.searchParams.delete("pgbouncer");
     u.searchParams.delete("channel_binding");
     if (!u.searchParams.has("sslmode")) u.searchParams.set("sslmode", "require");
+    u.searchParams.set("connect_timeout", "30");
     return u.toString();
   } catch {
     return urlStr;
@@ -64,8 +67,33 @@ function run(cmd, env = process.env) {
   execSync(cmd, { stdio: "inherit", env });
 }
 
+async function runDbPushWithRetries(attempts = 5) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      console.log(
+        `\n[vercel-build] prisma db push (attempt ${attempt}/${attempts}) — waking Neon if idle…`,
+      );
+      execSync("npx prisma db push --skip-generate", {
+        stdio: "inherit",
+        env: migrateEnv,
+      });
+      return;
+    } catch (err) {
+      lastError = err;
+      if (attempt === attempts) break;
+      const waitMs = attempt * 5000;
+      console.warn(
+        `[vercel-build] db push failed (Neon may still be waking). Retrying in ${waitMs / 1000}s…`,
+      );
+      await sleep(waitMs);
+    }
+  }
+  throw lastError;
+}
+
 run("npx prisma generate");
 // Additive schema sync only. No seed, no --accept-data-loss, no catalog wipe.
 // Product/category data is managed in Admin and must survive deploys.
-run("npx prisma db push --skip-generate", migrateEnv);
+await runDbPushWithRetries();
 run("npx next build");
