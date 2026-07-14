@@ -37,6 +37,12 @@
     "**/*.mts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "prisma",
+    "backups",
+    "scripts/check-email-settings.ts",
+    "scripts/cleanup-catalog.ts",
+    "scripts/test-smtp.ts",
+    "tmp-q.js"
   ]
 }

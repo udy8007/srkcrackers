@@ -154,12 +154,16 @@ function findLatestBackup(explicit?: string): string {
   if (!existsSync(dir)) {
     throw new Error("No backups/ folder. Pass a JSON path, or create a backup first.");
   }
-  const files = readdirSync(dir)
-    .filter((f) => f.endsWith(".json"))
+  const files = readdirSync(dir).filter((f) => f.endsWith(".json"));
+  if (files.length === 0) throw new Error("No .json backups found in backups/");
+  // Prefer winter-sun Neon backup (the migrate seed source).
+  const winter = files
+    .filter((f) => f.includes("winter-sun"))
     .map((f) => join(dir, f))
     .sort();
-  if (files.length === 0) throw new Error("No .json backups found in backups/");
-  return files[files.length - 1];
+  if (winter.length > 0) return winter[winter.length - 1];
+  const all = files.map((f) => join(dir, f)).sort();
+  return all[all.length - 1];
 }
 
 async function main() {

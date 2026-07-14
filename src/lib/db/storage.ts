@@ -15,11 +15,27 @@ export async function uploadBytes(
 ): Promise<string> {
   const isPublic = options.isPublic !== false;
   const bucket = (await getStorage()).bucket();
+  const [bucketExists] = await bucket.exists();
+  if (!bucketExists) {
+    throw new Error(
+      `Firebase Storage bucket "${bucket.name}" does not exist. Enable Storage in Firebase Console (Blaze plan required): https://console.firebase.google.com/project/srk-cracker/storage — see docs/firebase-migrate.md`,
+    );
+  }
   const file = bucket.file(path);
-  await file.save(data, {
-    metadata: { contentType },
-    resumable: false,
-  });
+  try {
+    await file.save(data, {
+      metadata: { contentType },
+      resumable: false,
+    });
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    if (/bucket does not exist|billing account/i.test(msg)) {
+      throw new Error(
+        `Firebase Storage unavailable (${msg}). Enable Billing + Storage for project srk-cracker. See docs/firebase-migrate.md`,
+      );
+    }
+    throw error;
+  }
 
   if (isPublic) {
     try {
