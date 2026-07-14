@@ -43,7 +43,7 @@ export function Hero() {
           ⭐ {BUSINESS.yearsExperience}+ Years Experience
         </span>
         <h2 className="text-festive mt-4 font-display text-[clamp(1.8rem,4.5vw,2.6rem)] font-extrabold leading-tight">
-          Best Crackers Shop — {BUSINESS.name}
+          {BUSINESS.name}
         </h2>
         <p className="mx-auto mt-3 max-w-[650px] text-sm text-ink-muted sm:text-[0.95rem]">
           Premium Sivakasi quality crackers from licensed dealer {BUSINESS.name}, Morai, Avadi.
