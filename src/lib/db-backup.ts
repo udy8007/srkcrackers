@@ -1,6 +1,6 @@
 import "server-only";
 import { gzipSync } from "node:zlib";
-import type { BackupSettings } from "@prisma/client";
+import type { BackupSettings } from "@/lib/db/types";
 import { prisma } from "@/lib/prisma";
 import { BUSINESS } from "@/lib/constants";
 import { getEmailSettings, resolveSiteOrigin } from "@/lib/email-settings";

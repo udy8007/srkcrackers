@@ -1,15 +1,26 @@
 import "server-only";
-import { cert, deleteApp, getApps, initializeApp, type App } from "firebase-admin/app";
-import { getMessaging } from "firebase-admin/messaging";
-import { prisma } from "@/lib/prisma";
 import {
+  ensureFirebaseApp,
+  getFirebaseAppOrNull,
+  getFirebaseProjectId,
+  getFirebaseStatus,
+  messaging,
   parseAndValidateServiceAccount,
+  resetFirebaseApp,
+  resolveServiceAccount,
   type ServiceAccountJson,
-} from "@/lib/firebase-service-account";
+} from "@/lib/firebase-admin";
+import { prisma } from "@/lib/prisma";
 
 export const FIREBASE_SETTINGS_ID = "default";
 export type { ServiceAccountJson };
-export { parseAndValidateServiceAccount };
+export {
+  parseAndValidateServiceAccount,
+  getFirebaseStatus,
+  resetFirebaseApp,
+  resolveServiceAccount,
+  getFirebaseProjectId,
+};
 
 export type AdminPushFailure = {
   code: string;
@@ -23,99 +34,6 @@ export type AdminPushResult = {
   projectId: string | null;
   failures: AdminPushFailure[];
 };
-
-function parseJsonString(raw: string | null | undefined): ServiceAccountJson | null {
-  if (!raw?.trim()) return null;
-  const result = parseAndValidateServiceAccount(raw.trim());
-  return result.ok ? result.json : null;
-}
-
-/** Prefer DB upload, then Vercel env. */
-export async function resolveServiceAccount(): Promise<ServiceAccountJson | null> {
-  try {
-    const row = await prisma.firebaseSettings.findUnique({
-      where: { id: FIREBASE_SETTINGS_ID },
-      select: { serviceAccountJson: true },
-    });
-    const fromDb = parseJsonString(row?.serviceAccountJson);
-    if (fromDb) return fromDb;
-  } catch (error) {
-    console.error("[admin-push] Failed reading FirebaseSettings:", error);
-  }
-
-  return parseJsonString(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
-}
-
-export async function getFirebaseStatus(): Promise<{
-  configured: boolean;
-  projectId: string | null;
-  clientEmail: string | null;
-  source: "database" | "env" | null;
-}> {
-  try {
-    const row = await prisma.firebaseSettings.findUnique({
-      where: { id: FIREBASE_SETTINGS_ID },
-      select: { serviceAccountJson: true, projectId: true, clientEmail: true },
-    });
-    const fromDb = parseJsonString(row?.serviceAccountJson);
-    if (fromDb) {
-      return {
-        configured: true,
-        projectId: fromDb.project_id ?? row?.projectId ?? null,
-        clientEmail: fromDb.client_email ?? row?.clientEmail ?? null,
-        source: "database",
-      };
-    }
-  } catch {
-    /* table may not exist yet before migrate */
-  }
-
-  const fromEnv = parseJsonString(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
-  if (fromEnv) {
-    return {
-      configured: true,
-      projectId: fromEnv.project_id ?? null,
-      clientEmail: fromEnv.client_email ?? null,
-      source: "env",
-    };
-  }
-
-  return { configured: false, projectId: null, clientEmail: null, source: null };
-}
-
-/** Drop cached Admin SDK app so new credentials take effect. */
-export async function resetFirebaseApp(): Promise<void> {
-  const apps = getApps();
-  await Promise.all(apps.map((app) => deleteApp(app).catch(() => undefined)));
-}
-
-async function getFirebaseApp(): Promise<{ app: App; projectId: string } | null> {
-  const sa = await resolveServiceAccount();
-  if (!sa?.project_id || !sa.client_email || !sa.private_key) {
-    return null;
-  }
-
-  const existing = getApps()[0];
-  if (existing) {
-    const existingProject = existing.options.projectId;
-    if (existingProject && existingProject !== sa.project_id) {
-      await deleteApp(existing).catch(() => undefined);
-    } else if (existing) {
-      return { app: existing, projectId: sa.project_id };
-    }
-  }
-
-  const app = initializeApp({
-    credential: cert({
-      projectId: sa.project_id,
-      clientEmail: sa.client_email,
-      privateKey: sa.private_key.replace(/\\n/g, "\n"),
-    }),
-    projectId: sa.project_id,
-  });
-
-  return { app, projectId: sa.project_id };
-}
 
 function errorInfo(error: unknown): AdminPushFailure {
   if (error && typeof error === "object") {
@@ -148,7 +66,7 @@ export type AdminPushPayload = {
 
 /** Send FCM to every registered admin device. Never throws. */
 export async function sendAdminPush(payload: AdminPushPayload): Promise<AdminPushResult> {
-  const firebase = await getFirebaseApp();
+  const firebase = await getFirebaseAppOrNull();
   if (!firebase) {
     console.warn(
       "[admin-push] Skipped: upload Firebase service account in Admin → Settings (or set FIREBASE_SERVICE_ACCOUNT_JSON).",
@@ -187,7 +105,7 @@ export async function sendAdminPush(payload: AdminPushPayload): Promise<AdminPus
     ...(payload.data ?? {}),
   };
 
-  const messaging = getMessaging(firebase.app);
+  const fcm = await messaging();
   let sent = 0;
   let failed = 0;
   const staleIds: string[] = [];
@@ -196,7 +114,7 @@ export async function sendAdminPush(payload: AdminPushPayload): Promise<AdminPus
   await Promise.all(
     devices.map(async (device) => {
       try {
-        await messaging.send({
+        await fcm.send({
           token: device.token,
           notification: {
             title: payload.title,
@@ -249,6 +167,7 @@ export async function registerAdminDeviceToken(input: {
   platform?: string;
   adminUserId?: string | null;
 }) {
+  await ensureFirebaseApp();
   const token = input.token.trim();
   if (!token) throw new Error("token required");
 
@@ -271,9 +190,4 @@ export async function unregisterAdminDeviceToken(token: string) {
   const trimmed = token.trim();
   if (!trimmed) return { count: 0 };
   return prisma.adminDeviceToken.deleteMany({ where: { token: trimmed } });
-}
-
-export async function getFirebaseProjectId(): Promise<string | null> {
-  const status = await getFirebaseStatus();
-  return status.projectId;
 }

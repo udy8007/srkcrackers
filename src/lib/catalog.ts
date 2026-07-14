@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import type { CategoryWithProductsDTO, ProductDTO } from "@/types";
+import type { Category, Product } from "@/lib/db/types";
 
 /** Fetch active categories with their active products, ready for the storefront. */
 export async function getCatalog(): Promise<CategoryWithProductsDTO[]> {
-  const categories = await prisma.category.findMany({
+  const categories = (await prisma.category.findMany({
     where: { active: true },
     orderBy: { sortOrder: "asc" },
     include: {
@@ -12,7 +13,7 @@ export async function getCatalog(): Promise<CategoryWithProductsDTO[]> {
         orderBy: { sortOrder: "asc" },
       },
     },
-  });
+  })) as Array<Category & { products: Product[] }>;
 
   return categories
     .map((category) => ({

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { OrderStatus } from "@prisma/client";
+import type { OrderStatus } from "@/lib/db/types";
 import { compressImage } from "@/lib/client-actions";
 import { canAdminEditBeforeDispatch } from "@/lib/order-status";
 

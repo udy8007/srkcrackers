@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { OrderStatus, Prisma } from "@prisma/client";
+import type { OrderStatus } from "@/lib/db/types";
 import { prisma } from "@/lib/prisma";
 import { BUSINESS, ORDER_STATUS_LABEL } from "@/lib/constants";
 import { buildOrderFromItems, customerOrderFields, validateCustomer } from "@/lib/order-build";
 import { generateOrderNumber } from "@/lib/utils";
 import { dispatchNotification, notifyOrderPlaced } from "@/lib/notifications";
+import { uploadDataUrl } from "@/lib/db/storage";
 import type { CreateOrderInput } from "@/types";
 
 export const dynamic = "force-dynamic";
 
-const MAX_SCREENSHOT_CHARS = 3_000_000; // ~2MB base64 guard
+const MAX_SCREENSHOT_CHARS = 3_000_000;
 
 export async function POST(request: NextRequest) {
   let body: CreateOrderInput;
@@ -39,6 +40,14 @@ export async function POST(request: NextRequest) {
   const hasPayment = Boolean(paymentScreenshot);
   const now = new Date();
 
+  async function storeScreenshot(orderId: string, dataUrl: string | undefined | null) {
+    if (!dataUrl) return null;
+    if (dataUrl.startsWith("data:")) {
+      return uploadDataUrl(`orders/${orderId}`, dataUrl, { isPublic: false });
+    }
+    return dataUrl;
+  }
+
   if (draftOrderId) {
     const draft = await prisma.order.findFirst({
       where: { id: draftOrderId, status: "PAYMENT_PENDING" },
@@ -60,23 +69,21 @@ export async function POST(request: NextRequest) {
       history.push({ status: "VERIFYING", label: ORDER_STATUS_LABEL.VERIFYING, createdAt: now });
     }
 
-    const order = await prisma.$transaction(async (tx) => {
-      await tx.orderItem.deleteMany({ where: { orderId: draft.id } });
-      return tx.order.update({
-        where: { id: draft.id },
-        data: {
-          ...customerOrderFields(customer),
-          paymentMethod: paymentMethod?.trim() || draft.paymentMethod,
-          upiId: BUSINESS.upiId,
-          paymentScreenshot: paymentScreenshot || null,
-          subtotal,
-          total,
-          status,
-          items: { create: orderItems },
-          statusHistory: { create: history },
-        },
-        select: { id: true, orderNumber: true, subtotal: true, total: true, status: true, createdAt: true },
-      });
+    await prisma.orderItem.deleteMany({ where: { orderId: draft.id } });
+    const screenshotUrl = await storeScreenshot(draft.id, paymentScreenshot);
+    const order = await prisma.order.update({
+      where: { id: draft.id },
+      data: {
+        ...customerOrderFields(customer!),
+        paymentMethod: paymentMethod?.trim() || draft.paymentMethod,
+        upiId: BUSINESS.upiId,
+        paymentScreenshot: screenshotUrl,
+        subtotal,
+        total,
+        status,
+        items: { create: orderItems },
+        statusHistory: { create: history },
+      },
     });
 
     dispatchNotification(() => notifyOrderPlaced(order.id));
@@ -96,7 +103,11 @@ export async function POST(request: NextRequest) {
     { status: "PLACED", label: ORDER_STATUS_LABEL.PLACED, createdAt: now },
   ];
   if (hasPayment) {
-    history.push({ status: "PAYMENT_UPLOADED", label: ORDER_STATUS_LABEL.PAYMENT_UPLOADED, createdAt: now });
+    history.push({
+      status: "PAYMENT_UPLOADED",
+      label: ORDER_STATUS_LABEL.PAYMENT_UPLOADED,
+      createdAt: now,
+    });
     history.push({ status: "VERIFYING", label: ORDER_STATUS_LABEL.VERIFYING, createdAt: now });
   }
 
@@ -106,18 +117,25 @@ export async function POST(request: NextRequest) {
       const order = await prisma.order.create({
         data: {
           orderNumber,
-          ...customerOrderFields(customer),
+          ...customerOrderFields(customer!),
           paymentMethod: paymentMethod?.trim() || "UPI",
           upiId: BUSINESS.upiId,
-          paymentScreenshot: paymentScreenshot || null,
+          paymentScreenshot: null,
           subtotal,
           total,
           status,
           items: { create: orderItems },
           statusHistory: { create: history },
         },
-        select: { id: true, orderNumber: true, subtotal: true, total: true, status: true, createdAt: true },
       });
+
+      if (paymentScreenshot) {
+        const screenshotUrl = await storeScreenshot(order.id, paymentScreenshot);
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { paymentScreenshot: screenshotUrl },
+        });
+      }
 
       dispatchNotification(() => notifyOrderPlaced(order.id));
 
@@ -133,9 +151,8 @@ export async function POST(request: NextRequest) {
         { status: 201 },
       );
     } catch (error) {
-      const isUniqueViolation =
-        (error as Prisma.PrismaClientKnownRequestError)?.code === "P2002";
-      if (isUniqueViolation) continue;
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.toLowerCase().includes("unique") || msg.includes("already exists")) continue;
       console.error("POST /api/orders failed:", error);
       return NextResponse.json({ error: "Failed to place order" }, { status: 500 });
     }

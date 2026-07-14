@@ -1,4 +1,4 @@
-import type { OrderStatus } from "@prisma/client";
+import type { OrderStatus } from "@/lib/db/types";
 
 /** Statuses where the parcel is with postal — manual updates are locked. */
 export const POSTAL_HANDOVER_STATUSES: OrderStatus[] = ["DISPATCHED"];

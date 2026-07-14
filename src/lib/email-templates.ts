@@ -1,4 +1,4 @@
-import type { OrderStatus } from "@prisma/client";
+import type { OrderStatus } from "@/lib/db/types";
 import { BUSINESS, ORDER_STATUS_LABEL } from "@/lib/constants";
 import { buildPrintInvoiceHtml, type PrintInvoiceData } from "@/lib/print-invoice-html";
 import { formatPrice } from "@/lib/utils";

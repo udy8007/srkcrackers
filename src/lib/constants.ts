@@ -1,4 +1,4 @@
-import type { OrderStatus } from "@prisma/client";
+import type { OrderStatus } from "@/lib/db/types";
 
 /** Central business configuration for SRK Crackers. */
 export const BUSINESS = {

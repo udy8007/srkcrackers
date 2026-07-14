@@ -1,4 +1,4 @@
-import type { EmailSettings } from "@prisma/client";
+import type { EmailSettings } from "@/lib/db/types";
 import { prisma } from "@/lib/prisma";
 import { BUSINESS } from "@/lib/constants";
 

@@ -1,4 +1,4 @@
-import type { OrderStatus } from "@prisma/client";
+import type { OrderStatus } from "@/lib/db/types";
 
 /** Product shape returned to the storefront. */
 export interface ProductDTO {

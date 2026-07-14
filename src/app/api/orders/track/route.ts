@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { OrderStatus } from "@/lib/db/types";
 import { prisma } from "@/lib/prisma";
 import { ORDER_STATUS_LABEL, BUSINESS } from "@/lib/constants";
 import { isValidPhone } from "@/lib/utils";
@@ -43,10 +44,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
 
+  const status = order.status as OrderStatus;
+
   const result: TrackOrderResult = {
     orderNumber: order.orderNumber,
-    status: order.status,
-    statusLabel: ORDER_STATUS_LABEL[order.status],
+    status,
+    statusLabel: ORDER_STATUS_LABEL[status],
     total: order.total,
     subtotal: order.subtotal,
     shipping: order.total - order.subtotal,
@@ -65,20 +68,24 @@ export async function POST(request: NextRequest) {
       pincode: order.pincode,
       notes: order.notes,
     },
-    items: order.items.map((item) => ({
-      id: item.id,
-      name: item.name,
-      pack: item.pack,
-      price: item.price,
-      qty: item.qty,
-      amount: item.amount,
-    })),
-    statusHistory: order.statusHistory.map((entry) => ({
-      status: entry.status,
-      label: entry.label,
-      note: entry.note,
-      createdAt: entry.createdAt.toISOString(),
-    })),
+    items: (order.items ?? []).map(
+      (item: { id: string; name: string; pack: string; price: number; qty: number; amount: number }) => ({
+        id: item.id,
+        name: item.name,
+        pack: item.pack,
+        price: item.price,
+        qty: item.qty,
+        amount: item.amount,
+      }),
+    ),
+    statusHistory: (order.statusHistory ?? []).map(
+      (entry: { status: OrderStatus; label: string; note: string | null; createdAt: Date }) => ({
+        status: entry.status,
+        label: entry.label,
+        note: entry.note,
+        createdAt: entry.createdAt.toISOString(),
+      }),
+    ),
   };
 
   return NextResponse.json(result);

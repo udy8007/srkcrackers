@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { BUSINESS, ORDER_STATUS_LABEL } from "@/lib/constants";
 import { buildOrderFromItems, customerOrderFields, validateCustomer } from "@/lib/order-build";
@@ -45,49 +44,38 @@ export async function POST(request: NextRequest) {
         ? `Opened ${paymentMethod} — payment not completed`
         : "Reached payment step — awaiting UPI payment";
 
-  const existing =
-    draftOrderId
-      ? await prisma.order.findFirst({
-          where: { id: draftOrderId, status: "PAYMENT_PENDING" },
-        })
-      : await prisma.order.findFirst({
-          where: {
-            phone: customer.phone.trim(),
-            status: "PAYMENT_PENDING",
-            createdAt: { gte: new Date(Date.now() - DRAFT_WINDOW_MS) },
-          },
-          orderBy: { createdAt: "desc" },
-        });
+  const existing = draftOrderId
+    ? await prisma.order.findFirst({
+        where: { id: draftOrderId, status: "PAYMENT_PENDING" },
+      })
+    : await prisma.order.findFirst({
+        where: {
+          phone: customer.phone.trim(),
+          status: "PAYMENT_PENDING",
+          createdAt: { gte: new Date(Date.now() - DRAFT_WINDOW_MS) },
+        },
+        orderBy: { createdAt: "desc" },
+      });
 
   if (existing) {
-    const updated = await prisma.$transaction(async (tx) => {
-      await tx.orderItem.deleteMany({ where: { orderId: existing.id } });
-      return tx.order.update({
-        where: { id: existing.id },
-        data: {
-          ...customerOrderFields(customer),
-          paymentMethod: paymentMethod?.trim() || existing.paymentMethod,
-          upiId: BUSINESS.upiId,
-          subtotal,
-          total,
-          items: { create: orderItems },
-          statusHistory: {
-            create: {
-              status: "PAYMENT_PENDING",
-              label: ORDER_STATUS_LABEL.PAYMENT_PENDING,
-              note: stepNote,
-            },
+    await prisma.orderItem.deleteMany({ where: { orderId: existing.id } });
+    const updated = await prisma.order.update({
+      where: { id: existing.id },
+      data: {
+        ...customerOrderFields(customer),
+        paymentMethod: paymentMethod?.trim() || existing.paymentMethod,
+        upiId: BUSINESS.upiId,
+        subtotal,
+        total,
+        items: { create: orderItems },
+        statusHistory: {
+          create: {
+            status: "PAYMENT_PENDING",
+            label: ORDER_STATUS_LABEL.PAYMENT_PENDING,
+            note: stepNote,
           },
         },
-        select: {
-          id: true,
-          orderNumber: true,
-          subtotal: true,
-          total: true,
-          status: true,
-          createdAt: true,
-        },
-      });
+      },
     });
 
     return NextResponse.json({
@@ -122,14 +110,6 @@ export async function POST(request: NextRequest) {
             },
           },
         },
-        select: {
-          id: true,
-          orderNumber: true,
-          subtotal: true,
-          total: true,
-          status: true,
-          createdAt: true,
-        },
       });
 
       return NextResponse.json(
@@ -145,9 +125,8 @@ export async function POST(request: NextRequest) {
         { status: 201 },
       );
     } catch (error) {
-      const isUniqueViolation =
-        (error as Prisma.PrismaClientKnownRequestError)?.code === "P2002";
-      if (isUniqueViolation) continue;
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.toLowerCase().includes("unique") || msg.includes("already exists")) continue;
       console.error("POST /api/orders/draft failed:", error);
       return NextResponse.json({ error: "Failed to save checkout" }, { status: 500 });
     }

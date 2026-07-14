@@ -1,14 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { slugify } from "@/lib/slugify";
+import type { Product } from "@/lib/db/types";
 
 export const dynamic = "force-dynamic";
 
-function serializeProduct(
-  product: Prisma.ProductGetPayload<{ include: { category: { select: { key: true; label: true } } } }>,
-) {
+type ProductRow = Product & { categoryKey: string; categoryLabel: string };
+
+async function withCategory(product: Product): Promise<ProductRow> {
+  const category = await prisma.category.findUnique({ where: { id: product.categoryId } });
+  return {
+    ...product,
+    categoryKey: category?.key ?? "",
+    categoryLabel: category?.label ?? "",
+  };
+}
+
+function serializeProduct(product: ProductRow) {
   return {
     id: product.id,
     name: product.name,
@@ -21,8 +30,8 @@ function serializeProduct(
     description: product.description,
     sortOrder: product.sortOrder,
     categoryId: product.categoryId,
-    categoryKey: product.category.key,
-    categoryLabel: product.category.label,
+    categoryKey: product.categoryKey,
+    categoryLabel: product.categoryLabel,
   };
 }
 
@@ -39,7 +48,7 @@ export async function GET(request: NextRequest) {
   const take = Math.min(Number(searchParams.get("take")) || 25, 200);
   const skip = Math.max(Number(searchParams.get("skip")) || 0, 0);
 
-  const where: Prisma.ProductWhereInput = {};
+  const where: Record<string, unknown> = {};
   if (statusParam === "active") where.active = true;
   else if (statusParam === "hidden") where.active = false;
   if (categoryId) where.categoryId = categoryId;
@@ -47,22 +56,15 @@ export async function GET(request: NextRequest) {
     where.OR = [
       { name: { contains: q, mode: "insensitive" } },
       { pack: { contains: q, mode: "insensitive" } },
-      { category: { label: { contains: q, mode: "insensitive" } } },
     ];
   }
-
-  const orderBy: Prisma.ProductOrderByWithRelationInput[] = [
-    { category: { sortOrder: "asc" } },
-    { sortOrder: "asc" },
-  ];
 
   const [products, total, statsTotal, statsActive, statsHidden] = await Promise.all([
     prisma.product.findMany({
       where,
-      orderBy,
+      orderBy: { sortOrder: "asc" },
       take,
       skip,
-      include: { category: { select: { key: true, label: true } } },
     }),
     prisma.product.count({ where }),
     prisma.product.count(),
@@ -70,8 +72,10 @@ export async function GET(request: NextRequest) {
     prisma.product.count({ where: { active: false } }),
   ]);
 
+  const enriched = await Promise.all(products.map(withCategory));
+
   return NextResponse.json({
-    products: products.map(serializeProduct),
+    products: enriched.map(serializeProduct),
     total,
     stats: { total: statsTotal, active: statsActive, hidden: statsHidden },
   });
@@ -132,13 +136,14 @@ export async function POST(request: NextRequest) {
         description: body.description?.trim() ?? "",
         imageUrl: body.imageUrl?.trim() || "/products/default.svg",
         active: body.active !== false,
-        sortOrder: (maxOrder._max.sortOrder ?? 0) + 1,
+        sortOrder: ((maxOrder._max as { sortOrder: number | null } | undefined)?.sortOrder ?? 0) + 1,
         categoryId,
       },
-      include: { category: { select: { key: true, label: true } } },
     });
-    return NextResponse.json(serializeProduct(product), { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Could not create product" }, { status: 400 });
+    const enriched = await withCategory(product);
+    return NextResponse.json(serializeProduct(enriched), { status: 201 });
+  } catch (error) {
+    console.error("POST /api/admin/products failed:", error);
+    return NextResponse.json({ error: "Failed to create product" }, { status: 500 });
   }
 }

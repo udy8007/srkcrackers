@@ -1,26 +1,9 @@
-import { PrismaClient } from "@prisma/client";
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
 /**
- * Resolve the database connection URL.
- * Prefer the standard DATABASE_URL (set locally and in Vercel Project Settings);
- * fall back to the Neon–Vercel integration variables (prefixed `skr_`).
+ * Firestore-backed data client (replaces Prisma / Neon).
+ * Existing callers keep `import { prisma } from "@/lib/prisma"`.
  */
-const connectionUrl =
-  process.env.DATABASE_URL ??
-  process.env["skr_POSTGRES_PRISMA_URL"] ??
-  process.env["skr_DATABASE_URL"];
+import { firestoreDb } from "@/lib/db/client";
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    ...(connectionUrl ? { datasourceUrl: connectionUrl } : {}),
-    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-  });
+export const prisma = firestoreDb;
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
-}
+export * from "@/lib/db/types";

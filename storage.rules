@@ -1,0 +1,14 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Product images — public read; writes only via Admin SDK
+    match /products/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+    // Payment screenshots — private (Admin SDK / signed URLs only)
+    match /orders/{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -53,3 +53,9 @@ mobile-admin/android/capacitor-cordova-android-plugins/
 # Firebase client config (Android APK only — do not commit service account keys)
 **/google-services.json
 
+# Local database dumps (contain customer data)
+/backups/
+
+# Firebase Admin SDK private key (never commit)
+.firebase-service-account.json
+

@@ -4,19 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate",
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev",
-    "db:deploy": "prisma migrate deploy",
-    "db:clear": "tsx prisma/clear-db.ts",
-    "db:clear-orders": "tsx prisma/clear-orders.ts",
-    "db:clear-catalog": "tsx prisma/clear-catalog.ts",
-    "db:studio": "prisma studio",
-    "db:reset": "prisma migrate reset",
+    "postinstall": "node -e \"process.exit(0)\"",
+    "db:import-firebase": "tsx scripts/import-backup-to-firebase.ts",
     "icons": "node scripts/generate-favicons.mjs"
   },
   "dependencies": {

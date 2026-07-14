@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import type { OrderStatus } from "@prisma/client";
+import type { OrderStatus } from "@/lib/db/types";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ORDER_STATUSES } from "@/lib/constants";
 import { formatDateTime, formatPrice } from "@/lib/utils";

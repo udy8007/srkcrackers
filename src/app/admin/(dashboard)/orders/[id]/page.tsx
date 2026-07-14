@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import type { Order, OrderItem, OrderStatusHistory } from "@/lib/db/types";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { formatDateTime, formatPrice, getStoredShipping } from "@/lib/utils";
 import { OrderActions } from "./OrderActions";
@@ -11,17 +12,22 @@ import { notifyAutoDelivered } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
+type OrderDetail = Order & {
+  items: OrderItem[];
+  statusHistory: OrderStatusHistory[];
+};
+
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const deliveredIds = await autoDeliverDueOrders();
   notifyAutoDelivered(deliveredIds);
-  const order = await prisma.order.findUnique({
+  const order = (await prisma.order.findUnique({
     where: { id },
     include: {
       items: true,
       statusHistory: { orderBy: { createdAt: "asc" } },
     },
-  });
+  })) as OrderDetail | null;
 
   if (!order) notFound();
 

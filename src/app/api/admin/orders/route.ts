@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { OrderStatus, Prisma } from "@prisma/client";
+import type { OrderStatus } from "@/lib/db/types";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { ORDER_STATUSES } from "@/lib/constants";
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   const take = Math.min(Number(searchParams.get("take")) || 50, 200);
   const skip = Math.max(Number(searchParams.get("skip")) || 0, 0);
 
-  const where: Prisma.OrderWhereInput = {};
+  const where: Record<string, unknown> = {};
   if (statusParam && VALID_STATUSES.has(statusParam as OrderStatus)) {
     where.status = statusParam as OrderStatus;
   }
@@ -34,13 +34,14 @@ export async function GET(request: NextRequest) {
     ];
   }
   if (from || to) {
-    where.createdAt = {};
-    if (from) where.createdAt.gte = new Date(from);
+    const createdAt: Record<string, Date> = {};
+    if (from) createdAt.gte = new Date(from);
     if (to) {
       const end = new Date(to);
       end.setHours(23, 59, 59, 999);
-      where.createdAt.lte = end;
+      createdAt.lte = end;
     }
+    where.createdAt = createdAt;
   }
 
   const [orders, total] = await Promise.all([
@@ -49,25 +50,20 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
       take,
       skip,
-      select: {
-        id: true,
-        orderNumber: true,
-        customerName: true,
-        phone: true,
-        city: true,
-        state: true,
-        total: true,
-        status: true,
-        createdAt: true,
-        _count: { select: { items: true } },
-      },
     }),
     prisma.order.count({ where }),
   ]);
 
+  const withCounts = await Promise.all(
+    orders.map(async (order) => {
+      const itemCount = await prisma.orderItem.count({ where: { orderId: order.id } });
+      return { order, itemCount };
+    }),
+  );
+
   return NextResponse.json({
     total,
-    orders: orders.map((order) => ({
+    orders: withCounts.map(({ order, itemCount }) => ({
       id: order.id,
       orderNumber: order.orderNumber,
       customerName: order.customerName,
@@ -76,7 +72,7 @@ export async function GET(request: NextRequest) {
       state: order.state,
       total: order.total,
       status: order.status,
-      itemCount: order._count.items,
+      itemCount,
       createdAt: order.createdAt.toISOString(),
     })),
   });

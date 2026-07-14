@@ -1,7 +1,7 @@
 import "server-only";
 import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
-import type { EmailSettings } from "@prisma/client";
+import type { EmailSettings } from "@/lib/db/types";
 import { prisma } from "@/lib/prisma";
 import { getEmailSettings, smtpConfigError } from "@/lib/email-settings";
 

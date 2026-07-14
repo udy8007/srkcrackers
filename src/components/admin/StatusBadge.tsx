@@ -1,4 +1,4 @@
-import type { OrderStatus } from "@prisma/client";
+import type { OrderStatus } from "@/lib/db/types";
 import { ORDER_STATUS_LABEL } from "@/lib/constants";
 
 const STYLES: Record<OrderStatus, string> = {

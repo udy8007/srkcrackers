@@ -1,6 +1,6 @@
 import "server-only";
 import { after } from "next/server";
-import type { OrderStatus } from "@prisma/client";
+import type { Order, OrderItem, OrderStatus } from "@/lib/db/types";
 import { prisma } from "@/lib/prisma";
 import { ORDER_STATUS_LABEL } from "@/lib/constants";
 import { getEmailSettings, resolveAdminNotifyEmail, resolveSiteOrigin } from "@/lib/email-settings";
@@ -17,13 +17,13 @@ import type { PrintInvoiceData } from "@/lib/print-invoice-html";
 
 const PENDING_STATUSES: OrderStatus[] = ["PLACED", "VERIFYING"];
 
-type OrderWithItems = Awaited<ReturnType<typeof loadOrderForNotification>>;
+type OrderWithItems = Order & { items: OrderItem[] };
 
-async function loadOrderForNotification(orderId: string) {
-  return prisma.order.findUnique({
+async function loadOrderForNotification(orderId: string): Promise<OrderWithItems | null> {
+  return (await prisma.order.findUnique({
     where: { id: orderId },
     include: { items: true },
-  });
+  })) as OrderWithItems | null;
 }
 
 function orderToInvoice(order: NonNullable<OrderWithItems>, origin: string): PrintInvoiceData {

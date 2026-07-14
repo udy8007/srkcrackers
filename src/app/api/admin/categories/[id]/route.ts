@@ -31,15 +31,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const category = await prisma.category.update({
       where: { id },
       data,
-      include: { _count: { select: { products: true } } },
     });
+    const productCount = await prisma.product.count({ where: { categoryId: id } });
     return NextResponse.json({
       id: category.id,
       key: category.key,
       label: category.label,
       active: category.active,
       sortOrder: category.sortOrder,
-      productCount: category._count.products,
+      productCount,
     });
   } catch {
     return NextResponse.json({ error: "Category not found" }, { status: 404 });

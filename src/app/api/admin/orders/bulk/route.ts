@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { OrderStatus } from "@prisma/client";
+import type { OrderStatus } from "@/lib/db/types";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { ORDER_STATUS_LABEL, ORDER_STATUSES } from "@/lib/constants";

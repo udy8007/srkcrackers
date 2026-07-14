@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { OrderStatus } from "@prisma/client";
+import type { OrderStatus } from "@/lib/db/types";
 import { BUSINESS, ORDER_STATUSES } from "@/lib/constants";
 import { canAdminEditBeforeDispatch } from "@/lib/order-status";
 import { formatDateTime } from "@/lib/utils";

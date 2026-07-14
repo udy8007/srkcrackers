@@ -18,7 +18,7 @@ import { BUSINESS, INDIAN_STATES, ORDER_STATUS_LABEL } from "@/lib/constants";
 import { isCustomerComplete, loadSavedCustomer, saveCustomerDetails } from "@/lib/checkout-storage";
 import { downloadOrderInvoice } from "@/lib/invoice";
 import { storeTrackPhone } from "./TrackOrderDeepLink";
-import type { OrderStatus } from "@prisma/client";
+import type { OrderStatus } from "@/lib/db/types";
 import type { CustomerInput, InvoiceData } from "@/types";
 
 const EMPTY_CUSTOMER: CustomerInput = {

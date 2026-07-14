@@ -10,7 +10,7 @@ import {
   buildTestEmail,
 } from "@/lib/email-templates";
 import type { PrintInvoiceData } from "@/lib/print-invoice-html";
-import type { OrderStatus } from "@prisma/client";
+import type { OrderStatus } from "@/lib/db/types";
 import { resolveSiteOrigin } from "@/lib/email-settings";
 import type { OrderEmailContext } from "@/lib/email-templates";
 

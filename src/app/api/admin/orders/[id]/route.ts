@@ -1,15 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { OrderStatus, Prisma } from "@prisma/client";
+import type { Order, OrderItem, OrderStatus, OrderStatusHistory } from "@/lib/db/types";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { ORDER_STATUS_LABEL, ORDER_STATUSES } from "@/lib/constants";
 import { canAdminEditBeforeDispatch } from "@/lib/order-status";
 import { dispatchNotification, notifyStatusChange } from "@/lib/notifications";
+import { uploadDataUrl } from "@/lib/db/storage";
 
 export const dynamic = "force-dynamic";
 
 const VALID_STATUSES = new Set(ORDER_STATUSES.map((s) => s.key));
 const MAX_SCREENSHOT_CHARS = 3_000_000;
+
+type OrderWithRelations = Order & {
+  items: OrderItem[];
+  statusHistory: OrderStatusHistory[];
+};
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -18,13 +24,13 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   }
 
   const { id } = await params;
-  const order = await prisma.order.findUnique({
+  const order = (await prisma.order.findUnique({
     where: { id },
     include: {
       items: true,
-      statusHistory: { orderBy: { createdAt: "asc" } },
+      statusHistory: true,
     },
-  });
+  })) as OrderWithRelations | null;
 
   if (!order) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
@@ -62,7 +68,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     existing.status === "DELIVERED" ||
     existing.status === "CANCELLED";
 
-  // Payment screenshot only before dispatch
   if (body.paymentScreenshot !== undefined) {
     if (!canAdminEditBeforeDispatch(existing.status)) {
       return NextResponse.json(
@@ -73,14 +78,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (body.paymentScreenshot.length > MAX_SCREENSHOT_CHARS) {
       return NextResponse.json({ error: "Screenshot is too large" }, { status: 400 });
     }
-    const order = await prisma.order.update({
+    let screenshotUrl = body.paymentScreenshot || null;
+    if (screenshotUrl?.startsWith("data:")) {
+      screenshotUrl = await uploadDataUrl(`orders/${id}`, screenshotUrl, { isPublic: false });
+    }
+    const order = (await prisma.order.update({
       where: { id },
-      data: { paymentScreenshot: body.paymentScreenshot || null },
+      data: { paymentScreenshot: screenshotUrl },
       include: {
         items: true,
-        statusHistory: { orderBy: { createdAt: "asc" } },
+        statusHistory: true,
       },
-    });
+    })) as OrderWithRelations;
     return NextResponse.json(serializeOrder(order));
   }
 
@@ -123,7 +132,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         `Handed to postal — expected delivery ${expectedDeliveryAt!.toLocaleString("en-IN")}`
       : body.note?.trim() || null;
 
-  const order = await prisma.order.update({
+  const order = (await prisma.order.update({
     where: { id },
     data: {
       status,
@@ -138,9 +147,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     },
     include: {
       items: true,
-      statusHistory: { orderBy: { createdAt: "asc" } },
+      statusHistory: true,
     },
-  });
+  })) as OrderWithRelations;
 
   dispatchNotification(() => notifyStatusChange(id, existing.status, dispatchNote));
 
@@ -154,7 +163,10 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
   }
 
   const { id } = await params;
-  const existing = await prisma.order.findUnique({ where: { id }, select: { id: true, orderNumber: true } });
+  const existing = await prisma.order.findUnique({
+    where: { id },
+    select: { id: true, orderNumber: true },
+  });
   if (!existing) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
@@ -163,10 +175,6 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
 
   return NextResponse.json({ ok: true, orderNumber: existing.orderNumber });
 }
-
-type OrderWithRelations = Prisma.OrderGetPayload<{
-  include: { items: true; statusHistory: true };
-}>;
 
 function serializeOrder(order: OrderWithRelations) {
   return {
@@ -193,7 +201,7 @@ function serializeOrder(order: OrderWithRelations) {
     total: order.total,
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
-    items: order.items.map((item) => ({
+    items: (order.items ?? []).map((item) => ({
       id: item.id,
       name: item.name,
       pack: item.pack,
@@ -201,7 +209,7 @@ function serializeOrder(order: OrderWithRelations) {
       qty: item.qty,
       amount: item.amount,
     })),
-    statusHistory: order.statusHistory.map((entry) => ({
+    statusHistory: (order.statusHistory ?? []).map((entry) => ({
       status: entry.status,
       label: entry.label,
       note: entry.note,

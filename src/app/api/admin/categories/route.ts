@@ -5,26 +5,6 @@ import { slugify } from "@/lib/slugify";
 
 export const dynamic = "force-dynamic";
 
-function serializeCategory(
-  c: {
-    id: string;
-    key: string;
-    label: string;
-    active: boolean;
-    sortOrder: number;
-    _count: { products: number };
-  },
-) {
-  return {
-    id: c.id,
-    key: c.key,
-    label: c.label,
-    active: c.active,
-    sortOrder: c.sortOrder,
-    productCount: c._count.products,
-  };
-}
-
 export async function GET(request: NextRequest) {
   const session = await auth();
   if (!session?.user) {
@@ -40,23 +20,26 @@ export async function GET(request: NextRequest) {
       orderBy: { sortOrder: "asc" },
       take,
       skip,
-      select: {
-        id: true,
-        key: true,
-        label: true,
-        active: true,
-        sortOrder: true,
-        _count: { select: { products: true } },
-      },
     }),
     prisma.category.count(),
     prisma.category.aggregate({ _max: { sortOrder: true } }),
   ]);
 
+  const serialized = await Promise.all(
+    categories.map(async (c) => ({
+      id: c.id,
+      key: c.key,
+      label: c.label,
+      active: c.active,
+      sortOrder: c.sortOrder,
+      productCount: await prisma.product.count({ where: { categoryId: c.id } }),
+    })),
+  );
+
   return NextResponse.json({
-    categories: categories.map(serializeCategory),
+    categories: serialized,
     total,
-    nextSortOrder: (maxSort._max.sortOrder ?? 0) + 1,
+    nextSortOrder: (maxSort._max?.sortOrder ?? 0) + 1,
   });
 }
 
@@ -88,7 +71,7 @@ export async function POST(request: NextRequest) {
   const sortOrder =
     typeof body.sortOrder === "number"
       ? Math.round(body.sortOrder)
-      : ((await prisma.category.aggregate({ _max: { sortOrder: true } }))._max.sortOrder ?? 0) + 1;
+      : ((await prisma.category.aggregate({ _max: { sortOrder: true } }))._max?.sortOrder ?? 0) + 1;
 
   const category = await prisma.category.create({
     data: {
@@ -97,7 +80,6 @@ export async function POST(request: NextRequest) {
       sortOrder,
       active: typeof body.active === "boolean" ? body.active : true,
     },
-    include: { _count: { select: { products: true } } },
   });
 
   return NextResponse.json({
@@ -106,6 +88,6 @@ export async function POST(request: NextRequest) {
     label: category.label,
     active: category.active,
     sortOrder: category.sortOrder,
-    productCount: category._count.products,
+    productCount: 0,
   });
 }

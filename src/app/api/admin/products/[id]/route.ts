@@ -1,14 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { slugify } from "@/lib/slugify";
+import type { Product } from "@/lib/db/types";
 
 export const dynamic = "force-dynamic";
 
-function serializeProduct(
-  product: Prisma.ProductGetPayload<{ include: { category: { select: { key: true; label: true } } } }>,
-) {
+type ProductRow = Product & { categoryKey: string; categoryLabel: string };
+
+async function withCategory(product: Product): Promise<ProductRow> {
+  const category = await prisma.category.findUnique({ where: { id: product.categoryId } });
+  return {
+    ...product,
+    categoryKey: category?.key ?? "",
+    categoryLabel: category?.label ?? "",
+  };
+}
+
+function serializeProduct(product: ProductRow) {
   return {
     id: product.id,
     name: product.name,
@@ -21,8 +30,8 @@ function serializeProduct(
     description: product.description,
     sortOrder: product.sortOrder,
     categoryId: product.categoryId,
-    categoryKey: product.category.key,
-    categoryLabel: product.category.label,
+    categoryKey: product.categoryKey,
+    categoryLabel: product.categoryLabel,
   };
 }
 
@@ -50,7 +59,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const data: Prisma.ProductUpdateInput = {};
+  const data: Record<string, unknown> = {};
   if (typeof body.name === "string" && body.name.trim()) data.name = body.name.trim();
   if (typeof body.pack === "string" && body.pack.trim()) data.pack = body.pack.trim();
   if (typeof body.description === "string") data.description = body.description.trim();
@@ -66,16 +75,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     data.imageUrl = url;
   }
   if (typeof body.categoryId === "string") {
-    data.category = { connect: { id: body.categoryId } };
+    data.categoryId = body.categoryId;
   }
 
   if (typeof body.name === "string" && body.name.trim()) {
     const baseSlug = slugify(body.name.trim());
     if (baseSlug) {
       const conflict = await prisma.product.findFirst({
-        where: { slug: baseSlug, NOT: { id } },
+        where: { slug: baseSlug },
       });
-      if (!conflict) data.slug = baseSlug;
+      if (!conflict || conflict.id === id) data.slug = baseSlug;
     }
   }
 
@@ -87,9 +96,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const product = await prisma.product.update({
       where: { id },
       data,
-      include: { category: { select: { key: true, label: true } } },
     });
-    return NextResponse.json(serializeProduct(product));
+    return NextResponse.json(serializeProduct(await withCategory(product)));
   } catch {
     return NextResponse.json({ error: "Product not found" }, { status: 404 });
   }
