@@ -6,7 +6,6 @@ import type { Category, Product } from "@/lib/db/types";
 export const CATALOG_CACHE_TAG = "catalog";
 
 async function loadCatalogFromDb(): Promise<CategoryWithProductsDTO[]> {
-  // Two indexed equality queries (+ join in memory) instead of N+1 includes.
   const [categories, products] = (await Promise.all([
     prisma.category.findMany({
       where: { active: true },
@@ -46,11 +45,20 @@ async function loadCatalogFromDb(): Promise<CategoryWithProductsDTO[]> {
     .filter((category) => category.products.length > 0);
 }
 
-/** Cached storefront catalog (shared across warm serverless instances via Next data cache). */
-export const getCatalog = unstable_cache(loadCatalogFromDb, ["storefront-catalog"], {
+const getCachedCatalog = unstable_cache(loadCatalogFromDb, ["storefront-catalog"], {
   revalidate: 60,
   tags: [CATALOG_CACHE_TAG],
 });
+
+/**
+ * Prefer the short-lived cache, but never serve a stuck empty catalog
+ * (e.g. after a deploy against an empty DB that was seeded later).
+ */
+export async function getCatalog(): Promise<CategoryWithProductsDTO[]> {
+  const cached = await getCachedCatalog();
+  if (cached.length > 0) return cached;
+  return loadCatalogFromDb();
+}
 
 /** Call after product/category admin mutations so the storefront refreshes promptly. */
 export function invalidateCatalogCache(): void {

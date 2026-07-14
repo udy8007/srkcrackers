@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SafeImage } from "@/components/SafeImage";
 import { SectionHead } from "./SectionHead";
 import { SectionDecor } from "./FestiveDecor";
@@ -35,12 +35,12 @@ function QtyControl({ product }: { product: ProductDTO }) {
         type="button"
         aria-label="Remove"
         onClick={() => changeQty(product.id, -1)}
-        className="flex h-9 w-9 items-center justify-center bg-brandbg text-lg font-bold text-primary transition hover:bg-primary/10 active:scale-95"
+        className="flex h-10 w-10 items-center justify-center bg-brandbg text-xl font-bold text-primary transition hover:bg-primary/10 active:scale-95"
       >
         −
       </button>
       <span
-        className={`w-9 text-center text-sm font-bold tabular-nums ${
+        className={`w-10 text-center text-base font-bold tabular-nums ${
           active ? "text-primary" : "text-ink"
         }`}
       >
@@ -50,7 +50,7 @@ function QtyControl({ product }: { product: ProductDTO }) {
         type="button"
         aria-label="Add"
         onClick={() => changeQty(product.id, 1)}
-        className="flex h-9 w-9 items-center justify-center bg-gradient-to-b from-primary to-primary-dark text-lg font-bold text-white transition hover:brightness-110 active:scale-95"
+        className="flex h-10 w-10 items-center justify-center bg-gradient-to-b from-primary to-primary-dark text-xl font-bold text-white transition hover:brightness-110 active:scale-95"
       >
         +
       </button>
@@ -58,8 +58,8 @@ function QtyControl({ product }: { product: ProductDTO }) {
   );
 }
 
-/** One product per row — polished list, no collage grid. */
-function ProductListRow({ product, index }: { product: ProductDTO; index: number }) {
+/** One product per row — large thumb so packaging is readable. */
+function ProductListRow({ product }: { product: ProductDTO }) {
   const openProduct = useUI((s) => s.openProduct);
   const qty = useCart((s) => s.items[product.id] ?? 0);
   const mounted = useMounted();
@@ -69,69 +69,78 @@ function ProductListRow({ product, index }: { product: ProductDTO; index: number
 
   return (
     <article
-      className={`group flex items-center gap-3 px-3 py-3.5 transition sm:gap-4 sm:px-4 ${
+      className={`group flex items-stretch gap-3 px-3 py-4 transition sm:gap-4 sm:px-4 ${
         inCart ? "bg-primary/[0.04]" : "bg-white hover:bg-[#fffaf5]"
       } border-b border-line/70 last:border-0`}
-      style={{ animationDelay: `${Math.min(index, 12) * 28}ms` }}
     >
       <button
         type="button"
         onClick={() => openProduct(product.id)}
-        className="relative shrink-0 overflow-hidden rounded-xl bg-brandbg shadow-[0_2px_8px_rgba(157,2,8,0.12)] ring-1 ring-black/5 transition group-hover:shadow-[0_4px_14px_rgba(157,2,8,0.18)] group-hover:ring-primary/20"
+        className="relative shrink-0 overflow-hidden rounded-2xl bg-brandbg shadow-[0_3px_12px_rgba(157,2,8,0.14)] ring-1 ring-black/5 transition group-hover:shadow-[0_6px_18px_rgba(157,2,8,0.2)] group-hover:ring-primary/25"
       >
         <SafeImage
           src={product.imageUrl}
           alt={product.name}
-          width={72}
-          height={72}
-          className="h-[4.25rem] w-[4.25rem] object-cover sm:h-[4.75rem] sm:w-[4.75rem]"
+          width={160}
+          height={160}
+          className="h-[7.25rem] w-[7.25rem] object-cover sm:h-36 sm:w-36"
         />
         {off != null && off >= 40 && (
-          <span className="absolute left-1 top-1 rounded-md bg-yellow px-1 py-0.5 text-[0.58rem] font-extrabold leading-none text-primary-dark shadow-sm">
+          <span className="absolute left-1.5 top-1.5 rounded-md bg-yellow px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-primary-dark shadow-sm">
             −{off}%
           </span>
         )}
       </button>
 
-      <div className="min-w-0 flex-1">
-        <button
-          type="button"
-          onClick={() => openProduct(product.id)}
-          className="text-left font-display text-[0.92rem] font-semibold leading-snug tracking-tight text-ink transition hover:text-primary sm:text-base"
-        >
-          {product.name}
-        </button>
-        <p className="mt-0.5 text-[0.72rem] text-ink-muted sm:text-xs">{product.pack}</p>
-        <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-          <span className="text-[0.7rem] text-ink-muted/80 line-through sm:text-xs">
-            {formatPrice(product.mrp)}
-          </span>
-          <span className="text-[1.05rem] font-extrabold tracking-tight text-green sm:text-lg">
-            {formatPrice(product.price)}
-          </span>
-          {inCart && (
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[0.65rem] font-bold text-primary">
-              Cart {formatPrice(amount)}
+      <div className="flex min-w-0 flex-1 flex-col justify-between gap-2 py-0.5">
+        <div>
+          <button
+            type="button"
+            onClick={() => openProduct(product.id)}
+            className="text-left font-display text-[0.95rem] font-semibold leading-snug tracking-tight text-ink transition hover:text-primary sm:text-[1.05rem]"
+          >
+            {product.name}
+          </button>
+          <p className="mt-1 text-xs text-ink-muted">{product.pack}</p>
+          <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            <span className="text-xs text-ink-muted/80 line-through">{formatPrice(product.mrp)}</span>
+            <span className="text-lg font-extrabold tracking-tight text-green sm:text-xl">
+              {formatPrice(product.price)}
             </span>
-          )}
+            {inCart && (
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[0.7rem] font-bold text-primary">
+                Cart {formatPrice(amount)}
+              </span>
+            )}
+          </div>
         </div>
-      </div>
 
-      <div className="shrink-0 self-center">
-        <QtyControl product={product} />
+        <div className="flex items-center justify-end sm:justify-start">
+          <QtyControl product={product} />
+        </div>
       </div>
     </article>
   );
 }
 
 export function ProductsSection() {
-  const { categories } = useCatalog();
+  const { categories, loading } = useCatalog();
   const cartItems = useCart((s) => s.items);
   const mounted = useMounted();
   const [search, setSearch] = useState("");
-  const [openCats, setOpenCats] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(categories.map((c) => [c.key, true])),
-  );
+  const [openCats, setOpenCats] = useState<Record<string, boolean>>({});
+
+  // Open all categories whenever the catalog loads / changes.
+  useEffect(() => {
+    if (categories.length === 0) return;
+    setOpenCats((prev) => {
+      const next = { ...prev };
+      for (const category of categories) {
+        if (next[category.key] === undefined) next[category.key] = true;
+      }
+      return next;
+    });
+  }, [categories]);
 
   const query = search.trim().toLowerCase();
   const hasSearch = query.length > 0;
@@ -160,7 +169,7 @@ export function ProductsSection() {
       <div className="mx-auto max-w-3xl">
         <SectionHead
           title="Crackers Price List — 80% Discount"
-          subtitle="Browse by category · One product per row · Tap + to add"
+          subtitle="Browse by category · Large product photos · Tap + to add"
         />
 
         <div className="mb-6 flex justify-center">
@@ -196,13 +205,19 @@ export function ProductsSection() {
         <OrderOffersBanner />
 
         <div className="mt-2 space-y-5">
+          {loading && filtered.length === 0 && (
+            <p className="rounded-2xl border border-line bg-white/90 py-10 text-center text-sm text-ink-muted shadow-sm">
+              Loading products…
+            </p>
+          )}
+
           {filtered.map((category) => {
             const isOpen = hasSearch || openCats[category.key] !== false;
             const catQty = mounted
               ? category.products.reduce((sum, p) => sum + (cartItems[p.id] ?? 0), 0)
               : 0;
             return (
-              <div key={category.key} className="animate-[fadeUp_0.45s_ease_both]">
+              <div key={category.key}>
                 <button
                   type="button"
                   onClick={() => toggle(category.key)}
@@ -237,8 +252,8 @@ export function ProductsSection() {
 
                 {isOpen && (
                   <div className="mt-2 overflow-hidden rounded-2xl border border-line/70 bg-white shadow-[0_6px_24px_rgba(0,0,0,0.06)]">
-                    {category.products.map((product, index) => (
-                      <ProductListRow key={product.id} product={product} index={index} />
+                    {category.products.map((product) => (
+                      <ProductListRow key={product.id} product={product} />
                     ))}
                   </div>
                 )}
@@ -246,9 +261,9 @@ export function ProductsSection() {
             );
           })}
 
-          {filtered.length === 0 && (
+          {!loading && filtered.length === 0 && (
             <p className="rounded-2xl border border-dashed border-line bg-white/80 py-12 text-center text-sm text-ink-muted">
-              No products found. Try a different search.
+              No products found. Try a different search or refresh the page.
             </p>
           )}
         </div>
