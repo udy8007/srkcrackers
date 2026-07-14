@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { invalidateCatalogCache } from "@/lib/catalog";
 import { slugify } from "@/lib/slugify";
 
 export const dynamic = "force-dynamic";
@@ -82,6 +83,7 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  invalidateCatalogCache();
   return NextResponse.json({
     id: category.id,
     key: category.key,

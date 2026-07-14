@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { invalidateCatalogCache } from "@/lib/catalog";
 import { slugify } from "@/lib/slugify";
 import type { Product } from "@/lib/db/types";
 
@@ -141,6 +142,7 @@ export async function POST(request: NextRequest) {
       },
     });
     const enriched = await withCategory(product);
+    invalidateCatalogCache();
     return NextResponse.json(serializeProduct(enriched), { status: 201 });
   } catch (error) {
     console.error("POST /api/admin/products failed:", error);

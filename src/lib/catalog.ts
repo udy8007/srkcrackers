@@ -1,25 +1,35 @@
+import { unstable_cache, revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { CategoryWithProductsDTO, ProductDTO } from "@/types";
 import type { Category, Product } from "@/lib/db/types";
 
-/** Fetch active categories with their active products, ready for the storefront. */
-export async function getCatalog(): Promise<CategoryWithProductsDTO[]> {
-  const categories = (await prisma.category.findMany({
-    where: { active: true },
-    orderBy: { sortOrder: "asc" },
-    include: {
-      products: {
-        where: { active: true },
-        orderBy: { sortOrder: "asc" },
-      },
-    },
-  })) as Array<Category & { products: Product[] }>;
+export const CATALOG_CACHE_TAG = "catalog";
+
+async function loadCatalogFromDb(): Promise<CategoryWithProductsDTO[]> {
+  // Two indexed equality queries (+ join in memory) instead of N+1 includes.
+  const [categories, products] = (await Promise.all([
+    prisma.category.findMany({
+      where: { active: true },
+      orderBy: { sortOrder: "asc" },
+    }),
+    prisma.product.findMany({
+      where: { active: true },
+      orderBy: { sortOrder: "asc" },
+    }),
+  ])) as [Category[], Product[]];
+
+  const productsByCategory = new Map<string, Product[]>();
+  for (const product of products) {
+    const list = productsByCategory.get(product.categoryId) ?? [];
+    list.push(product);
+    productsByCategory.set(product.categoryId, list);
+  }
 
   return categories
     .map((category) => ({
       key: category.key,
       label: category.label,
-      products: category.products.map(
+      products: (productsByCategory.get(category.id) ?? []).map(
         (product): ProductDTO => ({
           id: product.id,
           name: product.name,
@@ -34,6 +44,17 @@ export async function getCatalog(): Promise<CategoryWithProductsDTO[]> {
       ),
     }))
     .filter((category) => category.products.length > 0);
+}
+
+/** Cached storefront catalog (shared across warm serverless instances via Next data cache). */
+export const getCatalog = unstable_cache(loadCatalogFromDb, ["storefront-catalog"], {
+  revalidate: 60,
+  tags: [CATALOG_CACHE_TAG],
+});
+
+/** Call after product/category admin mutations so the storefront refreshes promptly. */
+export function invalidateCatalogCache(): void {
+  revalidateTag(CATALOG_CACHE_TAG);
 }
 
 /** Flat list of all active products. */

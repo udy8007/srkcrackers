@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import type { DocumentData, Firestore } from "firebase-admin/firestore";
+import type { DocumentData, Firestore, Query } from "firebase-admin/firestore";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { db as getDb } from "@/lib/firebase-admin";
 
@@ -65,6 +65,39 @@ type WhereFilter =
         mode?: string;
       };
     };
+
+/**
+ * Extract Firestore-friendly equality / `in` clauses from a Prisma-style where.
+ * Returns null when the filter needs a full collection scan (OR/AND/ops we can't push down).
+ */
+function firestoreEqualityFilters(
+  where?: WhereFilter,
+): Array<{ field: string; op: "==" | "in"; value: unknown }> | null {
+  if (!where) return [];
+  const record = where as Record<string, unknown>;
+  if (record.OR != null || record.AND != null) return null;
+
+  const out: Array<{ field: string; op: "==" | "in"; value: unknown }> = [];
+  for (const [field, condition] of Object.entries(where)) {
+    if (
+      condition !== null &&
+      typeof condition === "object" &&
+      !Array.isArray(condition) &&
+      !(condition instanceof Date)
+    ) {
+      const c = condition as Record<string, unknown>;
+      if ("in" in c && Array.isArray(c.in) && c.in.length > 0 && c.in.length <= 30) {
+        const extras = Object.keys(c).filter((k) => k !== "in");
+        if (extras.length > 0) return null;
+        out.push({ field, op: "in", value: c.in });
+        continue;
+      }
+      return null;
+    }
+    out.push({ field, op: "==", value: condition });
+  }
+  return out;
+}
 
 function matchWhere(doc: Record<string, unknown>, where?: WhereFilter): boolean {
   if (!where) return true;
@@ -239,6 +272,30 @@ export function createCollection<T extends { id: string }>(
     return snap.docs.map((doc) => hydrate(doc.id, doc.data()));
   }
 
+  /** Prefer indexed Firestore queries; fall back to full scan on complex filters / missing indexes. */
+  async function loadMatching(where?: WhereFilter): Promise<T[]> {
+    const filters = firestoreEqualityFilters(where);
+    if (filters === null) {
+      const all = await loadAll();
+      return all.filter((r) => matchWhere(r as unknown as Record<string, unknown>, where));
+    }
+    if (filters.length === 0) return loadAll();
+
+    try {
+      const firestore = await fs();
+      let query: Query = firestore.collection(name);
+      for (const f of filters) {
+        query = query.where(f.field, f.op, f.value);
+      }
+      const snap = await query.get();
+      return snap.docs.map((doc) => hydrate(doc.id, doc.data()));
+    } catch (error) {
+      console.warn(`[firestore] ${name} query failed, falling back to full scan:`, error);
+      const all = await loadAll();
+      return all.filter((r) => matchWhere(r as unknown as Record<string, unknown>, where));
+    }
+  }
+
   async function resolveWhereId(where: Record<string, unknown>): Promise<string | null> {
     if (typeof where.id === "string") return where.id;
     const firestore = await fs();
@@ -274,10 +331,7 @@ export function createCollection<T extends { id: string }>(
 
   return {
     async findMany(args = {}) {
-      let rows = await loadAll();
-      rows = rows.filter((r) =>
-        matchWhere(r as unknown as Record<string, unknown>, args.where),
-      );
+      let rows = await loadMatching(args.where);
       rows = sortRows(rows as unknown as Record<string, unknown>[], args.orderBy) as T[];
       if (args.skip) rows = rows.slice(args.skip);
       if (args.take != null) rows = rows.slice(0, args.take);

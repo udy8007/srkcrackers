@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { invalidateCatalogCache } from "@/lib/catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,7 @@ export async function POST(request: NextRequest) {
 
   if (action === "delete") {
     const result = await prisma.product.deleteMany({ where: { id: { in: ids } } });
+    invalidateCatalogCache();
     return NextResponse.json({ count: result.count });
   }
 
@@ -32,5 +34,6 @@ export async function POST(request: NextRequest) {
     where: { id: { in: ids } },
     data: { active },
   });
+  invalidateCatalogCache();
   return NextResponse.json({ count: result.count });
 }

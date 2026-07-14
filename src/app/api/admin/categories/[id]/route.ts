@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { invalidateCatalogCache } from "@/lib/catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       data,
     });
     const productCount = await prisma.product.count({ where: { categoryId: id } });
+    invalidateCatalogCache();
     return NextResponse.json({
       id: category.id,
       key: category.key,
