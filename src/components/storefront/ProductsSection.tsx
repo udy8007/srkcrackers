@@ -58,7 +58,7 @@ function QtyControl({ product }: { product: ProductDTO }) {
   );
 }
 
-/** One product per row — large thumb; qty stays on the right (no empty gutter). */
+/** Mobile: compact row. Desktop: image · name · price · qty (fills the center gap). */
 function ProductListRow({ product }: { product: ProductDTO }) {
   const openProduct = useUI((s) => s.openProduct);
   const qty = useCart((s) => s.items[product.id] ?? 0);
@@ -69,21 +69,21 @@ function ProductListRow({ product }: { product: ProductDTO }) {
 
   return (
     <article
-      className={`group flex w-full items-center gap-3 px-3 py-3.5 transition sm:gap-4 sm:px-4 ${
+      className={`group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 px-3 py-3.5 transition md:grid-cols-[8.5rem_minmax(0,1.4fr)_9rem_10rem] md:gap-x-5 md:px-5 ${
         inCart ? "bg-primary/[0.04]" : "bg-white hover:bg-[#fffaf5]"
       } border-b border-line/70 last:border-0`}
     >
       <button
         type="button"
         onClick={() => openProduct(product.id)}
-        className="relative shrink-0 overflow-hidden rounded-2xl bg-brandbg shadow-[0_3px_12px_rgba(157,2,8,0.14)] ring-1 ring-black/5 transition group-hover:shadow-[0_6px_18px_rgba(157,2,8,0.2)] group-hover:ring-primary/25"
+        className="relative shrink-0 overflow-hidden rounded-2xl bg-brandbg shadow-[0_3px_12px_rgba(157,2,8,0.14)] ring-1 ring-black/5 transition group-hover:shadow-[0_6px_18px_rgba(157,2,8,0.2)] group-hover:ring-primary/25 md:row-span-1"
       >
         <SafeImage
           src={product.imageUrl}
           alt={product.name}
           width={160}
           height={160}
-          className="h-[6.5rem] w-[6.5rem] object-cover sm:h-32 sm:w-32"
+          className="h-[6.5rem] w-[6.5rem] object-cover md:h-[8.5rem] md:w-[8.5rem]"
         />
         {off != null && off >= 40 && (
           <span className="absolute left-1.5 top-1.5 rounded-md bg-yellow px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-primary-dark shadow-sm">
@@ -92,18 +92,19 @@ function ProductListRow({ product }: { product: ProductDTO }) {
         )}
       </button>
 
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0">
         <button
           type="button"
           onClick={() => openProduct(product.id)}
-          className="text-left font-display text-[0.95rem] font-semibold leading-snug tracking-tight text-ink transition hover:text-primary sm:text-[1.05rem]"
+          className="text-left font-display text-[0.95rem] font-semibold leading-snug tracking-tight text-ink transition hover:text-primary md:text-[1.1rem]"
         >
           {product.name}
         </button>
-        <p className="mt-0.5 text-xs text-ink-muted">{product.pack}</p>
-        <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+        <p className="mt-0.5 text-xs text-ink-muted md:mt-1 md:text-sm">{product.pack}</p>
+        {/* Price under name on mobile only */}
+        <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 md:hidden">
           <span className="text-xs text-ink-muted/80 line-through">{formatPrice(product.mrp)}</span>
-          <span className="text-lg font-extrabold tracking-tight text-green sm:text-xl">
+          <span className="text-lg font-extrabold tracking-tight text-green">
             {formatPrice(product.price)}
           </span>
           {inCart && (
@@ -114,8 +115,34 @@ function ProductListRow({ product }: { product: ProductDTO }) {
         </div>
       </div>
 
-      <div className="shrink-0 self-center">
+      {/* Desktop center: dedicated price column (removes empty gap) */}
+      <div className="hidden min-w-0 flex-col items-end justify-center border-l border-line/60 pl-4 text-right md:flex">
+        <span className="text-[0.7rem] font-semibold uppercase tracking-wide text-ink-muted">
+          Price
+        </span>
+        <span className="mt-0.5 text-sm text-ink-muted/80 line-through">
+          {formatPrice(product.mrp)}
+        </span>
+        <span className="text-2xl font-extrabold tracking-tight text-green">
+          {formatPrice(product.price)}
+        </span>
+        {off != null && (
+          <span className="mt-1 rounded-full bg-yellow/90 px-2 py-0.5 text-[0.65rem] font-extrabold text-primary-dark">
+            Save {off}%
+          </span>
+        )}
+      </div>
+
+      <div className="flex shrink-0 flex-col items-end justify-center gap-1.5 self-center md:border-l md:border-line/60 md:pl-4">
+        <span className="hidden text-[0.7rem] font-semibold uppercase tracking-wide text-ink-muted md:block">
+          Qty
+        </span>
         <QtyControl product={product} />
+        {inCart && (
+          <span className="hidden text-xs font-bold text-primary md:block">
+            {formatPrice(amount)}
+          </span>
+        )}
       </div>
     </article>
   );
@@ -164,7 +191,7 @@ export function ProductsSection() {
   return (
     <section id="products" className="relative isolate overflow-hidden bg-brandbg px-4 py-14">
       <SectionDecor variant="rockets" />
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-4xl">
         <SectionHead
           title="Crackers Price List — 80% Discount"
           subtitle="Browse by category · Large product photos · Tap + to add"
