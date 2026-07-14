@@ -3,7 +3,7 @@
 import Image, { type ImageProps } from "next/image";
 import { useEffect, useState } from "react";
 
-const DEFAULT_FALLBACK = "/products/photos/2-kuruvi.jpg";
+const DEFAULT_FALLBACK = "/products/default.svg";
 
 type SafeImageProps = ImageProps & {
   fallbackSrc?: string;

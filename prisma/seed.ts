@@ -7,6 +7,12 @@ const prisma = new PrismaClient();
 function slugify(value: string): string {
   return value
     .toLowerCase()
+    .replace(/3½/g, "3-5")
+    .replace(/3¼/g, "3-25")
+    .replace(/2¾/g, "2-75")
+    .replace(/1½/g, "1-5")
+    .replace(/½/g, "half")
+    .replace(/¼/g, "quarter")
     .replace(/[″"']/g, "in")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");

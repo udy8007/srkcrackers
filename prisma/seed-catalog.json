@@ -1,0 +1,643 @@
+{
+  "products": [
+    {
+      "cat": "sparklers",
+      "name": "7 cm Electric Sparklers",
+      "pack": "1 box (10 pcs)",
+      "price": 13,
+      "mrp": 60,
+      "image": "/products/sparklers.svg",
+      "description": "Classic 7 cm electric sparklers with bright golden sparks. Safe for children under adult supervision."
+    },
+    {
+      "cat": "sparklers",
+      "name": "7 cm Colour Sparklers",
+      "pack": "1 box (10 pcs)",
+      "price": 15,
+      "mrp": 75,
+      "image": "/products/sparklers.svg",
+      "description": "7 cm colour sparklers \u2014 multi-colour sparks. Popular for kids and family celebrations."
+    },
+    {
+      "cat": "sparklers",
+      "name": "10 cm Electric Sparklers",
+      "pack": "1 box (10 pcs)",
+      "price": 18,
+      "mrp": 90,
+      "image": "/products/sparklers.svg",
+      "description": "10 cm electric sparklers with longer burn time and brighter golden display."
+    },
+    {
+      "cat": "sparklers",
+      "name": "10 cm Colour Sparklers",
+      "pack": "1 box (10 pcs)",
+      "price": 20,
+      "mrp": 100,
+      "image": "/products/sparklers.svg",
+      "description": "10 cm colour sparklers \u2014 vibrant mixed-colour sparks."
+    },
+    {
+      "cat": "sparklers",
+      "name": "15 cm Electric Sparklers",
+      "pack": "1 box (10 pcs)",
+      "price": 30,
+      "mrp": 150,
+      "image": "/products/sparklers.svg",
+      "description": "15 cm electric sparklers \u2014 tall golden fountain effect on a stick."
+    },
+    {
+      "cat": "sparklers",
+      "name": "15 cm Green Sparklers",
+      "pack": "1 box (10 pcs)",
+      "price": 55,
+      "mrp": 275,
+      "image": "/products/sparklers.svg",
+      "description": "15 cm green-colour sparklers with rich emerald-gold sparks."
+    },
+    {
+      "cat": "sparklers",
+      "name": "15 cm Red Sparklers",
+      "pack": "1 box (10 pcs)",
+      "price": 65,
+      "mrp": 325,
+      "image": "/products/sparklers.svg",
+      "description": "15 cm red sparklers \u2014 deep red and gold sparks."
+    },
+    {
+      "cat": "sparklers",
+      "name": "30 cm Electric Sparklers",
+      "pack": "1 box (5 pcs)",
+      "price": 45,
+      "mrp": 225,
+      "image": "/products/sparklers.svg",
+      "description": "30 cm mega electric sparklers \u2014 extra-long burn with shower of golden sparks."
+    },
+    {
+      "cat": "sparklers",
+      "name": "30 cm Colour Sparklers",
+      "pack": "1 box (5 pcs)",
+      "price": 55,
+      "mrp": 275,
+      "image": "/products/sparklers.svg",
+      "description": "30 cm colour sparklers \u2014 spectacular multi-colour shower effect."
+    },
+    {
+      "cat": "sparklers",
+      "name": "50 cm Electric Sparklers",
+      "pack": "1 box (5 pcs)",
+      "price": 180,
+      "mrp": 900,
+      "image": "/products/sparklers.svg",
+      "description": "50 cm jumbo electric sparklers \u2014 longest sparkler in our range."
+    },
+    {
+      "cat": "sparklers",
+      "name": "1\u00bd Twinkling Star",
+      "pack": "1 box (10 pcs)",
+      "price": 30,
+      "mrp": 150,
+      "image": "/products/photos/1-5-twinkling-star.png",
+      "description": "1\u00bd twinkling star sparklers \u2014 crackling / twinkling effect. 10 pcs per box."
+    },
+    {
+      "cat": "fountain",
+      "name": "Flower Pot Asoka",
+      "pack": "10 pcs",
+      "price": 170,
+      "mrp": 850,
+      "image": "/products/photos/flower-pot-asoka.png",
+      "description": "Flower Pot Asoka \u2014 classic cone flower-pot fountains. 10 pcs."
+    },
+    {
+      "cat": "fancy",
+      "name": "5 inch Fancy 2 in 1",
+      "pack": "1 box",
+      "price": 790,
+      "mrp": 1491,
+      "image": "/products/photos/5-inch-fancy-2-in-1.png",
+      "description": "5 inch Fancy 2-in-1 combo pack \u2014 premium dual-effect aerial fancy."
+    },
+    {
+      "cat": "fancy",
+      "name": "2 inch Double Ball",
+      "pack": "1 pc",
+      "price": 260,
+      "mrp": 1320,
+      "image": "/products/photos/2-inch-double-ball.png",
+      "description": "2 inch Double Ball aerial \u2014 dual-burst sky shot. Single piece."
+    },
+    {
+      "cat": "fancy",
+      "name": "2\" Fancy",
+      "pack": "1 pc",
+      "price": 120,
+      "mrp": 600,
+      "image": "/products/fancy.svg",
+      "description": "2 inch aerial fancy \u2014 shoots skyward and bursts with colourful stars."
+    },
+    {
+      "cat": "fancy",
+      "name": "2\" Fancy (3 Pcs)",
+      "pack": "1 box (3 pcs)",
+      "price": 280,
+      "mrp": 1400,
+      "image": "/products/fancy.svg",
+      "description": "2 inch fancy sky shots \u2014 box of 3 aerial bursts."
+    },
+    {
+      "cat": "fancy",
+      "name": "3\" Fancy",
+      "pack": "1 pc",
+      "price": 280,
+      "mrp": 1400,
+      "image": "/products/fancy.svg",
+      "description": "3 inch aerial fancy \u2014 rich colour mix sky shot."
+    },
+    {
+      "cat": "fancy",
+      "name": "3\u00bd\" Fancy (1 Piece)",
+      "pack": "1 pc",
+      "price": 320,
+      "mrp": 1600,
+      "image": "/products/fancy.svg",
+      "description": "Premium 3.5 inch single-piece fancy \u2014 maximum height and brightest colour burst."
+    },
+    {
+      "cat": "fancy",
+      "name": "4\" Fancy",
+      "pack": "1 pc",
+      "price": 380,
+      "mrp": 1860,
+      "image": "/products/fancy.svg",
+      "description": "4 inch aerial fancy \u2014 loud report with wide multi-colour star burst."
+    },
+    {
+      "cat": "fancy",
+      "name": "4\" Fancy (2 pcs)",
+      "pack": "1 box (2 pcs)",
+      "price": 650,
+      "mrp": 3250,
+      "image": "/products/fancy.svg",
+      "description": "4 inch fancy twin pack \u2014 two premium aerial bursts."
+    },
+    {
+      "cat": "fancy",
+      "name": "30 Shots Multi Colour",
+      "pack": "1 box (1 set)",
+      "price": 480,
+      "mrp": 2350,
+      "image": "/products/photos/30-shots-multi-colour.png",
+      "description": "30-shot multi-colour aerial display \u2014 continuous sky shots."
+    },
+    {
+      "cat": "fancy",
+      "name": "3 Pcs Sky Shot (2\")",
+      "pack": "1 box (3 pcs)",
+      "price": 580,
+      "mrp": 2900,
+      "image": "/products/fancy.svg",
+      "description": "Triple 2 inch sky shot pack \u2014 three consecutive aerial bursts."
+    },
+    {
+      "cat": "fancy",
+      "name": "2\" Pipe (1 Piece)",
+      "pack": "1 pc",
+      "price": 150,
+      "mrp": 750,
+      "image": "/products/fancy.svg",
+      "description": "2 inch pipe sky shot \u2014 cylindrical aerial cracker with sharp burst."
+    },
+    {
+      "cat": "fancy",
+      "name": "12 Shots",
+      "pack": "1 box (5 pcs)",
+      "price": 280,
+      "mrp": 1400,
+      "image": "/products/photos/12-shots.png",
+      "description": "12-shot multi-burst aerial set \u2014 sequential sky shots."
+    },
+    {
+      "cat": "fancy",
+      "name": "7 Shots",
+      "pack": "1 box (1 set)",
+      "price": 140,
+      "mrp": 700,
+      "image": "/products/photos/7-shots.png",
+      "description": "7-shot multi-burst aerial display \u2014 sequential sky shots in one compact set."
+    },
+    {
+      "cat": "rockets",
+      "name": "Sky Scrapper",
+      "pack": "1 pc",
+      "price": 140,
+      "mrp": 700,
+      "image": "/products/fancy.svg",
+      "description": "Sky Scrapper rocket-style aerial \u2014 high altitude burst with trailing sparks."
+    },
+    {
+      "cat": "rockets",
+      "name": "Rocket Bomb",
+      "pack": "1 box (10 pcs)",
+      "price": 120,
+      "mrp": 600,
+      "image": "/products/fancy.svg",
+      "description": "Rocket bomb crackers \u2014 launches with whistle and bursts in the sky."
+    },
+    {
+      "cat": "rockets",
+      "name": "Whistling Rocket",
+      "pack": "1 box (10 pcs)",
+      "price": 240,
+      "mrp": 1200,
+      "image": "/products/fancy.svg",
+      "description": "Whistling rockets \u2014 loud whistle on ascent followed by aerial burst."
+    },
+    {
+      "cat": "fountain",
+      "name": "Mega Peacock (3 Face)",
+      "pack": "1 box (5 pcs)",
+      "price": 280,
+      "mrp": 1400,
+      "image": "/products/fountain.svg",
+      "description": "Mega Peacock 3-face fountain \u2014 three-directional colour fountain."
+    },
+    {
+      "cat": "fountain",
+      "name": "Bada Peacock (5 Face)",
+      "pack": "1 box (5 pcs)",
+      "price": 420,
+      "mrp": 2100,
+      "image": "/products/fountain.svg",
+      "description": "Bada Peacock 5-face fountain \u2014 five-way colour spray."
+    },
+    {
+      "cat": "fountain",
+      "name": "Magic Peacock",
+      "pack": "1 box (5 pcs)",
+      "price": 180,
+      "mrp": 900,
+      "image": "/products/photos/magic-peacock.png",
+      "description": "Magic Peacock fountain \u2014 rotating colour fountain with peacock-tail effect."
+    },
+    {
+      "cat": "fountain",
+      "name": "Rotate Sparklers",
+      "pack": "1 box (10 pcs)",
+      "price": 240,
+      "mrp": 1200,
+      "image": "/products/fountain.svg",
+      "description": "Rotating sparkler / dancing umbrella \u2014 spins on ground while emitting sparks."
+    },
+    {
+      "cat": "fountain",
+      "name": "Colour Koti",
+      "pack": "1 box (10 pcs)",
+      "price": 240,
+      "mrp": 1200,
+      "image": "/products/photos/colour-koti.png",
+      "description": "Colour Koti 3-colour fountain \u2014 red, green and gold spray effect."
+    },
+    {
+      "cat": "fountain",
+      "name": "Tin Colour Fountain",
+      "pack": "1 box (5 pcs)",
+      "price": 90,
+      "mrp": 450,
+      "image": "/products/fountain.svg",
+      "description": "Tin colour fountain \u2014 compact metal-cased fountain with mixed colour sparks."
+    },
+    {
+      "cat": "fountain",
+      "name": "Butterfly",
+      "pack": "1 box (10 pcs)",
+      "price": 120,
+      "mrp": 600,
+      "image": "/products/fountain.svg",
+      "description": "Butterfly colour-changing fountain \u2014 sparks change colour during burn."
+    },
+    {
+      "cat": "fountain",
+      "name": "Mega Siren",
+      "pack": "1 box (3 pcs)",
+      "price": 200,
+      "mrp": 1000,
+      "image": "/products/fountain.svg",
+      "description": "Mega Siren fountain \u2014 loud siren sound with colour fountain effect."
+    },
+    {
+      "cat": "fountain",
+      "name": "Naya Falls",
+      "pack": "1 box (5 pcs)",
+      "price": 380,
+      "mrp": 1900,
+      "image": "/products/photos/naya-falls.png",
+      "description": "Naya Falls waterfall fountain \u2014 cascading golden sparks like a waterfall."
+    },
+    {
+      "cat": "bombs",
+      "name": "Bullet Bomb",
+      "pack": "1 pc",
+      "price": 90,
+      "mrp": 450,
+      "image": "/products/photos/bullet-bomb.png",
+      "description": "Bullet Bomb \u2014 loud single blast. Use only in wide open ground."
+    },
+    {
+      "cat": "bombs",
+      "name": "Hydro Bomb",
+      "pack": "1 box (10 pcs)",
+      "price": 70,
+      "mrp": 350,
+      "image": "/products/photos/hydro-bomb.png",
+      "description": "Hydro bomb crackers \u2014 deep thunder sound. 10 pcs per box. Open area only."
+    },
+    {
+      "cat": "bombs",
+      "name": "Classic Bomb",
+      "pack": "1 box (10 pcs)",
+      "price": 160,
+      "mrp": 800,
+      "image": "/products/photos/classic-bomb.png",
+      "description": "Classic bomb \u2014 extra-loud atom bomb series with sharp report."
+    },
+    {
+      "cat": "bombs",
+      "name": "Digital Bomb",
+      "pack": "1 box (10 pcs)",
+      "price": 280,
+      "mrp": 1400,
+      "image": "/products/photos/digital-bomb.png",
+      "description": "Digital bomb \u2014 loudest in atom bomb range. Deep resonating blast."
+    },
+    {
+      "cat": "bombs",
+      "name": "Paper Bomb (\u00bd Kg)",
+      "pack": "1 pc",
+      "price": 120,
+      "mrp": 600,
+      "image": "/products/bombs.svg",
+      "description": "\u00bd kg paper bomb \u2014 heavy single blast for large open areas."
+    },
+    {
+      "cat": "bombs",
+      "name": "Paper Bomb (1 Kg)",
+      "pack": "1 pc",
+      "price": 240,
+      "mrp": 1200,
+      "image": "/products/bombs.svg",
+      "description": "1 kg mega paper bomb \u2014 maximum single-shot sound effect."
+    },
+    {
+      "cat": "lakshmi",
+      "name": "3\u00bc Lakshmi (1 Packet)",
+      "pack": "1 pkt (5 pcs)",
+      "price": 15,
+      "mrp": 75,
+      "image": "/products/photos/3-25-lakshmi-1-packet.png",
+      "description": "3.25 inch Lakshmi crackers \u2014 traditional sharp sound. 5 pieces per packet."
+    },
+    {
+      "cat": "lakshmi",
+      "name": "Gold Lakshmi (1 Packet)",
+      "pack": "1 pkt (5 pcs)",
+      "price": 35,
+      "mrp": 175,
+      "image": "/products/photos/gold-lakshmi-1-packet.png",
+      "description": "Gold Lakshmi premium sound crackers \u2014 louder burst with gold-label quality."
+    },
+    {
+      "cat": "lakshmi",
+      "name": "4 DLX Lakshmi",
+      "pack": "1 pkt (5 pcs)",
+      "price": 28,
+      "mrp": 140,
+      "image": "/products/photos/4-dlx-lakshmi.png",
+      "description": "4 inch deluxe Lakshmi crackers \u2014 enhanced sound and longer burn."
+    },
+    {
+      "cat": "lakshmi",
+      "name": "Hulk DLX",
+      "pack": "1 pkt (5 pcs)",
+      "price": 38,
+      "mrp": 190,
+      "image": "/products/lakshmi.svg",
+      "description": "Hulk deluxe mega sound crackers \u2014 extra loud burst."
+    },
+    {
+      "cat": "lakshmi",
+      "name": "5\" Lion (1 Packet)",
+      "pack": "1 pkt (5 pcs)",
+      "price": 44,
+      "mrp": 220,
+      "image": "/products/photos/5in-lion-1-packet.png",
+      "description": "5 inch Lion brand crackers \u2014 deep loud report. Premium sound cracker."
+    },
+    {
+      "cat": "lakshmi",
+      "name": "Red Bijili (100)",
+      "pack": "1 bag (100 pcs)",
+      "price": 28,
+      "mrp": 140,
+      "image": "/products/photos/red-bijili-100.png",
+      "description": "Red bijili \u2014 small single-shot crackers, 100 pieces per bag."
+    },
+    {
+      "cat": "lakshmi",
+      "name": "Two Sound (1 Packet)",
+      "pack": "1 pkt (5 pcs)",
+      "price": 45,
+      "mrp": 230,
+      "image": "/products/lakshmi.svg",
+      "description": "Two-sound crackers \u2014 traditional double-report sound. 5 pcs per packet."
+    },
+    {
+      "cat": "lakshmi",
+      "name": "Jallikattu DLX (1 Packet)",
+      "pack": "1 pkt (5 pcs)",
+      "price": 65,
+      "mrp": 325,
+      "image": "/products/photos/jallikattu-dlx-1-packet.png",
+      "description": "Jallikattu deluxe sound crackers \u2014 loud burst. 5 pcs per packet."
+    },
+    {
+      "cat": "lakshmi",
+      "name": "2\u00be Kuruvi",
+      "pack": "1 pkt (5 pcs)",
+      "price": 8,
+      "mrp": 40,
+      "image": "/products/photos/2-75-kuruvi.png",
+      "description": "2.75 inch Kuruvi crackers \u2014 classic small sound cracker."
+    },
+    {
+      "cat": "kids",
+      "name": "Roll Cap",
+      "pack": "1 box (10 pcs)",
+      "price": 85,
+      "mrp": 425,
+      "image": "/products/photos/roll-cap.jpeg",
+      "description": "Roll cap strips \u2014 safe fun for kids, produces small popping sounds."
+    },
+    {
+      "cat": "kids",
+      "name": "Wonder Throw Box",
+      "pack": "1 box (10 pcs)",
+      "price": 120,
+      "mrp": 600,
+      "image": "/products/photos/wonder-throw-box.png",
+      "description": "Wonder throw box \u2014 throw-and-pop novelty cracker for kids with supervision."
+    },
+    {
+      "cat": "kids",
+      "name": "Sky Lander (1 Piece)",
+      "pack": "1 pc",
+      "price": 50,
+      "mrp": 250,
+      "image": "/products/kids.svg",
+      "description": "Sky Lander helicopter novelty \u2014 spins up into the air with sparks."
+    },
+    {
+      "cat": "kids",
+      "name": "Pop Pop (50 Boxes)",
+      "pack": "1 pack (50 boxes)",
+      "price": 400,
+      "mrp": 2000,
+      "image": "/products/kids.svg",
+      "description": "Pop Pop snappers \u2014 50 boxes of safe popping fun for kids."
+    },
+    {
+      "cat": "kids",
+      "name": "Bidi Blast (10 Boxes)",
+      "pack": "1 pack (10 boxes)",
+      "price": 150,
+      "mrp": 750,
+      "image": "/products/kids.svg",
+      "description": "Bidi Blast novelty \u2014 small crackling pop effect. 10 boxes per pack."
+    },
+    {
+      "cat": "kids",
+      "name": "Gun with 3 Ring Caps",
+      "pack": "1 set",
+      "price": 100,
+      "mrp": 500,
+      "image": "/products/photos/gun-with-3-ring-caps.png",
+      "description": "Toy gun with 3 ring cap rolls \u2014 classic kids' firework toy."
+    },
+    {
+      "cat": "kids",
+      "name": "Ring Cap (100 Packets)",
+      "pack": "1 pack (100 pkt)",
+      "price": 750,
+      "mrp": 3750,
+      "image": "/products/photos/ring-cap-100-packets.png",
+      "description": "Ring caps bulk pack \u2014 100 packets for toy guns."
+    },
+    {
+      "cat": "kids",
+      "name": "Anaconda (10 Boxes)",
+      "pack": "1 pack (10 boxes)",
+      "price": 50,
+      "mrp": 250,
+      "image": "/products/kids.svg",
+      "description": "Anaconda snake novelty \u2014 expanding snake effect on ignition."
+    },
+    {
+      "cat": "kids",
+      "name": "Selfie Stick",
+      "pack": "1 box (5 pcs)",
+      "price": 170,
+      "mrp": 850,
+      "image": "/products/photos/selfie-stick.png",
+      "description": "Selfie Stick photo flash \u2014 bright white flash effect for photos."
+    },
+    {
+      "cat": "kids",
+      "name": "Colour Smoke",
+      "pack": "1 box (5 pcs)",
+      "price": 180,
+      "mrp": 900,
+      "image": "/products/kids.svg",
+      "description": "Colour smoke fountain \u2014 coloured smoke plume. Daytime-friendly."
+    },
+    {
+      "cat": "kids",
+      "name": "Photo Flash",
+      "pack": "1 box (10 pcs)",
+      "price": 90,
+      "mrp": 450,
+      "image": "/products/kids.svg",
+      "description": "Photo flash crackers \u2014 bright white strobe flash for night celebrations."
+    },
+    {
+      "cat": "wala",
+      "name": "28 Wala",
+      "pack": "1 string",
+      "price": 15,
+      "mrp": 75,
+      "image": "/products/photos/28-wala.png",
+      "description": "28 crackers string (wala) \u2014 short garland for quick celebration burst."
+    },
+    {
+      "cat": "wala",
+      "name": "100 Wala",
+      "pack": "1 string",
+      "price": 45,
+      "mrp": 225,
+      "image": "/products/photos/100-wala.png",
+      "description": "100 wala cracker garland \u2014 continuous chain firing."
+    },
+    {
+      "cat": "wala",
+      "name": "200 Wala",
+      "pack": "1 string",
+      "price": 90,
+      "mrp": 450,
+      "image": "/products/photos/200-wala.png",
+      "description": "200 wala garland \u2014 longer continuous burst sequence."
+    },
+    {
+      "cat": "wala",
+      "name": "24 DLX Wala",
+      "pack": "1 string",
+      "price": 60,
+      "mrp": 300,
+      "image": "/products/photos/24-dlx-wala.png",
+      "description": "24 deluxe wala \u2014 premium quality thread with louder individual crackers."
+    },
+    {
+      "cat": "wala",
+      "name": "1000 Wala",
+      "pack": "1 box",
+      "price": 220,
+      "mrp": 1100,
+      "image": "/products/photos/1000-wala.png",
+      "description": "1000 wala garland ladi \u2014 extended continuous firing for grand celebrations."
+    },
+    {
+      "cat": "wala",
+      "name": "2000 Wala",
+      "pack": "1 box",
+      "price": 440,
+      "mrp": 2200,
+      "image": "/products/photos/2000-wala.png",
+      "description": "2000 wala mega garland \u2014 long continuous burst. Ideal for Diwali finale."
+    },
+    {
+      "cat": "wala",
+      "name": "5000 Wala",
+      "pack": "1 box",
+      "price": 1100,
+      "mrp": 5500,
+      "image": "/products/photos/5000-wala.png",
+      "description": "5000 wala super garland \u2014 one of the longest ladi chains."
+    },
+    {
+      "cat": "wala",
+      "name": "10000 Wala",
+      "pack": "1 box",
+      "price": 2200,
+      "mrp": 11000,
+      "image": "/products/photos/10000-wala.png",
+      "description": "10000 wala jumbo garland \u2014 maximum length continuous cracker chain."
+    }
+  ]
+}
