@@ -48,6 +48,8 @@ export function CheckoutModal() {
   const [step, setStep] = useState(1);
   const [customer, setCustomer] = useState<CustomerInput>(EMPTY_CUSTOMER);
   const [screenshot, setScreenshot] = useState<string | null>(null);
+  const [whatsappShared, setWhatsappShared] = useState(false);
+  const awaitingWhatsAppReturn = useRef(false);
   const [submitting, setSubmitting] = useState(false);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
   const [orderCreatedAt, setOrderCreatedAt] = useState<string | null>(null);
@@ -128,6 +130,8 @@ export function CheckoutModal() {
     setCustomer(saved ?? EMPTY_CUSTOMER);
     setStep(canSkipToPayment ? 2 : 1);
     setScreenshot(null);
+    setWhatsappShared(false);
+    awaitingWhatsAppReturn.current = false;
     setOrderNumber(null);
     setOrderCreatedAt(null);
     setOrderStatus(null);
@@ -220,6 +224,23 @@ export function CheckoutModal() {
     };
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [checkoutOpen, step, showToast]);
+
+  useEffect(() => {
+    if (!checkoutOpen || step !== 3) return;
+    const onReturn = () => {
+      if (document.visibilityState !== "visible") return;
+      if (!awaitingWhatsAppReturn.current) return;
+      awaitingWhatsAppReturn.current = false;
+      setWhatsappShared(true);
+      showToast("Shared on WhatsApp ✓ — you can confirm your order now.");
+    };
+    document.addEventListener("visibilitychange", onReturn);
+    window.addEventListener("focus", onReturn);
+    return () => {
+      document.removeEventListener("visibilitychange", onReturn);
+      window.removeEventListener("focus", onReturn);
+    };
   }, [checkoutOpen, step, showToast]);
 
   if (!checkoutOpen) return null;
@@ -364,8 +385,13 @@ export function CheckoutModal() {
     }
   };
 
+  const shareOnWhatsApp = () => {
+    awaitingWhatsAppReturn.current = true;
+    const url = whatsappUrl(buildWhatsAppText());
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   const confirmOrder = async () => {
-    if (!screenshot) return showToast("Please upload payment screenshot first");
     if (orderItems.length === 0) return showToast("Your cart is empty");
     if (!meetsMinOrder(subtotal)) {
       return showToast(getMinOrderToastMessage(subtotal));
@@ -378,7 +404,7 @@ export function CheckoutModal() {
         body: JSON.stringify({
           customer,
           items: orderItems.map((line) => ({ productId: line.product!.id, qty: line.qty })),
-          paymentScreenshot: screenshot,
+          paymentScreenshot: screenshot ?? undefined,
           paymentMethod,
           draftOrderId: draftOrderId ?? undefined,
         }),
@@ -404,7 +430,13 @@ export function CheckoutModal() {
       setStep(4);
       clearCart();
       void triggerInvoiceDownload(data.orderNumber, data.createdAt, data.status);
-      showToast("Order placed successfully!");
+      showToast(
+        screenshot
+          ? "Order placed successfully!"
+          : whatsappShared
+            ? "Order placed — we got your WhatsApp share. We'll verify payment soon."
+            : "Order placed — upload/share payment anytime or wait for our call.",
+      );
     } catch {
       showToast("Network error. Please try again.");
     } finally {
@@ -699,14 +731,14 @@ export function CheckoutModal() {
           {step === 3 && (
             <div className="space-y-4">
               <p className="text-sm text-ink-muted">
-                Upload your <b>UPI payment screenshot</b>. We verify within 2 hours and confirm your
-                order.
+                Upload your <b>UPI payment screenshot</b> <span className="text-ink-muted">(optional)</span>,
+                or <b>share on WhatsApp</b>, then confirm your order. We verify payment within 2 hours.
               </p>
               <label className="flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 border-dashed border-line bg-brandbg p-6 text-center transition hover:border-primary">
                 <input type="file" accept="image/*" onChange={handleUpload} className="hidden" />
                 <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-2xl font-light text-primary">↑</span>
                 <strong className="text-sm text-ink">Tap to upload payment screenshot</strong>
-                <span className="text-xs text-ink-muted">JPG, PNG · Max 5 MB</span>
+                <span className="text-xs text-ink-muted">JPG, PNG · Max 5 MB · Optional</span>
               </label>
               {screenshot && (
                 <div className="text-center">
@@ -719,27 +751,34 @@ export function CheckoutModal() {
                   <p className="mt-2 text-xs font-semibold text-green">✓ Screenshot uploaded</p>
                 </div>
               )}
+              {whatsappShared && (
+                <div className="rounded-lg border border-green/30 bg-green/5 px-3 py-2.5 text-center text-sm font-semibold text-green">
+                  ✓ Shared on WhatsApp — thank you! Confirm your order below.
+                </div>
+              )}
               <div className="flex flex-wrap gap-3">
                 <button type="button" onClick={() => setStep(2)} className="btn-outline flex-1">
                   ← Back
                 </button>
-                <a
-                  href={whatsappUrl(buildWhatsAppText())}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`btn-yellow flex-1 text-center ${screenshot ? "" : "pointer-events-none opacity-40"}`}
-                >
-                  Share on WhatsApp
-                </a>
                 <button
                   type="button"
-                  onClick={confirmOrder}
-                  disabled={!screenshot || submitting}
+                  onClick={shareOnWhatsApp}
+                  className="btn-yellow flex-1 text-center"
+                >
+                  Share on WhatsApp
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void confirmOrder()}
+                  disabled={submitting}
                   className="btn-primary flex-1 disabled:opacity-40"
                 >
                   {submitting ? "Placing..." : "Confirm Order ✓"}
                 </button>
               </div>
+              <p className="text-center text-[0.7rem] text-ink-muted">
+                You can confirm without a screenshot — our team will call to verify payment.
+              </p>
             </div>
           )}
 
