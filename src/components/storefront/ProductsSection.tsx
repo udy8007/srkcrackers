@@ -58,7 +58,7 @@ function QtyControl({ product }: { product: ProductDTO }) {
   );
 }
 
-/** Mobile: compact row. Desktop: image · name · price · qty (fills the center gap). */
+/** Mobile: hero image on top (full pack visible). Desktop: image · name · price · qty. */
 function ProductListRow({ product }: { product: ProductDTO }) {
   const openProduct = useUI((s) => s.openProduct);
   const qty = useCart((s) => s.items[product.id] ?? 0);
@@ -69,80 +69,117 @@ function ProductListRow({ product }: { product: ProductDTO }) {
 
   return (
     <article
-      className={`group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 px-3 py-3.5 transition md:grid-cols-[9.5rem_minmax(0,1.4fr)_9rem_10rem] md:gap-x-5 md:px-5 ${
+      className={`group border-b border-line/70 last:border-0 transition ${
         inCart ? "bg-primary/[0.04]" : "bg-white hover:bg-[#fffaf5]"
-      } border-b border-line/70 last:border-0`}
+      }`}
     >
-      <button
-        type="button"
-        onClick={() => openProduct(product.id)}
-        className="relative flex h-[7.25rem] w-[7.25rem] shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-b from-[#fff6ea] to-[#ffe8d2] p-1.5 shadow-[0_3px_12px_rgba(157,2,8,0.14)] ring-1 ring-black/5 transition group-hover:shadow-[0_6px_18px_rgba(157,2,8,0.2)] group-hover:ring-primary/25 md:h-[11rem] md:w-[9.25rem]"
-      >
-        <SafeImage
-          src={product.imageUrl}
-          alt={product.name}
-          width={200}
-          height={240}
-          className="h-full w-full object-contain object-center"
-        />
-        {off != null && off >= 40 && (
-          <span className="absolute left-1.5 top-1.5 z-10 rounded-md bg-yellow px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-primary-dark shadow-sm">
-            −{off}%
-          </span>
-        )}
-      </button>
-
-      <div className="min-w-0">
+      {/* —— Mobile: big photo first, then details —— */}
+      <div className="p-3 md:hidden">
         <button
           type="button"
           onClick={() => openProduct(product.id)}
-          className="text-left font-display text-[0.95rem] font-semibold leading-snug tracking-tight text-ink transition hover:text-primary md:text-[1.1rem]"
+          className="relative flex h-52 w-full items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-b from-[#fff6ea] via-[#fffaf3] to-[#ffe8d2] p-3 shadow-[inset_0_0_0_1px_rgba(157,2,8,0.06)]"
         >
-          {product.name}
-        </button>
-        <p className="mt-0.5 text-xs text-ink-muted md:mt-1 md:text-sm">{product.pack}</p>
-        {/* Price under name on mobile only */}
-        <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 md:hidden">
-          <span className="text-xs text-ink-muted/80 line-through">{formatPrice(product.mrp)}</span>
-          <span className="text-lg font-extrabold tracking-tight text-green">
-            {formatPrice(product.price)}
-          </span>
-          {inCart && (
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[0.7rem] font-bold text-primary">
-              Cart {formatPrice(amount)}
+          <SafeImage
+            src={product.imageUrl}
+            alt={product.name}
+            width={480}
+            height={480}
+            sizes="(max-width: 768px) 90vw, 200px"
+            className="h-full w-full object-contain object-center drop-shadow-md"
+          />
+          {off != null && off >= 40 && (
+            <span className="absolute left-2.5 top-2.5 z-10 rounded-full bg-yellow px-2.5 py-1 text-xs font-extrabold text-primary-dark shadow-sm">
+              −{off}%
             </span>
           )}
+          <span className="absolute bottom-2 right-2 rounded-full bg-black/45 px-2 py-0.5 text-[0.65rem] font-semibold text-white backdrop-blur-sm">
+            Tap for details
+          </span>
+        </button>
+
+        <div className="mt-3 flex items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <button
+              type="button"
+              onClick={() => openProduct(product.id)}
+              className="text-left font-display text-base font-semibold leading-snug text-ink"
+            >
+              {product.name}
+            </button>
+            <p className="mt-0.5 text-xs text-ink-muted">{product.pack}</p>
+            <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
+              <span className="text-xs text-ink-muted line-through">{formatPrice(product.mrp)}</span>
+              <span className="text-xl font-extrabold text-green">{formatPrice(product.price)}</span>
+              {inCart && (
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[0.7rem] font-bold text-primary">
+                  Cart {formatPrice(amount)}
+                </span>
+              )}
+            </div>
+          </div>
+          <QtyControl product={product} />
         </div>
       </div>
 
-      {/* Desktop center: dedicated price column (removes empty gap) */}
-      <div className="hidden min-w-0 flex-col items-end justify-center border-l border-line/60 pl-4 text-right md:flex">
-        <span className="text-[0.7rem] font-semibold uppercase tracking-wide text-ink-muted">
-          Price
-        </span>
-        <span className="mt-0.5 text-sm text-ink-muted/80 line-through">
-          {formatPrice(product.mrp)}
-        </span>
-        <span className="text-2xl font-extrabold tracking-tight text-green">
-          {formatPrice(product.price)}
-        </span>
-        {off != null && (
-          <span className="mt-1 rounded-full bg-yellow/90 px-2 py-0.5 text-[0.65rem] font-extrabold text-primary-dark">
-            Save {off}%
-          </span>
-        )}
-      </div>
+      {/* —— Desktop row —— */}
+      <div className="hidden w-full grid-cols-[9.5rem_minmax(0,1.4fr)_9rem_10rem] items-center gap-x-5 px-5 py-3.5 md:grid">
+        <button
+          type="button"
+          onClick={() => openProduct(product.id)}
+          className="relative flex h-[11rem] w-[9.25rem] shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-b from-[#fff6ea] to-[#ffe8d2] p-1.5 shadow-[0_3px_12px_rgba(157,2,8,0.14)] ring-1 ring-black/5 transition group-hover:shadow-[0_6px_18px_rgba(157,2,8,0.2)] group-hover:ring-primary/25"
+        >
+          <SafeImage
+            src={product.imageUrl}
+            alt={product.name}
+            width={200}
+            height={240}
+            className="h-full w-full object-contain object-center"
+          />
+          {off != null && off >= 40 && (
+            <span className="absolute left-1.5 top-1.5 z-10 rounded-md bg-yellow px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-primary-dark shadow-sm">
+              −{off}%
+            </span>
+          )}
+        </button>
 
-      <div className="flex shrink-0 flex-col items-end justify-center gap-1.5 self-center md:border-l md:border-line/60 md:pl-4">
-        <span className="hidden text-[0.7rem] font-semibold uppercase tracking-wide text-ink-muted md:block">
-          Qty
-        </span>
-        <QtyControl product={product} />
-        {inCart && (
-          <span className="hidden text-xs font-bold text-primary md:block">
-            {formatPrice(amount)}
+        <div className="min-w-0">
+          <button
+            type="button"
+            onClick={() => openProduct(product.id)}
+            className="text-left font-display text-[1.1rem] font-semibold leading-snug tracking-tight text-ink transition hover:text-primary"
+          >
+            {product.name}
+          </button>
+          <p className="mt-1 text-sm text-ink-muted">{product.pack}</p>
+        </div>
+
+        <div className="flex min-w-0 flex-col items-end justify-center border-l border-line/60 pl-4 text-right">
+          <span className="text-[0.7rem] font-semibold uppercase tracking-wide text-ink-muted">
+            Price
           </span>
-        )}
+          <span className="mt-0.5 text-sm text-ink-muted/80 line-through">
+            {formatPrice(product.mrp)}
+          </span>
+          <span className="text-2xl font-extrabold tracking-tight text-green">
+            {formatPrice(product.price)}
+          </span>
+          {off != null && (
+            <span className="mt-1 rounded-full bg-yellow/90 px-2 py-0.5 text-[0.65rem] font-extrabold text-primary-dark">
+              Save {off}%
+            </span>
+          )}
+        </div>
+
+        <div className="flex shrink-0 flex-col items-end justify-center gap-1.5 border-l border-line/60 pl-4">
+          <span className="text-[0.7rem] font-semibold uppercase tracking-wide text-ink-muted">
+            Qty
+          </span>
+          <QtyControl product={product} />
+          {inCart && (
+            <span className="text-xs font-bold text-primary">{formatPrice(amount)}</span>
+          )}
+        </div>
       </div>
     </article>
   );
