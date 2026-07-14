@@ -69,24 +69,24 @@ function ProductListRow({ product }: { product: ProductDTO }) {
 
   return (
     <article
-      className={`group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 px-3 py-3.5 transition md:grid-cols-[8.5rem_minmax(0,1.4fr)_9rem_10rem] md:gap-x-5 md:px-5 ${
+      className={`group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 px-3 py-3.5 transition md:grid-cols-[9.5rem_minmax(0,1.4fr)_9rem_10rem] md:gap-x-5 md:px-5 ${
         inCart ? "bg-primary/[0.04]" : "bg-white hover:bg-[#fffaf5]"
       } border-b border-line/70 last:border-0`}
     >
       <button
         type="button"
         onClick={() => openProduct(product.id)}
-        className="relative shrink-0 overflow-hidden rounded-2xl bg-brandbg shadow-[0_3px_12px_rgba(157,2,8,0.14)] ring-1 ring-black/5 transition group-hover:shadow-[0_6px_18px_rgba(157,2,8,0.2)] group-hover:ring-primary/25 md:row-span-1"
+        className="relative flex h-[7.25rem] w-[7.25rem] shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-b from-[#fff6ea] to-[#ffe8d2] p-1.5 shadow-[0_3px_12px_rgba(157,2,8,0.14)] ring-1 ring-black/5 transition group-hover:shadow-[0_6px_18px_rgba(157,2,8,0.2)] group-hover:ring-primary/25 md:h-[11rem] md:w-[9.25rem]"
       >
         <SafeImage
           src={product.imageUrl}
           alt={product.name}
-          width={160}
-          height={160}
-          className="h-[6.5rem] w-[6.5rem] object-cover md:h-[8.5rem] md:w-[8.5rem]"
+          width={200}
+          height={240}
+          className="h-full w-full object-contain object-center"
         />
         {off != null && off >= 40 && (
-          <span className="absolute left-1.5 top-1.5 rounded-md bg-yellow px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-primary-dark shadow-sm">
+          <span className="absolute left-1.5 top-1.5 z-10 rounded-md bg-yellow px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-primary-dark shadow-sm">
             −{off}%
           </span>
         )}

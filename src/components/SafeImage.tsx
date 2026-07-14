@@ -15,15 +15,14 @@ export function SafeImage({ src, fallbackSrc = DEFAULT_FALLBACK, alt, ...props }
   useEffect(() => setCurrent(src), [src]);
   const isDataUrl = typeof current === "string" && current.startsWith("data:");
 
+  // Prefer CSS object-fit from className; avoid native width/height forcing a squash.
   if (isDataUrl) {
-    const { width, height, className, style } = props;
+    const { className, style } = props;
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={current as string}
         alt={alt}
-        width={width}
-        height={height}
         className={className}
         style={style}
         onError={() => {
