@@ -5,6 +5,7 @@ import { SafeImage } from "@/components/SafeImage";
 import { SectionHead } from "./SectionHead";
 import { SectionDecor } from "./FestiveDecor";
 import { PriceListButton } from "./PriceListButton";
+import { OrderOffersBanner } from "./OrderOffersBanner";
 import { useCatalog } from "./catalog-context";
 import { useCart } from "@/store/cart";
 import { useUI } from "@/store/ui";
@@ -184,6 +185,8 @@ export function ProductsSection() {
             className="w-full bg-transparent text-sm outline-none placeholder:text-ink-muted"
           />
         </div>
+
+        <OrderOffersBanner />
 
         <div className="space-y-3">
           {filtered.map((category) => {

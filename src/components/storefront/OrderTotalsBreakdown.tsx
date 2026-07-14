@@ -22,6 +22,8 @@ export function OrderTotalsBreakdown({
   const shippingLabel = city ? `Shipping (${city})` : "Shipping";
   const freeShipping = qualifiesForFreeShipping(subtotal);
   const shippingShortfall = freeShippingShortfall(subtotal);
+  const qualifiesForFreeWala = subtotal >= BUSINESS.freeWalaGiftMinAmount;
+  const freeWalaShortfall = Math.max(0, BUSINESS.freeWalaGiftMinAmount - subtotal);
 
   return (
     <div className={cn(compact ? "space-y-0.5 text-xs" : "space-y-1 text-sm", className)}>
@@ -40,6 +42,16 @@ export function OrderTotalsBreakdown({
       {!belowMin && shippingShortfall > 0 && (
         <p className={cn("text-ink-muted", compact ? "text-[0.65rem]" : "text-xs")}>
           Add {formatPrice(shippingShortfall)} more for <strong className="text-green">FREE shipping</strong>
+        </p>
+      )}
+      {!belowMin && !qualifiesForFreeWala && freeWalaShortfall > 0 && (
+        <p className={cn("text-ink-muted", compact ? "text-[0.65rem]" : "text-xs")}>
+          Add {formatPrice(freeWalaShortfall)} more for <strong className="text-primary">Free 1000 Wala</strong>
+        </p>
+      )}
+      {!belowMin && qualifiesForFreeWala && (
+        <p className={cn("font-semibold text-green", compact ? "text-[0.65rem]" : "text-xs")}>
+          🎁 Free 1000 Wala gift unlocked!
         </p>
       )}
       {belowMin && (

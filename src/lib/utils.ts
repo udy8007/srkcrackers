@@ -31,7 +31,7 @@ export function isValidPincode(pincode: string): boolean {
   return /^\d{6}$/.test(pincode.trim());
 }
 
-/** Flat shipping charge when minimum order is met; free at ₹3000+ subtotal. */
+/** Flat shipping charge when minimum order is met; free at freeShippingMinAmount+ subtotal. */
 export function calculateShipping(subtotal: number): number {
   if (subtotal <= 0 || !meetsMinOrder(subtotal)) return 0;
   if (subtotal >= BUSINESS.freeShippingMinAmount) return 0;

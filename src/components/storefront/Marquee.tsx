@@ -53,7 +53,9 @@ function Marquee({
 export function MarqueeBars() {
   const offerItems: ReactNode[] = [
     <>🎇 Diwali Special — Flat <strong>80% OFF</strong> on All Crackers!</>,
-    <>🎁 Minimum order <strong>₹{BUSINESS.minOrderAmount}</strong> · Delivery across {BUSINESS.deliveryArea}</>,
+    <>🎁 Minimum order <strong>₹{BUSINESS.minOrderAmount.toLocaleString("en-IN")}</strong> · All over {BUSINESS.deliveryArea} delivery</>,
+    <>🚚 Free delivery above <strong>₹{BUSINESS.freeShippingMinAmount.toLocaleString("en-IN")}</strong> · Delivery ₹{BUSINESS.shippingCost}</>,
+    <>🎉 Free <strong>1000 Wala</strong> on orders above ₹{BUSINESS.freeWalaGiftMinAmount.toLocaleString("en-IN")}</>,
     <>🎆 Premium Sivakasi Quality Crackers</>,
     <>
       📞 Order Now:{" "}
@@ -62,12 +64,12 @@ export function MarqueeBars() {
       </a>
     </>,
     <>✅ Licensed Dealer — SRK Crackers, Morai, Avadi</>,
-    <>🚚 Delivery Available — Tamil Nadu &amp; All India</>,
     <>💬 Submit Order via WhatsApp — Quick &amp; Easy!</>,
   ];
 
   const infoItems: ReactNode[] = [
-    <>🚚 {BUSINESS.deliveryArea} — <strong>₹{BUSINESS.shippingCost}</strong> shipping · <strong>FREE</strong> above ₹{BUSINESS.freeShippingMinAmount.toLocaleString("en-IN")}</>,
+    <>🚚 All over {BUSINESS.deliveryArea} — <strong>₹{BUSINESS.shippingCost}</strong> delivery · <strong>FREE</strong> above ₹{BUSINESS.freeShippingMinAmount.toLocaleString("en-IN")}</>,
+    <>🎁 Free 1000 Wala gift above ₹{BUSINESS.freeWalaGiftMinAmount.toLocaleString("en-IN")}</>,
     <>🏛️ Govt. Licensed Fireworks Dealer — 100 KGS Capacity</>,
     <>📍 No 45, Sarathi Nagar, Morai Village, Avadi, Chennai - 600055</>,
     <>⏰ We confirm your order within 2 hours by phone call</>,

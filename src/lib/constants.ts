@@ -24,10 +24,12 @@ export const BUSINESS = {
   mapQuery: "Sarathi Nagar, Morai Village, Avadi, Chennai 600055, Tamil Nadu",
   mapEmbed:
     "https://maps.google.com/maps?q=13.1987642,80.0896457&z=16&hl=en&output=embed",
-  minOrderAmount: 1250,
-  shippingCost: 200,
+  minOrderAmount: 2500,
+  shippingCost: 250,
   /** Subtotal at or above this amount gets free shipping (min order still applies). */
-  freeShippingMinAmount: 3000,
+  freeShippingMinAmount: 5000,
+  /** Subtotal at or above this amount qualifies for a complimentary 1000 Wala gift. */
+  freeWalaGiftMinAmount: 4000,
   deliveryArea: "Chennai",
   yearsExperience: 10,
   /** Default days from dispatch until expected postal delivery. */
