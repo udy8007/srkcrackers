@@ -5,6 +5,7 @@ import { runScheduledBackupIfDue } from "@/lib/db-backup";
 import { getEmailSettings } from "@/lib/email-settings";
 import {
   notifyAutoDelivered,
+  sendIncompleteCheckoutReminders,
   sendPendingOrderReminders,
 } from "@/lib/notifications";
 
@@ -64,14 +65,15 @@ export async function runSchedulerTick(
     updates.lastDeliverAt = new Date();
   }
 
-  // Pending order reminders (interval from email settings)
+  // Pending + incomplete-checkout reminders (interval from email settings)
   const emailSettings = await getEmailSettings();
   const reminderMs = Math.max(1, emailSettings.pendingReminderHours) * 60 * 60 * 1000;
   const reminderDue =
     !state.lastReminderAt || now - state.lastReminderAt.getTime() >= reminderMs;
-  if (reminderDue && emailSettings.enabled && emailSettings.notifyAdminPendingReminder) {
-    const reminders = await sendPendingOrderReminders();
-    result.reminded = reminders.reminded;
+  if (reminderDue && emailSettings.notifyAdminPendingReminder) {
+    const pending = await sendPendingOrderReminders();
+    const incomplete = await sendIncompleteCheckoutReminders();
+    result.reminded = pending.reminded + incomplete.reminded;
     updates.lastReminderAt = new Date();
   }
 

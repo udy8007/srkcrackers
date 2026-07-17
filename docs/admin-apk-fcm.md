@@ -92,9 +92,11 @@ FCM data payload includes:
 | Key | Example |
 |-----|---------|
 | `target_url` | `https://www.srkcrackers.in/admin/orders/{orderId}` |
-| `type` | `NEW_ORDER` |
+| `type` | `NEW_ORDER` or `INCOMPLETE_CHECKOUT` |
 | `order_id` | cuid |
 | `order_number` | `SRK-…` |
+
+Incomplete checkout reminders (`INCOMPLETE_CHECKOUT`) use the same `target_url` deep link. They repeat every N hours (Admin → Settings → pending reminder interval) while status stays `PAYMENT_PENDING`, and stop when the order is completed or cancelled.
 
 On notification tap, load `data.target_url` in the WebView (must stay on `www.srkcrackers.in`).
 

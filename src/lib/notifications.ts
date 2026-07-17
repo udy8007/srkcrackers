@@ -316,6 +316,61 @@ export async function sendPendingOrderReminders(): Promise<{ reminded: number }>
   return { reminded };
 }
 
+/**
+ * Staff follow-up for incomplete checkouts (PAYMENT_PENDING).
+ * Sends per-order admin push + bell with order deep link, every N hours,
+ * until the order leaves PAYMENT_PENDING (completed payment or cancelled).
+ */
+export async function sendIncompleteCheckoutReminders(): Promise<{ reminded: number }> {
+  const settings = await getEmailSettings();
+  if (!settings.notifyAdminPendingReminder) {
+    return { reminded: 0 };
+  }
+
+  const hours = Math.max(1, settings.pendingReminderHours);
+  const threshold = new Date(Date.now() - hours * 60 * 60 * 1000);
+
+  const incomplete = await prisma.order.findMany({
+    where: {
+      status: "PAYMENT_PENDING",
+      OR: [
+        { lastPendingReminderAt: null, updatedAt: { lte: threshold } },
+        { lastPendingReminderAt: { lte: threshold } },
+      ],
+    },
+    include: { items: true },
+    orderBy: { createdAt: "asc" },
+    take: 50,
+  });
+
+  if (incomplete.length === 0) return { reminded: 0 };
+
+  const origin = resolveSiteOrigin();
+  const now = new Date();
+  let reminded = 0;
+
+  for (const order of incomplete) {
+    const ctx = buildContext(order, origin);
+    await createAdminNotification({
+      type: "INCOMPLETE_CHECKOUT",
+      title: `Incomplete checkout ${order.orderNumber}`,
+      message: `Payment not completed — please contact ${order.customerName} (${order.phone}). If not paying, please cancel · ${formatInr(order.total)}`,
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      targetUrl: ctx.adminOrderUrl,
+      pushTitle: "Payment pending — contact or cancel",
+      pushBody: `Order #${order.orderNumber} · ${order.customerName} · ${order.phone} · ${formatInr(order.total)}. If not paying, please cancel.`,
+    });
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { lastPendingReminderAt: now },
+    });
+    reminded += 1;
+  }
+
+  return { reminded };
+}
+
 /** Notify customers when orders are auto-delivered. */
 export function notifyAutoDelivered(orderIds: string[]) {
   for (const orderId of orderIds) {

@@ -75,9 +75,10 @@ export const NOTIFICATION_TRIGGER_META: NotificationTriggerMeta[] = [
     formKey: "notifyAdminPendingReminder",
     previewTrigger: "PENDING_REMINDER_ADMIN",
     label: "Admin — pending order reminder",
-    description: "Table of orders stuck in Placed / Verifying awaiting your action",
+    description:
+      "Placed/Verifying email reminder, plus FCM push for incomplete checkouts (payment pending — please contact) with order deep link",
     audience: "Admin",
-    timing: "Repeating — every N hours via in-app scheduler",
+    timing: "Repeating — every N hours via in-app scheduler until resolved/cancelled",
     icon: "⏰",
   },
 ];
