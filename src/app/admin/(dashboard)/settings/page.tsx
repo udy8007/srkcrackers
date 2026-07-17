@@ -1,6 +1,6 @@
 import { ChangePasswordForm } from "./ChangePasswordForm";
 import { EmailSettingsForm } from "./EmailSettingsForm";
-import { EmailNotificationLog } from "./EmailNotificationLog";
+import { NotificationResetControls } from "./NotificationResetControls";
 import { BackupSettingsForm } from "./BackupSettingsForm";
 import { SchedulerSettingsForm } from "./SchedulerSettingsForm";
 import { PushTestForm } from "./PushTestForm";
@@ -19,7 +19,7 @@ export default function SettingsPage() {
 
       <EmailSettingsForm />
 
-      <EmailNotificationLog />
+      <NotificationResetControls />
 
       <PushTestForm />
 
