@@ -43,6 +43,7 @@ export interface CustomerInput {
 export interface CreateOrderInput {
   customer: CustomerInput;
   items: CartLineInput[];
+  upiReferenceNumber?: string;
   paymentScreenshot?: string;
   paymentMethod?: string;
   draftOrderId?: string;
@@ -54,7 +55,7 @@ export interface CheckoutDraftInput {
   items: CartLineInput[];
   draftOrderId?: string;
   paymentMethod?: string;
-  checkoutStep?: "PAYMENT" | "SCREENSHOT";
+  checkoutStep?: "PAYMENT" | "REFERENCE";
 }
 
 /** Status history entry for the tracking timeline. */

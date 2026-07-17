@@ -4,6 +4,7 @@ import type { Transporter } from "nodemailer";
 import type { EmailSettings } from "@/lib/db/types";
 import { prisma } from "@/lib/prisma";
 import { getEmailSettings, smtpConfigError } from "@/lib/email-settings";
+import { outboundNotificationsDisabled } from "@/lib/dev-safety";
 
 export type EmailTrigger =
   | "ORDER_PLACED_CUSTOMER"
@@ -75,6 +76,13 @@ async function deliverMail(
   },
   settings: EmailSettings,
 ): Promise<{ ok: boolean; error?: string }> {
+  if (outboundNotificationsDisabled()) {
+    console.warn(
+      `[email] Skipped (${options.trigger} → ${options.to}): DISABLE_OUTBOUND_NOTIFICATIONS=true`,
+    );
+    return { ok: true };
+  }
+
   if (!settings.enabled && !options.force) {
     return { ok: false, error: "Email notifications are disabled" };
   }

@@ -196,6 +196,7 @@ function serializeOrder(order: OrderWithRelations) {
     },
     paymentMethod: order.paymentMethod,
     upiId: order.upiId,
+    upiReferenceNumber: order.upiReferenceNumber,
     paymentScreenshot: order.paymentScreenshot,
     subtotal: order.subtotal,
     total: order.total,

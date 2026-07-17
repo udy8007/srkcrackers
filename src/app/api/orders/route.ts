@@ -20,7 +20,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { customer, items, paymentScreenshot, paymentMethod, draftOrderId } = body ?? {};
+  const { customer, items, upiReferenceNumber, paymentScreenshot, paymentMethod, draftOrderId } =
+    body ?? {};
 
   const customerError = validateCustomer(customer);
   if (customerError) {
@@ -31,13 +32,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Payment screenshot is too large" }, { status: 400 });
   }
 
+  const upiRef = typeof upiReferenceNumber === "string" ? upiReferenceNumber.trim() : "";
+  if (upiRef && (upiRef.length < 6 || upiRef.length > 40)) {
+    return NextResponse.json(
+      { error: "Enter a valid UPI reference number (6–40 characters)" },
+      { status: 400 },
+    );
+  }
+
   const built = await buildOrderFromItems(items);
   if (!built.ok) {
     return NextResponse.json({ error: built.error }, { status: built.status });
   }
 
   const { orderItems, subtotal, total } = built.data;
-  const hasPayment = Boolean(paymentScreenshot);
+  const hasPayment = Boolean(upiRef || paymentScreenshot);
   const now = new Date();
 
   async function storeScreenshot(orderId: string, dataUrl: string | undefined | null) {
@@ -77,6 +86,7 @@ export async function POST(request: NextRequest) {
         ...customerOrderFields(customer!),
         paymentMethod: paymentMethod?.trim() || draft.paymentMethod,
         upiId: BUSINESS.upiId,
+        upiReferenceNumber: upiRef || null,
         paymentScreenshot: screenshotUrl,
         subtotal,
         total,
@@ -120,6 +130,7 @@ export async function POST(request: NextRequest) {
           ...customerOrderFields(customer!),
           paymentMethod: paymentMethod?.trim() || "UPI",
           upiId: BUSINESS.upiId,
+          upiReferenceNumber: upiRef || null,
           paymentScreenshot: null,
           subtotal,
           total,

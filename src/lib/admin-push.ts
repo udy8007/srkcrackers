@@ -11,6 +11,7 @@ import {
   type ServiceAccountJson,
 } from "@/lib/firebase-admin";
 import { prisma } from "@/lib/prisma";
+import { outboundNotificationsDisabled } from "@/lib/dev-safety";
 
 export const FIREBASE_SETTINGS_ID = "default";
 export type { ServiceAccountJson };
@@ -66,6 +67,17 @@ export type AdminPushPayload = {
 
 /** Send FCM to every registered admin device. Never throws. */
 export async function sendAdminPush(payload: AdminPushPayload): Promise<AdminPushResult> {
+  if (outboundNotificationsDisabled()) {
+    console.warn("[admin-push] Skipped: DISABLE_OUTBOUND_NOTIFICATIONS=true");
+    return {
+      sent: 0,
+      failed: 0,
+      removed: 0,
+      projectId: null,
+      failures: [],
+    };
+  }
+
   const firebase = await getFirebaseAppOrNull();
   if (!firebase) {
     console.warn(

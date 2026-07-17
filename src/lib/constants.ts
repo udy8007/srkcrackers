@@ -62,7 +62,7 @@ export interface OrderStatusMeta {
 export const ORDER_STATUSES: OrderStatusMeta[] = [
   { key: "PAYMENT_PENDING", label: "Payment Not Completed", timeline: false },
   { key: "PLACED", label: "Order Placed", timeline: true },
-  { key: "PAYMENT_UPLOADED", label: "Payment Screenshot Received", timeline: true },
+  { key: "PAYMENT_UPLOADED", label: "Payment Reference Received", timeline: true },
   { key: "VERIFYING", label: "Payment Verification", timeline: true },
   { key: "CONFIRMED", label: "Order Confirmed", timeline: true },
   { key: "PROCESSING", label: "Processing & Packing", timeline: true },

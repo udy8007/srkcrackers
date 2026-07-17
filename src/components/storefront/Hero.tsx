@@ -1,54 +1,70 @@
 "use client";
 
 import { BUSINESS } from "@/lib/constants";
-import { MarigoldGarland, Mandala, Diya, Sparkle } from "./FestiveDecor";
+import { MarigoldGarland, Sparkle } from "./FestiveDecor";
+import { HeroBoy, HeroGirl } from "./HeroCelebrationArt";
 import { PriceListButton } from "./PriceListButton";
 
 export function Hero() {
   return (
     <section
       id="home"
-      className="hero-festive relative overflow-hidden border-b-[3px] border-yellow px-4 pb-14 pt-16 text-center"
+      className="hero-festive relative overflow-hidden border-b-[3px] border-yellow px-4 pb-10 pt-14 text-center sm:pb-14 sm:pt-16 lg:pb-24"
     >
-      <MarigoldGarland className="absolute inset-x-0 top-0 px-3" />
+      <MarigoldGarland className="absolute inset-x-0 top-0 z-10 px-3" />
 
-      <Mandala className="animate-spin-slow pointer-events-none absolute -bottom-12 -left-12 h-40 w-40 text-primary/15 sm:h-52 sm:w-52" />
-      <Mandala className="animate-spin-slow-rev pointer-events-none absolute -right-12 top-10 h-32 w-32 text-orange/20 sm:h-44 sm:w-44" />
+      {/* Desktop side characters */}
+      <div
+        className="pointer-events-none absolute bottom-0 left-1 z-[1] hidden w-[min(24vw,240px)] select-none lg:block"
+        aria-hidden
+      >
+        <div className="hero-bob">
+          <HeroBoy className="h-auto w-full drop-shadow-[0_14px_26px_rgba(157,2,8,0.16)]" />
+        </div>
+      </div>
+      <div
+        className="pointer-events-none absolute bottom-0 right-1 z-[1] hidden w-[min(24vw,240px)] select-none lg:block"
+        aria-hidden
+      >
+        <div className="hero-bob-mirror">
+          <HeroGirl className="h-auto w-full drop-shadow-[0_14px_26px_rgba(157,2,8,0.16)]" />
+        </div>
+      </div>
 
-      <Diya className="animate-float pointer-events-none absolute bottom-3 left-[6%] h-9 w-9 opacity-90 sm:h-11 sm:w-11" />
-      <Diya
-        className="animate-float pointer-events-none absolute bottom-4 right-[7%] h-9 w-9 opacity-90 sm:h-11 sm:w-11"
-        style={{ animationDelay: "1.2s" }}
-      />
-
-      <Sparkle className="animate-twinkle pointer-events-none absolute left-[12%] top-20 h-4 w-4 text-yellow" />
+      <Sparkle className="animate-twinkle pointer-events-none absolute left-[10%] top-24 z-[2] hidden h-4 w-4 text-yellow md:block" />
       <Sparkle
-        className="animate-twinkle pointer-events-none absolute right-[14%] top-24 h-5 w-5 text-orange"
+        className="animate-twinkle pointer-events-none absolute right-[11%] top-28 z-[2] hidden h-5 w-5 text-orange md:block"
         style={{ animationDelay: "0.8s" }}
       />
-      <Sparkle
-        className="animate-twinkle pointer-events-none absolute left-[22%] bottom-16 h-3 w-3 text-gold"
-        style={{ animationDelay: "1.5s" }}
-      />
-      <Sparkle
-        className="animate-twinkle pointer-events-none absolute right-[24%] bottom-24 h-4 w-4 text-yellow"
-        style={{ animationDelay: "0.4s" }}
-      />
 
-      <div className="relative mx-auto max-w-3xl">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-yellow bg-yellow-light px-3 py-1 text-xs font-bold text-primary-dark">
-          🎇 Diwali Special — Flat 80% OFF
-        </span>
-        <span className="ml-2 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-white/80 px-3 py-1 text-xs font-bold text-primary">
-          ⭐ {BUSINESS.yearsExperience}+ Years Experience
-        </span>
-        <h2 className="text-festive mt-4 font-display text-[clamp(1.8rem,4.5vw,2.6rem)] font-extrabold leading-tight">
-          {BUSINESS.name}
-        </h2>
+      <div className="relative z-10 mx-auto max-w-3xl">
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-yellow bg-yellow-light px-3 py-1 text-xs font-bold text-primary-dark">
+            🎇 Diwali Special — Flat 80% OFF
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-white/80 px-3 py-1 text-xs font-bold text-primary">
+            ⭐ {BUSINESS.yearsExperience}+ Years Experience
+          </span>
+        </div>
+
+        {/* Mobile title with small animated boy (left) + girl (right) */}
+        <div className="mt-4 inline-flex max-w-full items-center justify-center gap-0 lg:block">
+          <div className="hero-bob -mr-0.5 w-12 shrink-0 sm:w-[3.25rem] lg:hidden" aria-hidden>
+            <HeroBoy className="h-auto w-full drop-shadow-[0_4px_8px_rgba(157,2,8,0.18)]" />
+          </div>
+          <h2 className="text-festive relative z-[1] font-display text-[clamp(1.5rem,5.2vw,2.6rem)] font-extrabold leading-none">
+            {BUSINESS.name}
+          </h2>
+          <div className="hero-bob-mirror -ml-0.5 w-12 shrink-0 sm:w-[3.25rem] lg:hidden" aria-hidden>
+            <HeroGirl className="h-auto w-full drop-shadow-[0_4px_8px_rgba(157,2,8,0.18)]" />
+          </div>
+        </div>
+
         <p className="mx-auto mt-3 max-w-[650px] text-sm text-ink-muted sm:text-[0.95rem]">
           Premium Sivakasi quality crackers from licensed dealer {BUSINESS.name}, Morai, Avadi.
           Select products below, get your estimate and submit order via WhatsApp.
         </p>
+
         <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
           <a href="#products" className="btn-primary">
             🛍️ Quick Order

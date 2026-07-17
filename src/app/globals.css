@@ -263,6 +263,65 @@ body {
   animation: flicker 1.5s ease-in-out infinite;
 }
 
+/* Hero celebration characters */
+@keyframes heroBob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes heroBobMirror {
+  0%,
+  100% {
+    transform: scaleX(-1) translateY(0);
+  }
+  50% {
+    transform: scaleX(-1) translateY(-6px);
+  }
+}
+@keyframes heroWave {
+  0%,
+  100% {
+    transform: rotate(-8deg);
+  }
+  50% {
+    transform: rotate(10deg);
+  }
+}
+@keyframes heroSpark {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+}
+.hero-bob {
+  animation: heroBob 2.2s ease-in-out infinite;
+  will-change: transform;
+}
+.hero-bob-mirror {
+  animation: heroBobMirror 2.2s ease-in-out infinite;
+  animation-delay: 0.35s;
+  will-change: transform;
+}
+.hero-wave {
+  transform-box: fill-box;
+  transform-origin: left bottom;
+  animation: heroWave 1.6s ease-in-out infinite;
+}
+.hero-spark {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: heroSpark 0.9s ease-in-out infinite;
+}
+
 @keyframes ringPulseGreen {
   0% {
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), 0 0 0 0 rgba(37, 211, 102, 0.55);
@@ -334,7 +393,11 @@ body {
   .animate-spin-slow-rev,
   .flame,
   .animate-pop,
-  .pulse-whatsapp {
+  .pulse-whatsapp,
+  .hero-bob,
+  .hero-bob-mirror,
+  .hero-wave,
+  .hero-spark {
     animation: none !important;
   }
   .reveal {

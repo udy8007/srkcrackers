@@ -94,9 +94,10 @@ model Order {
   pincode           String
   notes             String?
   // Payment
-  paymentMethod     String               @default("UPI")
-  upiId             String?
-  paymentScreenshot String? // base64 data URL — swap for object storage (Vercel Blob / Cloudinary) in production
+  paymentMethod       String               @default("UPI")
+  upiId               String?
+  upiReferenceNumber  String? // customer UPI / UTR reference from payment app
+  paymentScreenshot   String? // base64 data URL — swap for object storage (Vercel Blob / Cloudinary) in production
   // Totals
   subtotal          Int
   total             Int

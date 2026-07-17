@@ -10,7 +10,6 @@ import { useToast } from "@/store/toast";
 import { formatPrice, formatFullDeliveryAddress, getMinOrderToastMessage, isValidPhone, isValidPincode, meetsMinOrder } from "@/lib/utils";
 import {
   buildUpiPayLink,
-  compressImage,
   scrollToId,
   whatsappUrl,
 } from "@/lib/client-actions";
@@ -33,7 +32,7 @@ const EMPTY_CUSTOMER: CustomerInput = {
   notes: "",
 };
 
-const STEP_LABELS = ["Details", "Pay", "Screenshot", "Done"];
+const STEP_LABELS = ["Details", "Pay", "Reference", "Done"];
 
 export function CheckoutModal() {
   const { getProduct } = useCatalog();
@@ -47,7 +46,7 @@ export function CheckoutModal() {
 
   const [step, setStep] = useState(1);
   const [customer, setCustomer] = useState<CustomerInput>(EMPTY_CUSTOMER);
-  const [screenshot, setScreenshot] = useState<string | null>(null);
+  const [upiReference, setUpiReference] = useState("");
   const [whatsappShared, setWhatsappShared] = useState(false);
   const awaitingWhatsAppReturn = useRef(false);
   const [submitting, setSubmitting] = useState(false);
@@ -86,7 +85,7 @@ export function CheckoutModal() {
   );
 
   const saveCheckoutDraft = useCallback(
-    async (opts?: { paymentMethod?: string; checkoutStep?: "PAYMENT" | "SCREENSHOT" }) => {
+    async (opts?: { paymentMethod?: string; checkoutStep?: "PAYMENT" | "REFERENCE" }) => {
       if (orderItems.length === 0) return;
       try {
         const response = await fetch("/api/orders/draft", {
@@ -129,7 +128,7 @@ export function CheckoutModal() {
 
     setCustomer(saved ?? EMPTY_CUSTOMER);
     setStep(canSkipToPayment ? 2 : 1);
-    setScreenshot(null);
+    setUpiReference("");
     setWhatsappShared(false);
     awaitingWhatsAppReturn.current = false;
     setOrderNumber(null);
@@ -177,7 +176,7 @@ export function CheckoutModal() {
 
   useEffect(() => {
     if (!checkoutOpen || step !== 3) return;
-    void saveCheckoutDraft({ checkoutStep: "SCREENSHOT" });
+    void saveCheckoutDraft({ checkoutStep: "REFERENCE" });
   }, [checkoutOpen, step, saveCheckoutDraft]);
 
   const paymentCopyText = useMemo(
@@ -220,7 +219,7 @@ export function CheckoutModal() {
       }
       leftForPaymentRef.current = false;
       setStep(3);
-      showToast("Welcome back — upload your payment screenshot.");
+      showToast("Welcome back — enter your UPI reference number.");
     };
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
@@ -288,21 +287,7 @@ export function CheckoutModal() {
   const handlePaidViaQr = async () => {
     setPaymentMethod("UPI QR");
     setStep(3);
-    await saveCheckoutDraft({ paymentMethod: "UPI QR", checkoutStep: "SCREENSHOT" });
-  };
-
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) return showToast("Please upload an image file");
-    if (file.size > 5 * 1024 * 1024) return showToast("Image must be under 5 MB");
-    try {
-      const dataUrl = await compressImage(file);
-      setScreenshot(dataUrl);
-      showToast("Payment screenshot uploaded!");
-    } catch {
-      showToast("Could not process the image");
-    }
+    await saveCheckoutDraft({ paymentMethod: "UPI QR", checkoutStep: "REFERENCE" });
   };
 
   const buildWhatsAppText = (id?: string) => {
@@ -330,6 +315,7 @@ export function CheckoutModal() {
         : `*Shipping: ₹${totals.shipping}*`,
       `*Grand Total: ₹${totals.total}*`,
       `*Payment:* ${paymentMethod} (${BUSINESS.upiId})`,
+      upiReference.trim() ? `*UPI Ref:* ${upiReference.trim()}` : "",
       "",
       "Please confirm availability and delivery.",
       "📍 Morai, Avadi, Chennai",
@@ -396,6 +382,10 @@ export function CheckoutModal() {
     if (!meetsMinOrder(subtotal)) {
       return showToast(getMinOrderToastMessage(subtotal));
     }
+    const ref = upiReference.trim();
+    if (ref && (ref.length < 6 || ref.length > 40)) {
+      return showToast("Enter a valid UPI reference number (6–40 characters)");
+    }
     setSubmitting(true);
     try {
       const response = await fetch("/api/orders", {
@@ -404,7 +394,7 @@ export function CheckoutModal() {
         body: JSON.stringify({
           customer,
           items: orderItems.map((line) => ({ productId: line.product!.id, qty: line.qty })),
-          paymentScreenshot: screenshot ?? undefined,
+          upiReferenceNumber: ref || undefined,
           paymentMethod,
           draftOrderId: draftOrderId ?? undefined,
         }),
@@ -431,11 +421,11 @@ export function CheckoutModal() {
       clearCart();
       void triggerInvoiceDownload(data.orderNumber, data.createdAt, data.status);
       showToast(
-        screenshot
+        upiReference.trim()
           ? "Order placed successfully!"
           : whatsappShared
             ? "Order placed — we got your WhatsApp share. We'll verify payment soon."
-            : "Order placed — upload/share payment anytime or wait for our call.",
+            : "Order placed — share UPI reference anytime or wait for our call.",
       );
     } catch {
       showToast("Network error. Please try again.");
@@ -731,26 +721,29 @@ export function CheckoutModal() {
           {step === 3 && (
             <div className="space-y-4">
               <p className="text-sm text-ink-muted">
-                Upload your <b>UPI payment screenshot</b> <span className="text-ink-muted">(optional)</span>,
-                or <b>share on WhatsApp</b>, then confirm your order. We verify payment within 2 hours.
+                Enter your <b>UPI Reference / UTR number</b> from the payment app{" "}
+                <span className="text-ink-muted">(optional)</span>, or <b>share on WhatsApp</b>, then
+                confirm your order. We verify payment within 2 hours.
               </p>
-              <label className="flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 border-dashed border-line bg-brandbg p-6 text-center transition hover:border-primary">
-                <input type="file" accept="image/*" onChange={handleUpload} className="hidden" />
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-2xl font-light text-primary">↑</span>
-                <strong className="text-sm text-ink">Tap to upload payment screenshot</strong>
-                <span className="text-xs text-ink-muted">JPG, PNG · Max 5 MB · Optional</span>
-              </label>
-              {screenshot && (
-                <div className="text-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={screenshot}
-                    alt="Payment screenshot preview"
-                    className="mx-auto max-h-52 rounded-lg border border-line"
-                  />
-                  <p className="mt-2 text-xs font-semibold text-green">✓ Screenshot uploaded</p>
-                </div>
-              )}
+              <div>
+                <label htmlFor="upi-ref" className="mb-1.5 block text-sm font-semibold text-ink">
+                  UPI Reference Number
+                </label>
+                <input
+                  id="upi-ref"
+                  type="text"
+                  inputMode="text"
+                  autoComplete="off"
+                  placeholder="e.g. 123456789012"
+                  value={upiReference}
+                  onChange={(e) => setUpiReference(e.target.value.replace(/\s/g, ""))}
+                  className="w-full rounded-xl border border-line bg-white px-4 py-3 font-mono text-sm tracking-wide text-ink outline-none focus:border-primary"
+                  maxLength={40}
+                />
+                <p className="mt-1.5 text-xs text-ink-muted">
+                  Find this in GPay / PhonePe / Paytm under payment history (UTR / Ref No).
+                </p>
+              </div>
               {whatsappShared && (
                 <div className="rounded-lg border border-green/30 bg-green/5 px-3 py-2.5 text-center text-sm font-semibold text-green">
                   ✓ Shared on WhatsApp — thank you! Confirm your order below.
@@ -777,7 +770,7 @@ export function CheckoutModal() {
                 </button>
               </div>
               <p className="text-center text-[0.7rem] text-ink-muted">
-                You can confirm without a screenshot — our team will call to verify payment.
+                You can confirm without a reference — our team will call to verify payment.
               </p>
             </div>
           )}

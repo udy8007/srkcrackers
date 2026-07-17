@@ -5,7 +5,7 @@ const STEPS = [
   { num: 1, title: "Select Products", desc: "Open category · add quantity · check total in bottom bar" },
   { num: 2, title: "Your Details", desc: "Fill name, phone, address when you click Place Order" },
   { num: 3, title: "Pay via GPay", desc: "Scan QR code · pay exact amount shown" },
-  { num: 4, title: "Share Screenshot", desc: "Upload payment screenshot · share on WhatsApp · track order status" },
+  { num: 4, title: "Enter UPI Reference", desc: "Share UPI / UTR number · confirm on WhatsApp · track order status" },
 ];
 
 export function HowToOrder() {

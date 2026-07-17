@@ -14,7 +14,7 @@ interface DraftOrderInput {
   items: CartLineInput[];
   draftOrderId?: string;
   paymentMethod?: string;
-  checkoutStep?: "PAYMENT" | "SCREENSHOT";
+  checkoutStep?: "PAYMENT" | "REFERENCE";
 }
 
 export async function POST(request: NextRequest) {
@@ -38,8 +38,8 @@ export async function POST(request: NextRequest) {
 
   const { orderItems, subtotal, total } = built.data;
   const stepNote =
-    checkoutStep === "SCREENSHOT"
-      ? "Reached screenshot upload — payment not confirmed yet"
+    checkoutStep === "REFERENCE"
+      ? "Reached UPI reference step — payment not confirmed yet"
       : paymentMethod && paymentMethod !== "UPI QR"
         ? `Opened ${paymentMethod} — payment not completed`
         : "Reached payment step — awaiting UPI payment";
