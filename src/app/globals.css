@@ -321,6 +321,54 @@ body {
   transform-origin: center;
   animation: heroSpark 0.9s ease-in-out infinite;
 }
+@keyframes heroFlame {
+  0%,
+  100% {
+    transform: scaleY(1) scaleX(1);
+    opacity: 1;
+  }
+  40% {
+    transform: scaleY(1.25) scaleX(0.9);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scaleY(0.85) scaleX(1.1);
+    opacity: 1;
+  }
+}
+@keyframes heroRise {
+  0% {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-42px);
+    opacity: 0;
+  }
+}
+@keyframes heroGlowPulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+.hero-flame {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: heroFlame 0.55s ease-in-out infinite;
+}
+.hero-rise {
+  animation: heroRise 1.8s ease-out infinite;
+}
+.hero-glow {
+  animation: heroGlowPulse 2.4s ease-in-out infinite;
+}
 
 @keyframes ringPulseGreen {
   0% {
@@ -397,7 +445,10 @@ body {
   .hero-bob,
   .hero-bob-mirror,
   .hero-wave,
-  .hero-spark {
+  .hero-spark,
+  .hero-flame,
+  .hero-rise,
+  .hero-glow {
     animation: none !important;
   }
   .reveal {
