@@ -16,6 +16,16 @@ function resolveTopic() {
   return process.env.NTFY_TOPIC?.trim() || DEFAULT_TOPIC;
 }
 
+/** HTTP headers must be Latin-1 (ByteString); strip/replace non-ASCII. */
+function toHeaderValue(value: string, maxLen = 250): string {
+  return value
+    .replace(/[\u2013\u2014\u2212]/g, "-") // en/em/minus dashes
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[^\x00-\xFF]/g, "")
+    .slice(0, maxLen);
+}
+
 /** Send a push notification via ntfy.sh. Never throws. */
 export async function sendNtfyNotification(
   input: NtfySendInput,
@@ -25,8 +35,8 @@ export async function sendNtfyNotification(
   const iconUrl = input.iconUrl ?? `${origin}/logo.png`;
 
   const headers: Record<string, string> = {
-    Title: input.title.slice(0, 250),
-    "X-Icon": iconUrl,
+    Title: toHeaderValue(input.title),
+    "X-Icon": toHeaderValue(iconUrl, 500),
     "Content-Type": "text/plain; charset=utf-8",
   };
 
@@ -73,7 +83,7 @@ export function buildBugReportNtfy(input: BugReportInput) {
   const severity = input.severity?.trim() || "Medium";
   const steps = input.steps?.trim();
 
-  const title = `SRK Admin — Bug on ${area}`;
+  const title = `SRK Admin - Bug on ${area}`;
   const lines = [
     `${input.reporterName} (${input.reporterEmail}) reported a problem in the ${area} section.`,
     "",
