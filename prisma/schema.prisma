@@ -209,6 +209,28 @@ model AdminNotification {
   @@index([read, createdAt])
 }
 
+/// Audit log of outbound admin FCM push attempts.
+model AdminPushLog {
+  id          String   @id @default(cuid())
+  type        String
+  title       String
+  body        String
+  targetUrl   String
+  orderId     String?
+  orderNumber String?
+  status      String
+  sent        Int      @default(0)
+  failed      Int      @default(0)
+  removed     Int      @default(0)
+  error       String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([orderId])
+  @@index([type])
+  @@index([status])
+}
+
 /// Singleton database backup schedule (admin portal).
 model BackupSettings {
   id                 String          @id @default("default")

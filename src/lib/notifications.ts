@@ -91,18 +91,55 @@ export async function createAdminNotification(input: {
   await prisma.adminNotification.create({ data: bell });
 
   const origin = resolveSiteOrigin();
-  await sendAdminPush({
-    title: pushTitle ?? input.title,
-    body: pushBody ?? input.message,
-    targetUrl: targetUrl ?? `${origin}/admin`,
-    data: {
-      type: input.type,
-      ...(input.orderId ? { order_id: input.orderId } : {}),
-      ...(input.orderNumber ? { order_number: input.orderNumber } : {}),
-    },
-  }).catch((error) => {
+  const resolvedTargetUrl = targetUrl ?? `${origin}/admin`;
+  const resolvedPushTitle = pushTitle ?? input.title;
+  const resolvedPushBody = pushBody ?? input.message;
+
+  try {
+    const result = await sendAdminPush({
+      title: resolvedPushTitle,
+      body: resolvedPushBody,
+      targetUrl: resolvedTargetUrl,
+      data: {
+        type: input.type,
+        ...(input.orderId ? { order_id: input.orderId } : {}),
+        ...(input.orderNumber ? { order_number: input.orderNumber } : {}),
+      },
+    });
+
+    await prisma.adminPushLog.create({
+      data: {
+        type: input.type,
+        title: resolvedPushTitle,
+        body: resolvedPushBody,
+        targetUrl: resolvedTargetUrl,
+        orderId: input.orderId,
+        orderNumber: input.orderNumber,
+        status: result.failed > 0 ? (result.sent > 0 ? "PARTIAL" : "FAILED") : "SENT",
+        sent: result.sent,
+        failed: result.failed,
+        removed: result.removed,
+        error: result.failures.length
+          ? result.failures.map((failure) => `${failure.code}: ${failure.message}`).join("\n")
+          : null,
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    await prisma.adminPushLog.create({
+      data: {
+        type: input.type,
+        title: resolvedPushTitle,
+        body: resolvedPushBody,
+        targetUrl: resolvedTargetUrl,
+        orderId: input.orderId,
+        orderNumber: input.orderNumber,
+        status: "FAILED",
+        error: message,
+      },
+    });
     console.error("[createAdminNotification] FCM push failed:", error);
-  });
+  }
 }
 
 /** Schedule notification work after the HTTP response (Vercel-safe). Never throws to callers. */

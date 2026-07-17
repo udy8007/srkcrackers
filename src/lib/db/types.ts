@@ -10,6 +10,7 @@ export type {
   EmailSettings,
   EmailLog,
   AdminNotification,
+  AdminPushLog,
   BackupSettings,
   DbBackupLog,
   SchedulerState,
