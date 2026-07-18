@@ -22,6 +22,7 @@ function serializeProduct(product: ProductRow) {
   return {
     id: product.id,
     name: product.name,
+    nameTa: product.nameTa ?? null,
     slug: product.slug,
     pack: product.pack,
     price: product.price,
@@ -45,6 +46,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const { id } = await params;
   let body: {
     name?: string;
+    nameTa?: string | null;
     pack?: string;
     price?: number;
     mrp?: number;
@@ -62,6 +64,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const data: Record<string, unknown> = {};
   if (typeof body.name === "string" && body.name.trim()) data.name = body.name.trim();
+  if (body.nameTa !== undefined) {
+    data.nameTa = typeof body.nameTa === "string" ? body.nameTa.trim() || null : null;
+  }
   if (typeof body.pack === "string" && body.pack.trim()) data.pack = body.pack.trim();
   if (typeof body.description === "string") data.description = body.description.trim();
   if (typeof body.active === "boolean") data.active = body.active;

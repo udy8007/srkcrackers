@@ -184,6 +184,11 @@ export function ProductModal() {
             <h4 className="truncate font-display text-base font-bold text-ink sm:text-lg">
               {product.name}
             </h4>
+            {product.nameTa ? (
+              <p className="truncate text-sm text-ink/75" lang="ta">
+                {product.nameTa}
+              </p>
+            ) : null}
           </div>
           <button
             type="button"
@@ -216,6 +221,11 @@ export function ProductModal() {
                 <h3 className="mt-3 font-display text-[1.65rem] font-bold leading-tight text-ink sm:text-3xl">
                   {product.name}
                 </h3>
+                {product.nameTa ? (
+                  <p className="mt-1 text-lg leading-snug text-ink/80" lang="ta">
+                    {product.nameTa}
+                  </p>
+                ) : null}
                 <p className="mt-1.5 text-sm text-ink-muted">{product.pack}</p>
               </div>
 

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { BUSINESS } from "@/lib/constants";
+import { bilingualProductName } from "@/lib/pdf-helpers";
 import { calculateOrderTotals, isValidPhone, isValidPincode } from "@/lib/utils";
 import type { CartLineInput, CustomerInput } from "@/types";
 
@@ -61,7 +62,7 @@ export async function buildOrderFromItems(items: CartLineInput[]): Promise<
     const qty = qtyByProduct.get(product.id)!;
     return {
       productId: product.id,
-      name: product.name,
+      name: bilingualProductName(product.name, product.nameTa),
       pack: product.pack,
       price: product.price,
       qty,

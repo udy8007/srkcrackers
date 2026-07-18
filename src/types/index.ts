@@ -4,6 +4,7 @@ import type { OrderStatus } from "@/lib/db/types";
 export interface ProductDTO {
   id: string;
   name: string;
+  nameTa: string | null;
   slug: string;
   pack: string;
   price: number;

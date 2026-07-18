@@ -16,6 +16,7 @@ import {
 import { BUSINESS, INDIAN_STATES, ORDER_STATUS_LABEL } from "@/lib/constants";
 import { isCustomerComplete, loadSavedCustomer, saveCustomerDetails } from "@/lib/checkout-storage";
 import { downloadOrderInvoice } from "@/lib/invoice";
+import { bilingualProductName } from "@/lib/pdf-helpers";
 import { storeTrackPhone } from "./TrackOrderDeepLink";
 import type { OrderStatus } from "@/lib/db/types";
 import type { CustomerInput, InvoiceData } from "@/types";
@@ -346,7 +347,7 @@ export function CheckoutModal() {
       savedInvoiceItems.length > 0
         ? savedInvoiceItems
         : orderItems.map((line) => ({
-            name: line.product!.name,
+            name: bilingualProductName(line.product!.name, line.product!.nameTa),
             pack: line.product!.pack,
             price: line.product!.price,
             qty: line.qty,
@@ -405,7 +406,7 @@ export function CheckoutModal() {
         return;
       }
       const invoiceItems = orderItems.map((line) => ({
-        name: line.product!.name,
+        name: bilingualProductName(line.product!.name, line.product!.nameTa),
         pack: line.product!.pack,
         price: line.product!.price,
         qty: line.qty,
@@ -503,7 +504,8 @@ export function CheckoutModal() {
               {orderItems.map((line) => (
                 <div key={line.product!.id} className="flex justify-between gap-2">
                   <span className="truncate">
-                    {line.product!.name} × {line.qty}
+                    {line.product!.name}
+                    {line.product!.nameTa ? ` / ${line.product!.nameTa}` : ""} × {line.qty}
                   </span>
                   <span>{formatPrice(line.amount)}</span>
                 </div>

@@ -16,6 +16,7 @@ interface Category {
 interface AdminProduct {
   id: string;
   name: string;
+  nameTa: string | null;
   slug: string;
   pack: string;
   price: number;
@@ -31,7 +32,16 @@ interface AdminProduct {
 
 type Draft = Pick<
   AdminProduct,
-  "name" | "pack" | "price" | "mrp" | "description" | "active" | "imageUrl" | "categoryId" | "sortOrder"
+  | "name"
+  | "nameTa"
+  | "pack"
+  | "price"
+  | "mrp"
+  | "description"
+  | "active"
+  | "imageUrl"
+  | "categoryId"
+  | "sortOrder"
 >;
 
 type StatusFilter = "all" | "active" | "hidden";
@@ -40,6 +50,7 @@ const PAGE_SIZE = 25;
 
 const EMPTY_ADD: Draft = {
   name: "",
+  nameTa: null,
   pack: "1 box",
   price: 0,
   mrp: 0,
@@ -53,6 +64,7 @@ const EMPTY_ADD: Draft = {
 function toDraft(p: AdminProduct): Draft {
   return {
     name: p.name,
+    nameTa: p.nameTa ?? null,
     pack: p.pack,
     price: p.price,
     mrp: p.mrp,
@@ -267,6 +279,7 @@ export function ProductsManager() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: `${product.name} (Copy)`,
+          nameTa: product.nameTa,
           pack: product.pack,
           price: product.price,
           mrp: product.mrp,
@@ -534,6 +547,16 @@ export function ProductsManager() {
                     className="input w-full max-w-md py-1.5 font-medium"
                     value={draft.name}
                     onChange={(e) => updateDraft(product.id, { name: e.target.value })}
+                    placeholder="English name"
+                  />
+                  <input
+                    className="input mt-1.5 w-full max-w-md py-1.5 text-sm"
+                    value={draft.nameTa ?? ""}
+                    onChange={(e) =>
+                      updateDraft(product.id, { nameTa: e.target.value.trim() ? e.target.value : null })
+                    }
+                    placeholder="தமிழ் பெயர் (Tamil name)"
+                    lang="ta"
                   />
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink-muted">
                     <span>{categoryLabel}</span>
@@ -727,6 +750,21 @@ export function ProductsManager() {
                   value={addForm.name}
                   onChange={(e) => setAddForm((f) => ({ ...f, name: e.target.value }))}
                   placeholder="e.g. 7 cm Electric Sparklers"
+                />
+              </label>
+              <label className="block text-xs">
+                <span className="mb-1 block font-semibold text-ink-muted">Tamil name</span>
+                <input
+                  className="input py-1.5"
+                  value={addForm.nameTa ?? ""}
+                  onChange={(e) =>
+                    setAddForm((f) => ({
+                      ...f,
+                      nameTa: e.target.value.trim() ? e.target.value : null,
+                    }))
+                  }
+                  placeholder="e.g. 7 செ.மீ. எலக்ட்ரிக் கம்பி மத்தாப்பு"
+                  lang="ta"
                 />
               </label>
               <label className="block text-xs">

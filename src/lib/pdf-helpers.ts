@@ -43,6 +43,43 @@ export async function loadImageDataUrl(url: string): Promise<string | null> {
   }
 }
 
+/** English + Tamil product label for PDFs / order snapshots. */
+export function bilingualProductName(name: string, nameTa?: string | null): string {
+  const ta = nameTa?.trim();
+  return ta ? `${name}\n${ta}` : name;
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  const chunk = 0x8000;
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+}
+
+/**
+ * Register Catamaran (Latin + Tamil) so jsPDF can render bilingual product names.
+ * Falls back to Helvetica if the font file cannot be loaded.
+ */
+export async function registerPdfUnicodeFont(
+  doc: import("jspdf").jsPDF,
+): Promise<"Catamaran" | "helvetica"> {
+  try {
+    const res = await fetch("/fonts/Catamaran.ttf");
+    if (!res.ok) return "helvetica";
+    const base64 = arrayBufferToBase64(await res.arrayBuffer());
+    doc.addFileToVFS("Catamaran.ttf", base64);
+    doc.addFont("Catamaran.ttf", "Catamaran", "normal");
+    doc.addFont("Catamaran.ttf", "Catamaran", "bold");
+    doc.addFont("Catamaran.ttf", "Catamaran", "italic");
+    return "Catamaran";
+  } catch {
+    return "helvetica";
+  }
+}
+
 /** Draw a QR block on the top-right of a jsPDF page header. */
 export function drawPdfHeaderQr(
   doc: import("jspdf").jsPDF,

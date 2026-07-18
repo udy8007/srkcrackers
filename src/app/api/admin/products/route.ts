@@ -22,6 +22,7 @@ function serializeProduct(product: ProductRow) {
   return {
     id: product.id,
     name: product.name,
+    nameTa: product.nameTa ?? null,
     slug: product.slug,
     pack: product.pack,
     price: product.price,
@@ -56,6 +57,7 @@ export async function GET(request: NextRequest) {
   if (q) {
     where.OR = [
       { name: { contains: q, mode: "insensitive" } },
+      { nameTa: { contains: q, mode: "insensitive" } },
       { pack: { contains: q, mode: "insensitive" } },
     ];
   }
@@ -90,6 +92,7 @@ export async function POST(request: NextRequest) {
 
   let body: {
     name?: string;
+    nameTa?: string | null;
     pack?: string;
     price?: number;
     mrp?: number;
@@ -127,9 +130,12 @@ export async function POST(request: NextRequest) {
   });
 
   try {
+    const nameTa = typeof body.nameTa === "string" ? body.nameTa.trim() || null : null;
+
     const product = await prisma.product.create({
       data: {
         name,
+        nameTa,
         slug,
         pack,
         price,

@@ -6,6 +6,7 @@ import { discountPercent, formatPrice } from "@/lib/utils";
 export interface AdminProductView {
   id: string;
   name: string;
+  nameTa?: string | null;
   pack: string;
   price: number;
   mrp: number;
@@ -63,6 +64,11 @@ export function ProductPreviewModal({ product, onClose }: ProductPreviewModalPro
             {product.categoryLabel}
           </span>
           <h4 className="mt-1 font-display text-xl font-bold text-ink">{product.name || "Untitled product"}</h4>
+          {product.nameTa ? (
+            <p className="mt-0.5 text-base text-ink/80" lang="ta">
+              {product.nameTa}
+            </p>
+          ) : null}
           <div className="mt-0.5 text-sm text-ink-muted">{product.pack}</div>
 
           <div className="mt-3 flex flex-wrap items-center gap-3">

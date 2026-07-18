@@ -4,6 +4,7 @@ import {
   buildUpiQrImageUrl,
   drawPdfHeaderQr,
   loadImageDataUrl,
+  registerPdfUnicodeFont,
 } from "@/lib/pdf-helpers";
 import { formatInvoiceAddressLines } from "@/lib/utils";
 import type { InvoiceData, TrackOrderResult } from "@/types";
@@ -41,6 +42,7 @@ export async function downloadOrderInvoice(data: InvoiceData) {
   const margin = 32;
   const logo = await loadImageDataUrl("/logo.png");
   const qr = await loadImageDataUrl(buildUpiQrImageUrl(data.total, 140));
+  const bodyFont = await registerPdfUnicodeFont(doc);
 
   const drawHeader = () => {
     if (logo) doc.addImage(logo, "PNG", margin, 22, 56, 56);
@@ -147,7 +149,7 @@ export async function downloadOrderInvoice(data: InvoiceData) {
     tableWidth,
     margin: { left: margin, right: margin },
     styles: {
-      font: "helvetica",
+      font: bodyFont,
       fontSize: 8.5,
       cellPadding: { top: 5, right: 6, bottom: 5, left: 6 },
       textColor: INK,
@@ -161,6 +163,7 @@ export async function downloadOrderInvoice(data: InvoiceData) {
       textColor: [255, 255, 255],
       fontStyle: "bold",
       fontSize: 9,
+      font: bodyFont,
       valign: "middle",
     },
     alternateRowStyles: { fillColor: STRIPE },

@@ -107,6 +107,11 @@ function ProductListRow({ product }: { product: ProductDTO }) {
             >
               {product.name}
             </button>
+            {product.nameTa ? (
+              <p className="mt-0.5 text-sm leading-snug text-ink/75" lang="ta">
+                {product.nameTa}
+              </p>
+            ) : null}
             <p className="mt-0.5 text-xs text-ink-muted">{product.pack}</p>
             <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
               <span className="text-xs text-ink-muted line-through">{formatPrice(product.mrp)}</span>
@@ -151,6 +156,11 @@ function ProductListRow({ product }: { product: ProductDTO }) {
           >
             {product.name}
           </button>
+          {product.nameTa ? (
+            <p className="mt-0.5 text-sm leading-snug text-ink/75" lang="ta">
+              {product.nameTa}
+            </p>
+          ) : null}
           <p className="mt-1 text-sm text-ink-muted">{product.pack}</p>
         </div>
 
@@ -215,6 +225,7 @@ export function ProductsSection() {
           ? category.products.filter(
               (p) =>
                 p.name.toLowerCase().includes(query) ||
+                (p.nameTa?.toLowerCase().includes(query) ?? false) ||
                 p.pack.toLowerCase().includes(query) ||
                 p.description.toLowerCase().includes(query),
             )

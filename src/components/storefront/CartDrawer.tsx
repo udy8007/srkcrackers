@@ -66,6 +66,11 @@ function CartLine({ product, qty }: { product: ProductDTO; qty: number }) {
       </button>
       <div className="min-w-0 flex-1">
         <div className="font-semibold text-ink">{product.name}</div>
+        {product.nameTa ? (
+          <div className="text-xs text-ink/75" lang="ta">
+            {product.nameTa}
+          </div>
+        ) : null}
         <div className="text-xs text-ink-muted">{product.pack}</div>
         <div className="mt-1 text-sm font-bold text-green">{formatPrice(product.price)}</div>
         <div className="mt-2 flex flex-wrap items-center gap-2">

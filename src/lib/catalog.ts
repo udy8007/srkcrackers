@@ -32,6 +32,7 @@ async function loadCatalogFromDb(): Promise<CategoryWithProductsDTO[]> {
         (product): ProductDTO => ({
           id: product.id,
           name: product.name,
+          nameTa: product.nameTa ?? null,
           slug: product.slug,
           pack: product.pack,
           price: product.price,
