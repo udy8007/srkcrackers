@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { Order, OrderItem, OrderStatus, OrderStatusHistory } from "@/lib/db/types";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { actorFromSession, writeAuditLog } from "@/lib/audit-log";
 import { ORDER_STATUS_LABEL, ORDER_STATUSES } from "@/lib/constants";
 import { canAdminEditBeforeDispatch } from "@/lib/order-status";
 import { dispatchNotification, notifyStatusChange } from "@/lib/notifications";
@@ -90,6 +91,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         statusHistory: true,
       },
     })) as OrderWithRelations;
+    await writeAuditLog({
+      actor: actorFromSession(session.user),
+      action: "ORDER_PAYMENT_SCREENSHOT",
+      entityType: "order",
+      entityId: order.id,
+      summary: `Updated payment screenshot for ${order.orderNumber}`,
+    });
     return NextResponse.json(serializeOrder(order));
   }
 
@@ -153,6 +161,19 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   dispatchNotification(() => notifyStatusChange(id, existing.status, dispatchNote));
 
+  await writeAuditLog({
+    actor: actorFromSession(session.user),
+    action: "ORDER_STATUS_CHANGE",
+    entityType: "order",
+    entityId: order.id,
+    summary: `Order ${order.orderNumber} → ${ORDER_STATUS_LABEL[status]}`,
+    metadata: {
+      from: existing.status,
+      to: status,
+      note: dispatchNote,
+    },
+  });
+
   return NextResponse.json(serializeOrder(order));
 }
 
@@ -172,6 +193,14 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
   }
 
   await prisma.order.delete({ where: { id } });
+
+  await writeAuditLog({
+    actor: actorFromSession(session.user),
+    action: "ORDER_DELETE",
+    entityType: "order",
+    entityId: existing.id,
+    summary: `Reset/deleted order ${existing.orderNumber}`,
+  });
 
   return NextResponse.json({ ok: true, orderNumber: existing.orderNumber });
 }

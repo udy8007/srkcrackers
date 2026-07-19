@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { actorFromSession, writeAuditLog } from "@/lib/audit-log";
 import { invalidateCatalogCache } from "@/lib/catalog";
 
 export const dynamic = "force-dynamic";
@@ -35,6 +36,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     });
     const productCount = await prisma.product.count({ where: { categoryId: id } });
     invalidateCatalogCache();
+    await writeAuditLog({
+      actor: actorFromSession(session.user),
+      action: "CATEGORY_UPDATE",
+      entityType: "category",
+      entityId: category.id,
+      summary: `Updated category "${category.label}"`,
+      metadata: { fields: Object.keys(data) },
+    });
     return NextResponse.json({
       id: category.id,
       key: category.key,

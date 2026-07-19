@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { actorFromSession, writeAuditLog } from "@/lib/audit-log";
 import {
   getSchedulerSettings,
   runSchedulerTick,
@@ -38,6 +39,16 @@ export async function PATCH(request: NextRequest) {
   }
 
   const updated = await updateSchedulerSettings(body);
+  await writeAuditLog({
+    actor: actorFromSession(session.user),
+    action: "SETTINGS_SCHEDULER_UPDATE",
+    entityType: "settings",
+    summary: `Updated scheduler (enabled=${updated.enabled}, interval=${updated.tickIntervalMinutes}m)`,
+    metadata: {
+      enabled: updated.enabled,
+      tickIntervalMinutes: updated.tickIntervalMinutes,
+    },
+  });
   return NextResponse.json({
     enabled: updated.enabled,
     tickIntervalMinutes: updated.tickIntervalMinutes,
@@ -54,5 +65,11 @@ export async function POST() {
   }
 
   const result = await runSchedulerTick("admin");
+  await writeAuditLog({
+    actor: actorFromSession(session.user),
+    action: "SETTINGS_SCHEDULER_TICK",
+    entityType: "settings",
+    summary: "Ran scheduler tick manually",
+  });
   return NextResponse.json(result);
 }

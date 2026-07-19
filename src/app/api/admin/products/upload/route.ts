@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { actorFromSession, writeAuditLog } from "@/lib/audit-log";
 import { uploadDataUrl } from "@/lib/db/storage";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +37,13 @@ export async function POST(request: NextRequest) {
       .toLowerCase()
       .slice(0, 48);
     const imageUrl = await uploadDataUrl(`products/uploads/${safeName}`, dataUrl);
+    await writeAuditLog({
+      actor: actorFromSession(session.user),
+      action: "PRODUCT_IMAGE_UPLOAD",
+      entityType: "product",
+      summary: `Uploaded product image "${safeName}"`,
+      metadata: { filename: safeName },
+    });
     return NextResponse.json({ imageUrl });
   } catch (error) {
     console.error("Product image upload failed:", error);

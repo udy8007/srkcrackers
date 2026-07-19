@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { actorFromSession, writeAuditLog } from "@/lib/audit-log";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -46,5 +47,12 @@ export async function DELETE() {
   }
 
   const result = await prisma.emailLog.deleteMany();
+  await writeAuditLog({
+    actor: actorFromSession(session.user),
+    action: "SYSTEM_CLEAR_EMAIL_LOGS",
+    entityType: "system",
+    summary: `Cleared email logs (${result.count})`,
+    metadata: { deleted: result.count },
+  });
   return NextResponse.json({ ok: true, deleted: result.count });
 }

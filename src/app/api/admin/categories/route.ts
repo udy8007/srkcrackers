@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { actorFromSession, writeAuditLog } from "@/lib/audit-log";
 import { invalidateCatalogCache } from "@/lib/catalog";
 import { slugify } from "@/lib/slugify";
 
@@ -84,6 +85,14 @@ export async function POST(request: NextRequest) {
   });
 
   invalidateCatalogCache();
+  await writeAuditLog({
+    actor: actorFromSession(session.user),
+    action: "CATEGORY_CREATE",
+    entityType: "category",
+    entityId: category.id,
+    summary: `Created category "${category.label}"`,
+    metadata: { key: category.key },
+  });
   return NextResponse.json({
     id: category.id,
     key: category.key,

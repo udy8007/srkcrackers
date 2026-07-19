@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { actorFromSession, writeAuditLog } from "@/lib/audit-log";
 import { BACKUP_SETTINGS_ID, getBackupSettings } from "@/lib/db-backup";
 import { prisma } from "@/lib/prisma";
 
@@ -87,6 +88,14 @@ export async function PATCH(request: NextRequest) {
     where: { id: BACKUP_SETTINGS_ID },
     create: { id: BACKUP_SETTINGS_ID, ...data },
     update: data,
+  });
+
+  await writeAuditLog({
+    actor: actorFromSession(session.user),
+    action: "SETTINGS_BACKUP_UPDATE",
+    entityType: "settings",
+    entityId: BACKUP_SETTINGS_ID,
+    summary: "Updated database backup settings",
   });
 
   return NextResponse.json({

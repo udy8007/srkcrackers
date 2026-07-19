@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { OrderStatus } from "@/lib/db/types";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { actorFromSession, writeAuditLog } from "@/lib/audit-log";
 import { ORDER_STATUS_LABEL, ORDER_STATUSES } from "@/lib/constants";
 import { dispatchNotification, notifyStatusChange } from "@/lib/notifications";
 
@@ -68,6 +69,14 @@ export async function POST(request: NextRequest) {
       /* skip missing */
     }
   }
+
+  await writeAuditLog({
+    actor: actorFromSession(session.user),
+    action: "ORDER_BULK_STATUS",
+    entityType: "order",
+    summary: `Bulk updated ${count} order(s) → ${label}`,
+    metadata: { count, status: orderStatus, ids },
+  });
 
   return NextResponse.json({ count });
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { actorFromSession, writeAuditLog } from "@/lib/audit-log";
 import { invalidateCatalogCache } from "@/lib/catalog";
 import { slugify } from "@/lib/slugify";
 import type { Product } from "@/lib/db/types";
@@ -104,6 +105,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       data,
     });
     invalidateCatalogCache();
+    await writeAuditLog({
+      actor: actorFromSession(session.user),
+      action: "PRODUCT_UPDATE",
+      entityType: "product",
+      entityId: product.id,
+      summary: `Updated product "${product.name}"`,
+      metadata: { fields: Object.keys(data) },
+    });
     return NextResponse.json(serializeProduct(await withCategory(product)));
   } catch {
     return NextResponse.json({ error: "Product not found" }, { status: 404 });
@@ -118,8 +127,22 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
 
   const { id } = await params;
   try {
+    const existing = await prisma.product.findUnique({
+      where: { id },
+      select: { id: true, name: true },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
     await prisma.product.delete({ where: { id } });
     invalidateCatalogCache();
+    await writeAuditLog({
+      actor: actorFromSession(session.user),
+      action: "PRODUCT_DELETE",
+      entityType: "product",
+      entityId: existing.id,
+      summary: `Deleted product "${existing.name}"`,
+    });
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Product not found" }, { status: 404 });

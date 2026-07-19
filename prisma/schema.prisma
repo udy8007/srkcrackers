@@ -34,6 +34,12 @@ enum BackupFrequency {
   YEARLY
 }
 
+enum ReportEmailFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
 /// Admin/staff accounts for the dashboard (credentials login).
 model AdminUser {
   id           String             @id @default(cuid())
@@ -298,4 +304,44 @@ model FirebaseSettings {
   clientEmail        String   @default("")
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+}
+
+/// Admin portal activity audit (who changed what).
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actorEmail String?
+  actorName  String?
+  action     String // e.g. PRODUCT_CREATE, ORDER_STATUS_CHANGE
+  entityType String // product | order | category | settings | account | system
+  entityId   String?
+  summary    String // human-readable one-liner for the table
+  metadata   String? // JSON string of small details
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entityType, createdAt])
+  @@index([action, createdAt])
+  @@index([actorEmail, createdAt])
+}
+
+/// Scheduled email business reports to admin (Sales / Orders / Catalog / Traffic).
+model ReportEmailSettings {
+  id               String               @id @default("default")
+  enabled          Boolean              @default(false)
+  frequency        ReportEmailFrequency @default(DAILY)
+  recipientEmail   String               @default("")
+  runHour          Int                  @default(8) // IST hour 0–23
+  runDayOfWeek     Int                  @default(1) // 0=Sun … 6=Sat (weekly)
+  runDayOfMonth    Int                  @default(1)
+  includeSales     Boolean              @default(true)
+  includeOrders    Boolean              @default(true)
+  includeCatalog   Boolean              @default(true)
+  includeTraffic   Boolean              @default(true)
+  notifyPush       Boolean              @default(true) // FCM + in-app bell → /admin/reports
+  lastSentAt       DateTime?
+  lastStatus       String?
+  lastError        String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
 }

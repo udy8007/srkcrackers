@@ -4,6 +4,7 @@ import { NotificationResetControls } from "./NotificationResetControls";
 import { BackupSettingsForm } from "./BackupSettingsForm";
 import { SchedulerSettingsForm } from "./SchedulerSettingsForm";
 import { PushTestForm } from "./PushTestForm";
+import { ReportEmailSettingsForm } from "../reports/ReportEmailSettingsForm";
 
 export const metadata = {
   title: "Settings — SRK Admin",
@@ -18,6 +19,8 @@ export default function SettingsPage() {
       </div>
 
       <EmailSettingsForm />
+
+      <ReportEmailSettingsForm />
 
       <NotificationResetControls />
 

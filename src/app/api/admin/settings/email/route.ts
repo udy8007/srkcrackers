@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { actorFromSession, writeAuditLog } from "@/lib/audit-log";
 import {
   EMAIL_SETTINGS_ID,
   getEmailSettings,
@@ -85,6 +86,14 @@ export async function PATCH(request: NextRequest) {
     where: { id: EMAIL_SETTINGS_ID },
     create: { id: EMAIL_SETTINGS_ID, ...data },
     update: data,
+  });
+
+  await writeAuditLog({
+    actor: actorFromSession(session.user),
+    action: "SETTINGS_EMAIL_UPDATE",
+    entityType: "settings",
+    entityId: EMAIL_SETTINGS_ID,
+    summary: "Updated email / notification settings",
   });
 
   return NextResponse.json(serializeEmailSettings(updated));

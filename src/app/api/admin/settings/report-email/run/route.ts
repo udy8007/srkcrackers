@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { actorFromSession, writeAuditLog } from "@/lib/audit-log";
-import { runDatabaseBackup } from "@/lib/db-backup";
+import { sendBusinessReportEmail } from "@/lib/report-email";
 
 export const dynamic = "force-dynamic";
 
@@ -11,23 +11,22 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await runDatabaseBackup("MANUAL");
-
+  const result = await sendBusinessReportEmail("MANUAL");
   if (!result.ok) {
-    return NextResponse.json({ error: result.error ?? "Backup failed" }, { status: 500 });
+    return NextResponse.json({ error: result.error ?? "Failed to send report" }, { status: 500 });
   }
 
   await writeAuditLog({
     actor: actorFromSession(session.user),
-    action: "SETTINGS_BACKUP_RUN",
+    action: "SETTINGS_REPORT_EMAIL_SEND",
     entityType: "settings",
-    summary: `Ran manual database backup (${result.filename})`,
-    metadata: { filename: result.filename, sizeBytes: result.sizeBytes },
+    summary: `Sent business report email to ${result.recipient}`,
+    metadata: { recipient: result.recipient },
   });
 
   return NextResponse.json({
     ok: true,
-    filename: result.filename,
-    sizeBytes: result.sizeBytes,
+    recipient: result.recipient,
+    message: `Report emailed to ${result.recipient}`,
   });
 }

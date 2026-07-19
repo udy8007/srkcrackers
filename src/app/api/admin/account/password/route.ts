@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { auth } from "@/lib/auth";
+import { actorFromSession, writeAuditLog } from "@/lib/audit-log";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -54,6 +55,14 @@ export async function POST(request: NextRequest) {
   await prisma.adminUser.update({
     where: { id: user.id },
     data: { passwordHash },
+  });
+
+  await writeAuditLog({
+    actor: actorFromSession(session.user),
+    action: "ACCOUNT_PASSWORD_CHANGE",
+    entityType: "account",
+    entityId: user.id,
+    summary: "Changed admin account password",
   });
 
   return NextResponse.json({ ok: true });

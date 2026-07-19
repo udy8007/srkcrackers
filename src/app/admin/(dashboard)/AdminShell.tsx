@@ -13,8 +13,10 @@ const NAV = [
   { href: "/admin/orders", label: "Orders", icon: "📦", badgeKey: "pending" as const },
   { href: "/admin/products", label: "Products", icon: "🎆" },
   { href: "/admin/categories", label: "Categories", icon: "🏷️" },
+  { href: "/admin/reports", label: "Reports", icon: "📉" },
   { href: "/admin/analytics", label: "Analytics", icon: "📈" },
   { href: "/admin/notifications", label: "Notifications", icon: "🔔" },
+  { href: "/admin/audit-log", label: "Audit Log", icon: "📋" },
   { href: "/admin/report-bug", label: "Report Bug", icon: "🐛" },
   { href: "/admin/settings", label: "Settings", icon: "⚙️" },
 ];

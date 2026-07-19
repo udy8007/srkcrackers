@@ -14,6 +14,7 @@ export type EmailTrigger =
   | "DELIVERED_CUSTOMER"
   | "PENDING_REMINDER_ADMIN"
   | "DB_BACKUP"
+  | "REPORT_EMAIL"
   | "TEST";
 
 export interface EmailAttachment {

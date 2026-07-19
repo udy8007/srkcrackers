@@ -16,7 +16,10 @@ export type {
   SchedulerState,
   AdminDeviceToken,
   FirebaseSettings,
+  AuditLog,
+  ReportEmailSettings,
   OrderStatus,
   UserRole,
   BackupFrequency,
+  ReportEmailFrequency,
 } from "@prisma/client";

@@ -8,7 +8,7 @@ import {
   sendIncompleteCheckoutReminders,
   sendPendingOrderReminders,
 } from "@/lib/notifications";
-
+import { runScheduledReportEmailIfDue } from "@/lib/report-email";
 export const SCHEDULER_ID = "default";
 const MIN_TICK_GAP_MS = 5 * 60 * 1000; // debounce — max once per 5 min globally
 const DELIVER_INTERVAL_MS = 15 * 60 * 1000;
@@ -21,6 +21,7 @@ export interface SchedulerTickResult {
   delivered?: number;
   reminded?: number;
   backup?: { ran: boolean; ok?: boolean };
+  reportEmail?: { ran: boolean; ok?: boolean; error?: string };
 }
 
 async function getSchedulerState() {
@@ -79,6 +80,9 @@ export async function runSchedulerTick(
 
   // Scheduled DB backup (daily / monthly / yearly logic in db-backup.ts)
   result.backup = await runScheduledBackupIfDue();
+
+  // Scheduled business report email
+  result.reportEmail = await runScheduledReportEmailIfDue();
 
   await prisma.schedulerState.update({
     where: { id: SCHEDULER_ID },

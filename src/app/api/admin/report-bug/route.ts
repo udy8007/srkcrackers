@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { actorFromSession, writeAuditLog } from "@/lib/audit-log";
 import { buildBugReportNtfy, sendNtfyNotification } from "@/lib/ntfy";
 
 export const dynamic = "force-dynamic";
@@ -84,6 +85,14 @@ export async function POST(request: NextRequest) {
       { status: 502 },
     );
   }
+
+  await writeAuditLog({
+    actor: actorFromSession(session.user),
+    action: "SYSTEM_BUG_REPORT",
+    entityType: "system",
+    summary: `Submitted bug report (${area}, ${severity})`,
+    metadata: { area, severity },
+  });
 
   return NextResponse.json({ ok: true });
 }

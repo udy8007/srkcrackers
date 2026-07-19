@@ -91,9 +91,25 @@ export function NotificationBell() {
         return "💾";
       case "STATUS_CHANGE":
         return "🔄";
+      case "REPORT_READY":
+        return "📉";
       default:
         return "🔔";
     }
+  };
+
+  const itemHref = (item: NotificationItem) => {
+    if (item.orderId) return `/admin/orders/${item.orderId}`;
+    if (item.type === "REPORT_READY") return "/admin/reports";
+    if (item.type === "DB_BACKUP") return "/admin/settings";
+    return null;
+  };
+
+  const itemLinkLabel = (item: NotificationItem) => {
+    if (item.orderId) return "View order";
+    if (item.type === "REPORT_READY") return "Open reports";
+    if (item.type === "DB_BACKUP") return "Open settings";
+    return "Open";
   };
 
   return (
@@ -159,16 +175,16 @@ export function NotificationBell() {
                         {new Date(item.createdAt).toLocaleString("en-IN")}
                       </p>
                       <div className="mt-2 flex gap-2">
-                        {item.orderId && (
+                        {itemHref(item) && (
                           <Link
-                            href={`/admin/orders/${item.orderId}`}
+                            href={itemHref(item)!}
                             onClick={() => {
                               if (!item.read) void markRead([item.id]);
                               setOpen(false);
                             }}
                             className="text-xs font-semibold text-primary hover:underline"
                           >
-                            View order
+                            {itemLinkLabel(item)}
                           </Link>
                         )}
                         {!item.read && (

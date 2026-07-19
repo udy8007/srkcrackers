@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { actorFromSession, writeAuditLog } from "@/lib/audit-log";
 import { prisma } from "@/lib/prisma";
 import {
   FIREBASE_SETTINGS_ID,
@@ -89,6 +90,15 @@ export async function POST(request: NextRequest) {
 
   await resetFirebaseApp();
 
+  await writeAuditLog({
+    actor: actorFromSession(session.user),
+    action: "SETTINGS_FIREBASE_UPLOAD",
+    entityType: "settings",
+    entityId: FIREBASE_SETTINGS_ID,
+    summary: `Uploaded Firebase service account (${validated.json.project_id})`,
+    metadata: { projectId: validated.json.project_id },
+  });
+
   return NextResponse.json({
     ok: true,
     projectId: validated.json.project_id,
@@ -109,6 +119,14 @@ export async function DELETE() {
     update: { serviceAccountJson: "", projectId: "", clientEmail: "" },
   });
   await resetFirebaseApp();
+
+  await writeAuditLog({
+    actor: actorFromSession(session.user),
+    action: "SETTINGS_FIREBASE_CLEAR",
+    entityType: "settings",
+    entityId: FIREBASE_SETTINGS_ID,
+    summary: "Cleared Firebase credentials",
+  });
 
   return NextResponse.json({ ok: true, message: "Firebase credentials cleared from database." });
 }

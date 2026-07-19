@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { actorFromSession, writeAuditLog } from "@/lib/audit-log";
 import { invalidateCatalogCache } from "@/lib/catalog";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +27,13 @@ export async function POST(request: NextRequest) {
   if (action === "delete") {
     const result = await prisma.product.deleteMany({ where: { id: { in: ids } } });
     invalidateCatalogCache();
+    await writeAuditLog({
+      actor: actorFromSession(session.user),
+      action: "PRODUCT_BULK_DELETE",
+      entityType: "product",
+      summary: `Bulk deleted ${result.count} product(s)`,
+      metadata: { count: result.count, ids },
+    });
     return NextResponse.json({ count: result.count });
   }
 
@@ -35,5 +43,12 @@ export async function POST(request: NextRequest) {
     data: { active },
   });
   invalidateCatalogCache();
+  await writeAuditLog({
+    actor: actorFromSession(session.user),
+    action: active ? "PRODUCT_BULK_ENABLE" : "PRODUCT_BULK_DISABLE",
+    entityType: "product",
+    summary: `Bulk ${active ? "enabled" : "disabled"} ${result.count} product(s)`,
+    metadata: { count: result.count, ids },
+  });
   return NextResponse.json({ count: result.count });
 }
