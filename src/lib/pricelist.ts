@@ -1,11 +1,9 @@
 import type { RowInput } from "jspdf-autotable";
 import { BUSINESS, LICENSE_INFO } from "@/lib/constants";
 import {
-  bilingualProductName,
   buildStoreQrImageUrl,
   drawPdfHeaderQr,
   loadImageDataUrl,
-  registerPdfUnicodeFont,
 } from "@/lib/pdf-helpers";
 import type { CategoryWithProductsDTO } from "@/types";
 
@@ -40,7 +38,6 @@ export async function downloadPriceList(categories: CategoryWithProductsDTO[]) {
 
   const logo = await loadImageDataUrl("/logo.png");
   const qr = await loadImageDataUrl(buildStoreQrImageUrl(140));
-  const bodyFont = await registerPdfUnicodeFont(doc);
 
   const drawHeader = () => {
     if (logo) doc.addImage(logo, "PNG", margin, 22, 56, 56);
@@ -96,14 +93,7 @@ export async function downloadPriceList(categories: CategoryWithProductsDTO[]) {
     ]);
     for (const product of category.products) {
       serial += 1;
-      body.push([
-        serial,
-        bilingualProductName(product.name, product.nameTa),
-        product.pack,
-        rupees(product.mrp),
-        rupees(product.price),
-        "",
-      ]);
+      body.push([serial, product.name, product.pack, rupees(product.mrp), rupees(product.price), ""]);
     }
   }
 
@@ -112,21 +102,19 @@ export async function downloadPriceList(categories: CategoryWithProductsDTO[]) {
     body,
     margin: { top: 128, bottom: 46, left: margin, right: margin },
     styles: {
-      font: bodyFont,
+      font: "helvetica",
       fontSize: 8.5,
       cellPadding: 4,
       textColor: INK,
       lineColor: [235, 225, 215],
       lineWidth: 0.5,
       overflow: "linebreak",
-      valign: "middle",
     },
     headStyles: {
       fillColor: RED_DARK,
       textColor: [255, 255, 255],
       fontStyle: "bold",
       fontSize: 9,
-      font: bodyFont,
       halign: "center",
     },
     alternateRowStyles: { fillColor: STRIPE },
