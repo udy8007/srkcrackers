@@ -1,4 +1,4 @@
-# SRK Crackers — Online Crackers Store1
+# SRK Crackers — Online Crackers Store
 
 A full-stack, business-grade crackers e-commerce web app for **SRK Crackers**, a licensed
 fireworks dealer in Mogai, Avadi, Tiruvallur. Customers browse the catalog, build a cart, place an
