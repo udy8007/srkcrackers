@@ -119,7 +119,7 @@ export function SparklerTrail({ className = "" }: { className?: string }) {
 /** Special brand frame: glow + bursts + sparkles around the title. */
 export function HeroBrandSpecial({ name }: { name: string }) {
   return (
-    <div className="relative mx-auto mt-5 inline-flex max-w-full flex-col items-center">
+    <div className="hero-brand-magic relative mx-auto mt-1 inline-flex max-w-full flex-col items-center sm:mt-2">
       {/* ambient glow behind title */}
       <div
         aria-hidden
@@ -130,14 +130,14 @@ export function HeroBrandSpecial({ name }: { name: string }) {
         }}
       />
 
-      <div className="relative flex items-center justify-center gap-1 sm:gap-2">
+      <div className="relative flex items-center justify-center gap-0.5 sm:gap-2">
         <FireworkBurst
           tone="gold"
-          className="hero-bob pointer-events-none h-12 w-12 shrink-0 sm:h-14 sm:w-14 md:h-16 md:w-16"
+          className="hero-bob pointer-events-none h-9 w-9 shrink-0 sm:h-14 sm:w-14 md:h-16 md:w-16"
         />
 
         <div className="relative px-1 text-center">
-          <h2 className="text-festive relative z-[1] font-display text-[clamp(1.85rem,6vw,2.85rem)] font-extrabold leading-none tracking-tight">
+          <h2 className="text-festive relative z-[1] font-display text-[clamp(1.65rem,7vw,2.85rem)] font-extrabold leading-none tracking-tight whitespace-nowrap">
             {name}
           </h2>
           {/* gold underline flourish */}
@@ -160,7 +160,7 @@ export function HeroBrandSpecial({ name }: { name: string }) {
 
         <FireworkBurst
           tone="red"
-          className="hero-bob pointer-events-none h-12 w-12 shrink-0 sm:h-14 sm:w-14 md:h-16 md:w-16"
+          className="hero-bob pointer-events-none h-9 w-9 shrink-0 sm:h-14 sm:w-14 md:h-16 md:w-16"
         />
       </div>
 

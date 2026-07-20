@@ -46,11 +46,11 @@ export function MarigoldGarland({ className = "" }: { className?: string }) {
           <div
             key={i}
             className="animate-sway flex flex-col items-center"
-            style={{ marginTop: i % 2 ? "0.6rem" : 0, animationDelay: `${(i % 5) * 0.25}s` }}
+            style={{ marginTop: i % 2 ? "0.2rem" : 0, animationDelay: `${(i % 5) * 0.25}s` }}
           >
-            <span className="h-3 w-px bg-green/70" />
-            <span className="mb-0.5 h-1.5 w-1.5 rounded-full bg-green/80" />
-            <Marigold className="h-6 w-6 drop-shadow-[0_2px_3px_rgba(157,2,8,0.25)] sm:h-7 sm:w-7" />
+            <span className="h-1.5 w-px bg-green/70 sm:h-2" />
+            <span className="mb-0.5 h-1 w-1 rounded-full bg-green/80" />
+            <Marigold className="h-5 w-5 drop-shadow-[0_2px_3px_rgba(157,2,8,0.25)] sm:h-6 sm:w-6" />
           </div>
         ))}
       </div>
