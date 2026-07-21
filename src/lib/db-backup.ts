@@ -235,8 +235,7 @@ export async function runDatabaseBackup(
       title: "Database backup failed",
       message: error,
       targetUrl: `${resolveSiteOrigin()}/admin/settings`,
-      pushTitle: "Database backup failed",
-      pushBody: error.slice(0, 180),
+      skipPush: true,
     });
     return { ok: false, error };
   }
@@ -279,10 +278,7 @@ export async function runDatabaseBackup(
       ? `${filename} (${sizeMb} MB) emailed to ${recipient}`
       : result.error ?? "Backup email failed",
     targetUrl: `${resolveSiteOrigin()}/admin/settings`,
-    pushTitle: result.ok ? "Database backup sent" : "Database backup failed",
-    pushBody: result.ok
-      ? `${filename} (${sizeMb} MB)`
-      : (result.error ?? "Backup email failed").slice(0, 180),
+    skipPush: true,
   });
 
   return result.ok

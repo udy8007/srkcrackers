@@ -86,9 +86,13 @@ export async function createAdminNotification(input: {
   /** Optional FCM title/body override (bell still uses title/message). */
   pushTitle?: string;
   pushBody?: string;
+  /** When true, only create the admin bell entry — skip FCM push. */
+  skipPush?: boolean;
 }) {
-  const { targetUrl, pushTitle, pushBody, ...bell } = input;
+  const { targetUrl, pushTitle, pushBody, skipPush, ...bell } = input;
   await prisma.adminNotification.create({ data: bell });
+
+  if (skipPush) return;
 
   const origin = resolveSiteOrigin();
   const resolvedTargetUrl = targetUrl ?? `${origin}/admin`;
