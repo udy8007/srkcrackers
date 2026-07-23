@@ -16,6 +16,7 @@ import { TrackOrder } from "./TrackOrder";
 import { TrackOrderDeepLink } from "./TrackOrderDeepLink";
 import { LicenseInfo } from "./LicenseInfo";
 import { ShopShowcase } from "./ShopShowcase";
+import { VideoShowcase } from "./VideoShowcase";
 import { MapSection } from "./MapSection";
 import { Footer } from "./Footer";
 import { StickyBar } from "./StickyBar";
@@ -61,6 +62,7 @@ export function Storefront({ categories }: { categories: CategoryWithProductsDTO
           <TrackOrder />
           <LicenseInfo />
           <ShopShowcase />
+          <VideoShowcase />
           <MapSection />
           <CustomerFeedback />
         </main>
