@@ -4,7 +4,14 @@ import { useRef, useState } from "react";
 import { SectionDecor } from "./FestiveDecor";
 import { SectionHead } from "./SectionHead";
 
-export function VideoShowcase() {
+const VIDEOS = [
+  { src: "/videos/srk-crackers-showcase.mp4", title: "SRK Crackers Collection" },
+  { src: "/videos/srk-crackers-showcase-2.mp4", title: "Festive Cracker Highlights" },
+  { src: "/videos/srk-crackers-showcase-3.mp4", title: "Premium Fireworks Showcase" },
+  { src: "/videos/srk-crackers-showcase-4.mp4", title: "Celebration Collection" },
+];
+
+function VideoCard({ src, title }: { src: string; title: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -19,6 +26,52 @@ export function VideoShowcase() {
     }
   };
 
+  return (
+    <article className="group relative rounded-[1.4rem] bg-gradient-to-br from-yellow via-orange to-primary p-[3px] shadow-[0_18px_55px_rgba(255,195,0,0.2)] transition duration-500 hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(255,195,0,0.35)] sm:rounded-[1.75rem]">
+      <div className="relative overflow-hidden rounded-[calc(1.4rem-3px)] bg-black sm:rounded-[calc(1.75rem-3px)]">
+        <video
+          ref={videoRef}
+          className="aspect-video max-h-[75vh] w-full bg-black object-contain"
+          controls
+          playsInline
+          preload="metadata"
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onEnded={() => setIsPlaying(false)}
+          aria-label={title}
+        >
+          <source src={src} type="video/mp4" />
+          Your browser does not support HTML video.
+        </video>
+
+        {!isPlaying && (
+          <button
+            type="button"
+            onClick={togglePlayback}
+            aria-label={`Play ${title}`}
+            className="group/play absolute inset-0 flex cursor-pointer items-center justify-center bg-black/20 transition hover:bg-black/10"
+          >
+            <span className="absolute h-20 w-20 animate-ping rounded-full bg-yellow/25 sm:h-24 sm:w-24" />
+            <span className="relative grid h-16 w-16 place-items-center rounded-full border-2 border-white/80 bg-gradient-to-br from-yellow to-orange text-primary-dark shadow-[0_0_30px_rgba(255,195,0,0.7)] transition duration-300 group-hover/play:scale-110 sm:h-20 sm:w-20">
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                className="ml-1 h-8 w-8 fill-current sm:h-9 sm:w-9"
+              >
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </span>
+          </button>
+        )}
+      </div>
+      <h4 className="px-3 py-3 text-center font-display text-sm font-semibold text-white sm:text-base">
+        {title}
+      </h4>
+    </article>
+  );
+}
+
+export function VideoShowcase() {
   return (
     <section
       id="showcase-video"
@@ -38,43 +91,10 @@ export function VideoShowcase() {
           />
         </div>
 
-        <div className="relative rounded-[1.75rem] bg-gradient-to-br from-yellow via-orange to-primary p-[3px] shadow-[0_24px_80px_rgba(255,195,0,0.3)] sm:rounded-[2.25rem] sm:p-1">
-          <div className="relative overflow-hidden rounded-[calc(1.75rem-3px)] bg-black sm:rounded-[calc(2.25rem-4px)]">
-            <video
-              ref={videoRef}
-              className="aspect-video max-h-[75vh] w-full bg-black object-contain"
-              controls
-              playsInline
-              preload="metadata"
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-              onEnded={() => setIsPlaying(false)}
-              aria-label="SRK Crackers showroom and collection video"
-            >
-              <source src="/videos/srk-crackers-showcase.mp4" type="video/mp4" />
-              Your browser does not support HTML video.
-            </video>
-
-            {!isPlaying && (
-              <button
-                type="button"
-                onClick={togglePlayback}
-                aria-label="Play SRK Crackers showcase video"
-                className="group absolute inset-0 flex cursor-pointer items-center justify-center bg-black/20 transition hover:bg-black/10"
-              >
-                <span className="absolute h-24 w-24 animate-ping rounded-full bg-yellow/25 sm:h-32 sm:w-32" />
-                <span className="relative grid h-18 w-18 place-items-center rounded-full border-2 border-white/80 bg-gradient-to-br from-yellow to-orange text-primary-dark shadow-[0_0_35px_rgba(255,195,0,0.7)] transition duration-300 group-hover:scale-110 sm:h-24 sm:w-24">
-                  <svg
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    className="ml-1 h-8 w-8 fill-current sm:h-11 sm:w-11"
-                  >
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </span>
-              </button>
-            )}
-          </div>
+        <div className="grid gap-5 sm:grid-cols-2 sm:gap-6">
+          {VIDEOS.map((video) => (
+            <VideoCard key={video.src} {...video} />
+          ))}
         </div>
 
         <p className="mx-auto mt-6 max-w-2xl text-center text-sm leading-relaxed text-white/75 sm:text-base">
