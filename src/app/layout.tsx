@@ -19,8 +19,8 @@ const jost = Jost({
 });
 
 const SITE_URL = BUSINESS.url;
-const TITLE = `${BUSINESS.name} — Best Crackers Shop | Sivakasi Quality Online`;
-const DESCRIPTION = `${BUSINESS.name} — Government licensed fireworks dealer in Morai, Avadi, Chennai. Buy premium Sivakasi crackers at up to 80% discount. Order online & pay via UPI. Call ${BUSINESS.phoneDisplay}.`;
+const TITLE = `${BUSINESS.name} — 1000 Wala, Gift Boxes & Sivakasi Crackers Online | Avadi, Chennai`;
+const DESCRIPTION = `Buy 1000 Wala crackers, festival gift boxes and Sivakasi fireworks online from ${BUSINESS.name}, Avadi, Chennai. Licensed dealer · up to 80% off · Free 1000 Wala above ₹${BUSINESS.freeWalaGiftMinAmount.toLocaleString("en-IN")}. Call ${BUSINESS.phoneDisplay}.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -31,17 +31,21 @@ export const metadata: Metadata = {
   description: DESCRIPTION,
   applicationName: BUSINESS.name,
   keywords: [
+    "1000 wala",
+    "1000 wala crackers",
+    "1000 wala price",
+    "1000 wala online Chennai",
+    "1000 wala Avadi",
+    "1000 வாலா",
+    "wala crackers",
     "SRK Crackers",
     "Sivakasi crackers",
     "crackers shop Avadi",
     "crackers shop Chennai",
-    "fireworks Avadi Chennai",
-    "fireworks Tiruvallur",
     "Diwali crackers online",
+    "gift box crackers",
     "crackers price list",
-    "wholesale crackers Tamil Nadu",
     "buy crackers online Avadi",
-    "Sivakasi fireworks dealer",
   ],
   authors: [{ name: BUSINESS.name, url: SITE_URL }],
   creator: BUSINESS.name,
@@ -100,7 +104,7 @@ export const viewport: Viewport = {
 
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "Store",
+  "@type": ["Store", "LocalBusiness"],
   "@id": `${SITE_URL}/#store`,
   name: BUSINESS.name,
   description: DESCRIPTION,
@@ -132,9 +136,33 @@ const jsonLd = {
     closes: "21:00",
   },
   areaServed: [
+    { "@type": "City", name: "Chennai" },
+    { "@type": "City", name: "Avadi" },
     { "@type": "State", name: "Tamil Nadu" },
     { "@type": "Country", name: "India" },
   ],
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Crackers & Gift Boxes",
+    itemListElement: [
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Product",
+          name: "1000 Wala Crackers",
+          url: `${SITE_URL}/1000-wala`,
+        },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Product",
+          name: "Festival Gift Boxes",
+          url: `${SITE_URL}/#gift-packs`,
+        },
+      },
+    ],
+  },
 };
 
 export default function RootLayout({

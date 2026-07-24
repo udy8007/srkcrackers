@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SafeImage } from "@/components/SafeImage";
 import { getGiftPackContents } from "@/lib/gift-pack-contents";
+import { productSeoPath } from "@/lib/seo-products";
 import { useCatalog } from "./catalog-context";
 import { useUI } from "@/store/ui";
 import { useCart } from "@/store/cart";
 import { formatPrice, discountPercent } from "@/lib/utils";
+import Link from "next/link";
 
 const ZOOM = 2.15;
 
@@ -305,6 +307,13 @@ export function ProductModal() {
                   </div>
                 </div>
               )}
+
+              <Link
+                href={productSeoPath(product.slug)}
+                className="inline-flex text-sm font-semibold text-primary underline-offset-2 hover:underline"
+              >
+                Open SEO product page →
+              </Link>
 
               {/* Desktop qty */}
               <div className="hidden items-center justify-between gap-4 rounded-2xl border border-line bg-white p-4 shadow-sm lg:flex">

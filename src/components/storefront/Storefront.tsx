@@ -15,6 +15,7 @@ import { GiftPacksSection } from "./GiftPacksSection";
 import { HowToOrder } from "./HowToOrder";
 import { TrackOrder } from "./TrackOrder";
 import { TrackOrderDeepLink } from "./TrackOrderDeepLink";
+import { ProductDeepLink } from "./ProductDeepLink";
 import { LicenseInfo } from "./LicenseInfo";
 import { ShopShowcase } from "./ShopShowcase";
 import { VideoShowcase } from "./VideoShowcase";
@@ -50,6 +51,7 @@ export function Storefront({ categories }: { categories: CategoryWithProductsDTO
     <CatalogProvider categories={categories}>
       <Suspense fallback={null}>
         <TrackOrderDeepLink />
+        <ProductDeepLink />
       </Suspense>
       <div className="overflow-x-hidden pb-sticky">
         <TopBar />
