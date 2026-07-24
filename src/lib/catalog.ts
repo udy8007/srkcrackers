@@ -54,10 +54,15 @@ const getCachedCatalog = unstable_cache(loadCatalogFromDb, ["storefront-catalog"
 /**
  * Prefer the short-lived cache, but never serve a stuck empty catalog
  * (e.g. after a deploy against an empty DB that was seeded later).
+ * Falls back when Next.js refuses large cache entries (>2MB).
  */
 export async function getCatalog(): Promise<CategoryWithProductsDTO[]> {
-  const cached = await getCachedCatalog();
-  if (cached.length > 0) return cached;
+  try {
+    const cached = await getCachedCatalog();
+    if (cached.length > 0) return cached;
+  } catch (error) {
+    console.warn("Catalog cache unavailable, loading from DB:", error);
+  }
   return loadCatalogFromDb();
 }
 

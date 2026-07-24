@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SafeImage } from "@/components/SafeImage";
+import { getGiftPackContents } from "@/lib/gift-pack-contents";
 import { useCatalog } from "./catalog-context";
 import { useUI } from "@/store/ui";
 import { useCart } from "@/store/cart";
@@ -152,6 +153,8 @@ export function ProductModal() {
 
   const categoryLabel = categories.find((c) => c.key === product.categoryKey)?.label ?? "";
   const off = discountPercent(product.mrp, product.price);
+  const packItems = getGiftPackContents(product.slug);
+  const isGiftPack = product.categoryKey === "gift-packs" || packItems != null;
 
   return (
     <div
@@ -254,6 +257,54 @@ export function ProductModal() {
                 </div>
                 <p className="mt-2 text-sm leading-relaxed text-ink">{product.description}</p>
               </div>
+
+              {isGiftPack && packItems && packItems.length > 0 && (
+                <div className="overflow-hidden rounded-2xl border border-primary/15 bg-white shadow-sm">
+                  <div className="flex items-center justify-between gap-3 border-b border-line bg-gradient-to-r from-primary/5 via-yellow/10 to-primary/5 px-4 py-3">
+                    <div>
+                      <p className="text-[0.7rem] font-bold uppercase tracking-[0.12em] text-primary">
+                        Pack contents
+                      </p>
+                      <p className="mt-0.5 text-sm font-semibold text-ink">
+                        {packItems.length} crackers included
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-primary px-2.5 py-1 text-[0.65rem] font-bold text-white">
+                      Full list
+                    </span>
+                  </div>
+
+                  <div className="max-h-[min(42vh,360px)] overflow-y-auto overscroll-contain">
+                    <table className="w-full text-left text-sm">
+                      <thead className="sticky top-0 z-10 bg-[#fff6ea] text-[0.65rem] font-bold uppercase tracking-wide text-ink-muted">
+                        <tr>
+                          <th className="w-12 px-3 py-2.5 sm:px-4">No.</th>
+                          <th className="px-2 py-2.5 sm:px-3">Cracker item</th>
+                          <th className="w-24 px-3 py-2.5 text-right sm:px-4">Qty</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {packItems.map((item, index) => (
+                          <tr
+                            key={`${item.name}-${index}`}
+                            className="border-t border-line/70 odd:bg-white even:bg-[#fffaf5]"
+                          >
+                            <td className="px-3 py-2.5 align-top text-xs font-bold text-primary sm:px-4">
+                              {index + 1}
+                            </td>
+                            <td className="px-2 py-2.5 align-top font-semibold leading-snug text-ink sm:px-3">
+                              {item.name}
+                            </td>
+                            <td className="px-3 py-2.5 align-top text-right text-xs font-bold text-ink-muted sm:px-4">
+                              {item.qty}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
 
               {/* Desktop qty */}
               <div className="hidden items-center justify-between gap-4 rounded-2xl border border-line bg-white p-4 shadow-sm lg:flex">

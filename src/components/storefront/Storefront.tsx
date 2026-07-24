@@ -11,6 +11,7 @@ import { Hero } from "./Hero";
 import { Highlights } from "./Highlights";
 import { CustomerFeedback } from "./CustomerFeedback";
 import { ProductsSection } from "./ProductsSection";
+import { GiftPacksSection } from "./GiftPacksSection";
 import { HowToOrder } from "./HowToOrder";
 import { TrackOrder } from "./TrackOrder";
 import { TrackOrderDeepLink } from "./TrackOrderDeepLink";
@@ -58,6 +59,7 @@ export function Storefront({ categories }: { categories: CategoryWithProductsDTO
           <Hero />
           <Highlights />
           <ProductsSection />
+          <GiftPacksSection />
           <HowToOrder />
           <TrackOrder />
           <LicenseInfo />

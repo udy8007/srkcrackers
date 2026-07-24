@@ -1,345 +1,297 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { SafeImage } from "@/components/SafeImage";
-import { SectionHead } from "./SectionHead";
-import { SectionDecor } from "./FestiveDecor";
-import { PriceListButton } from "./PriceListButton";
-import { OrderOffersBanner } from "./OrderOffersBanner";
-import { useCatalog } from "./catalog-context";
-import { useCart } from "@/store/cart";
-import { useUI } from "@/store/ui";
 import { useMounted } from "@/lib/hooks";
 import { formatPrice } from "@/lib/utils";
+import { useCart } from "@/store/cart";
+import { useUI } from "@/store/ui";
 import type { ProductDTO } from "@/types";
+import { OrderOffersBanner } from "./OrderOffersBanner";
+import { PriceListButton } from "./PriceListButton";
+import { SectionDecor } from "./FestiveDecor";
+import { SectionHead } from "./SectionHead";
+import { useCatalog } from "./catalog-context";
 
 function discountPct(mrp: number, price: number): number | null {
-  if (!mrp || mrp <= price) return null;
-  return Math.round(((mrp - price) / mrp) * 100);
+  return mrp > price ? Math.round(((mrp - price) / mrp) * 100) : null;
 }
 
-function QtyControl({ product }: { product: ProductDTO }) {
-  const changeQty = useCart((s) => s.changeQty);
-  const qty = useCart((s) => s.items[product.id] ?? 0);
+function ProductCard({ product }: { product: ProductDTO }) {
+  const openProduct = useUI((state) => state.openProduct);
+  const changeQty = useCart((state) => state.changeQty);
+  const qty = useCart((state) => state.items[product.id] ?? 0);
   const mounted = useMounted();
-  const shown = mounted ? qty : 0;
-  const active = shown > 0;
-
-  return (
-    <div
-      className={`inline-flex items-center overflow-hidden rounded-full border shadow-sm transition ${
-        active ? "border-primary/40 bg-white ring-2 ring-primary/15" : "border-line bg-white"
-      }`}
-    >
-      <button
-        type="button"
-        aria-label="Remove"
-        onClick={() => changeQty(product.id, -1)}
-        className="flex h-10 w-10 items-center justify-center bg-brandbg text-xl font-bold text-primary transition hover:bg-primary/10 active:scale-95"
-      >
-        −
-      </button>
-      <span
-        className={`w-10 text-center text-base font-bold tabular-nums ${
-          active ? "text-primary" : "text-ink"
-        }`}
-      >
-        {shown}
-      </span>
-      <button
-        type="button"
-        aria-label="Add"
-        onClick={() => changeQty(product.id, 1)}
-        className="flex h-10 w-10 items-center justify-center bg-gradient-to-b from-primary to-primary-dark text-xl font-bold text-white transition hover:brightness-110 active:scale-95"
-      >
-        +
-      </button>
-    </div>
-  );
-}
-
-/** Mobile: hero image on top (full pack visible). Desktop: image · name · price · qty. */
-function ProductListRow({ product }: { product: ProductDTO }) {
-  const openProduct = useUI((s) => s.openProduct);
-  const qty = useCart((s) => s.items[product.id] ?? 0);
-  const mounted = useMounted();
-  const amount = mounted ? qty * product.price : 0;
-  const inCart = mounted && qty > 0;
-  const off = discountPct(product.mrp, product.price);
+  const shownQty = mounted ? qty : 0;
+  const discount = discountPct(product.mrp, product.price);
 
   return (
     <article
-      className={`group border-b border-line/70 last:border-0 transition ${
-        inCart ? "bg-primary/[0.04]" : "bg-white hover:bg-[#fffaf5]"
+      className={`group flex h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_7px_24px_rgba(90,0,8,0.08)] transition hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(90,0,8,0.14)] ${
+        shownQty > 0 ? "border-primary/40 ring-2 ring-primary/15" : "border-[#ead9c8]"
       }`}
     >
-      {/* —— Mobile: big photo first, then details —— */}
-      <div className="p-3 md:hidden">
+      <button
+        type="button"
+        onClick={() => openProduct(product.id)}
+        className="relative flex aspect-square w-full items-center justify-center overflow-hidden bg-gradient-to-b from-[#fff9f1] to-[#ffead7] p-4"
+      >
+        <SafeImage
+          src={product.imageUrl}
+          alt={product.name}
+          width={400}
+          height={400}
+          sizes="(max-width: 640px) 88vw, (max-width: 1024px) 45vw, 25vw"
+          className="h-full w-full object-contain drop-shadow-md transition duration-300 group-hover:scale-[1.03]"
+        />
+        {discount && (
+          <span className="absolute left-3 top-3 rounded-md bg-yellow px-2.5 py-1 text-xs font-extrabold text-primary-dark shadow-sm">
+            {discount}% Off
+          </span>
+        )}
+      </button>
+
+      <div className="flex flex-1 flex-col p-4">
         <button
           type="button"
           onClick={() => openProduct(product.id)}
-          className="relative flex h-52 w-full items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-b from-[#fff6ea] via-[#fffaf3] to-[#ffe8d2] p-3 shadow-[inset_0_0_0_1px_rgba(157,2,8,0.06)]"
+          className="flex flex-1 flex-col text-left transition hover:opacity-90"
         >
-          <SafeImage
-            src={product.imageUrl}
-            alt={product.name}
-            width={480}
-            height={480}
-            sizes="(max-width: 768px) 90vw, 200px"
-            className="h-full w-full object-contain object-center drop-shadow-md"
-          />
-          {off != null && off >= 40 && (
-            <span className="absolute left-2.5 top-2.5 z-10 rounded-full bg-yellow px-2.5 py-1 text-xs font-extrabold text-primary-dark shadow-sm">
-              −{off}%
+          <span className="font-display text-base font-bold leading-snug text-ink group-hover:text-primary">
+            {product.name}
+          </span>
+          {product.nameTa && (
+            <span className="mt-1 line-clamp-1 text-sm text-ink/70" lang="ta">
+              {product.nameTa}
             </span>
           )}
-          <span className="absolute bottom-2 right-2 rounded-full bg-black/45 px-2 py-0.5 text-[0.65rem] font-semibold text-white backdrop-blur-sm">
-            Tap for details
+          <span className="mt-1 text-xs text-ink-muted">{product.pack}</span>
+
+          <span className="mt-auto flex items-baseline gap-2 pt-4">
+            <span className="text-xl font-extrabold text-primary">{formatPrice(product.price)}</span>
+            <span className="text-xs text-ink-muted line-through">{formatPrice(product.mrp)}</span>
           </span>
         </button>
 
-        <div className="mt-3 flex items-start gap-3">
-          <div className="min-w-0 flex-1">
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <span className="text-xs font-semibold text-ink-muted">
+            {shownQty > 0 ? `${shownQty} in cart` : "Quantity"}
+          </span>
+          <div className="inline-flex items-center overflow-hidden rounded-full border border-line bg-white shadow-sm">
             <button
               type="button"
-              onClick={() => openProduct(product.id)}
-              className="text-left font-display text-base font-semibold leading-snug text-ink"
+              aria-label={`Remove ${product.name}`}
+              onClick={() => changeQty(product.id, -1)}
+              className="flex h-9 w-9 items-center justify-center bg-brandbg text-lg font-bold text-primary hover:bg-primary/10"
             >
-              {product.name}
+              −
             </button>
-            {product.nameTa ? (
-              <p className="mt-0.5 text-sm leading-snug text-ink/75" lang="ta">
-                {product.nameTa}
-              </p>
-            ) : null}
-            <p className="mt-0.5 text-xs text-ink-muted">{product.pack}</p>
-            <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
-              <span className="text-xs text-ink-muted line-through">{formatPrice(product.mrp)}</span>
-              <span className="text-xl font-extrabold text-green">{formatPrice(product.price)}</span>
-              {inCart && (
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[0.7rem] font-bold text-primary">
-                  Cart {formatPrice(amount)}
-                </span>
-              )}
-            </div>
+            <span className="w-8 text-center text-sm font-bold tabular-nums text-ink">{shownQty}</span>
+            <button
+              type="button"
+              aria-label={`Add ${product.name}`}
+              onClick={() => changeQty(product.id, 1)}
+              className="flex h-9 w-9 items-center justify-center bg-primary text-lg font-bold text-white hover:brightness-110"
+            >
+              +
+            </button>
           </div>
-          <QtyControl product={product} />
-        </div>
-      </div>
-
-      {/* —— Desktop row —— */}
-      <div className="hidden w-full grid-cols-[9.5rem_minmax(0,1.4fr)_9rem_10rem] items-center gap-x-5 px-5 py-3.5 md:grid">
-        <button
-          type="button"
-          onClick={() => openProduct(product.id)}
-          className="relative flex h-[11rem] w-[9.25rem] shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-b from-[#fff6ea] to-[#ffe8d2] p-1.5 shadow-[0_3px_12px_rgba(157,2,8,0.14)] ring-1 ring-black/5 transition group-hover:shadow-[0_6px_18px_rgba(157,2,8,0.2)] group-hover:ring-primary/25"
-        >
-          <SafeImage
-            src={product.imageUrl}
-            alt={product.name}
-            width={200}
-            height={240}
-            className="h-full w-full object-contain object-center"
-          />
-          {off != null && off >= 40 && (
-            <span className="absolute left-1.5 top-1.5 z-10 rounded-md bg-yellow px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-primary-dark shadow-sm">
-              −{off}%
-            </span>
-          )}
-        </button>
-
-        <div className="min-w-0">
-          <button
-            type="button"
-            onClick={() => openProduct(product.id)}
-            className="text-left font-display text-[1.1rem] font-semibold leading-snug tracking-tight text-ink transition hover:text-primary"
-          >
-            {product.name}
-          </button>
-          {product.nameTa ? (
-            <p className="mt-0.5 text-sm leading-snug text-ink/75" lang="ta">
-              {product.nameTa}
-            </p>
-          ) : null}
-          <p className="mt-1 text-sm text-ink-muted">{product.pack}</p>
-        </div>
-
-        <div className="flex min-w-0 flex-col items-end justify-center border-l border-line/60 pl-4 text-right">
-          <span className="text-[0.7rem] font-semibold uppercase tracking-wide text-ink-muted">
-            Price
-          </span>
-          <span className="mt-0.5 text-sm text-ink-muted/80 line-through">
-            {formatPrice(product.mrp)}
-          </span>
-          <span className="text-2xl font-extrabold tracking-tight text-green">
-            {formatPrice(product.price)}
-          </span>
-          {off != null && (
-            <span className="mt-1 rounded-full bg-yellow/90 px-2 py-0.5 text-[0.65rem] font-extrabold text-primary-dark">
-              Save {off}%
-            </span>
-          )}
-        </div>
-
-        <div className="flex shrink-0 flex-col items-end justify-center gap-1.5 border-l border-line/60 pl-4">
-          <span className="text-[0.7rem] font-semibold uppercase tracking-wide text-ink-muted">
-            Qty
-          </span>
-          <QtyControl product={product} />
-          {inCart && (
-            <span className="text-xs font-bold text-primary">{formatPrice(amount)}</span>
-          )}
         </div>
       </div>
     </article>
   );
 }
 
+function scrollToGiftBoxes() {
+  document.getElementById("gift-packs")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 export function ProductsSection() {
   const { categories, loading } = useCatalog();
-  const cartItems = useCart((s) => s.items);
-  const mounted = useMounted();
   const [search, setSearch] = useState("");
-  const [openCats, setOpenCats] = useState<Record<string, boolean>>({});
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
-  // Open all categories whenever the catalog loads / changes.
-  useEffect(() => {
-    if (categories.length === 0) return;
-    setOpenCats((prev) => {
-      const next = { ...prev };
-      for (const category of categories) {
-        if (next[category.key] === undefined) next[category.key] = true;
-      }
-      return next;
-    });
-  }, [categories]);
-
+  const giftPackCategory = useMemo(
+    () => categories.find((category) => category.key === "gift-packs"),
+    [categories],
+  );
+  const shopCategories = useMemo(
+    () => categories.filter((category) => category.key !== "gift-packs"),
+    [categories],
+  );
+  const totalProducts = useMemo(
+    () => shopCategories.reduce((total, category) => total + category.products.length, 0),
+    [shopCategories],
+  );
   const query = search.trim().toLowerCase();
-  const hasSearch = query.length > 0;
 
-  const filtered = useMemo(() => {
-    return categories
-      .map((category) => ({
-        ...category,
-        products: hasSearch
-          ? category.products.filter(
-              (p) =>
-                p.name.toLowerCase().includes(query) ||
-                (p.nameTa?.toLowerCase().includes(query) ?? false) ||
-                p.pack.toLowerCase().includes(query) ||
-                p.description.toLowerCase().includes(query),
-            )
-          : category.products,
-      }))
-      .filter((category) => category.products.length > 0);
-  }, [categories, query, hasSearch]);
-
-  const toggle = (key: string) => setOpenCats((prev) => ({ ...prev, [key]: !prev[key] }));
+  const products = useMemo(() => {
+    return shopCategories
+      .filter((category) => selectedCategory === "all" || category.key === selectedCategory)
+      .flatMap((category) => category.products)
+      .filter(
+        (product) =>
+          !query ||
+          product.name.toLowerCase().includes(query) ||
+          (product.nameTa?.toLowerCase().includes(query) ?? false) ||
+          product.pack.toLowerCase().includes(query) ||
+          product.description.toLowerCase().includes(query),
+      );
+  }, [shopCategories, selectedCategory, query]);
 
   return (
     <section id="products" className="relative isolate overflow-hidden bg-brandbg px-4 py-14">
       <SectionDecor variant="rockets" />
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-7xl">
         <SectionHead
-          title="Crackers Price List — 80% Discount"
-          subtitle="Browse by category · Large product photos · Tap + to add"
+          title="Shop Crackers by Category"
+          subtitle="Clear pricing · Browse categories · Tap + to add"
         />
 
         <div className="mb-6 flex justify-center">
           <PriceListButton
             label="Download Price List (PDF)"
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-dark px-6 py-3 text-sm font-bold text-white shadow-[0_8px_20px_rgba(157,2,8,0.28)] transition hover:brightness-105 hover:shadow-[0_10px_24px_rgba(157,2,8,0.35)]"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-dark px-6 py-3 text-sm font-bold text-white shadow-[0_8px_20px_rgba(157,2,8,0.28)] transition hover:brightness-105"
           />
         </div>
 
         <OrderOffersBanner />
 
-        <div className="mx-auto mb-6 flex max-w-md items-center gap-2.5 rounded-full border border-line/80 bg-white px-4 py-3 shadow-[0_4px_18px_rgba(0,0,0,0.06)]">
-          <span className="text-primary/70" aria-hidden>
-            🔍
-          </span>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search crackers..."
-            className="w-full bg-transparent text-sm outline-none placeholder:text-ink-muted"
-          />
-          {search && (
+        <div className="relative mb-8 overflow-hidden rounded-3xl border border-[#ead6c3] bg-white/95 p-4 shadow-[0_10px_32px_rgba(90,0,8,0.08)] sm:p-6">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-yellow via-primary to-primary-dark" />
+
+          <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="font-display text-lg font-bold text-ink">Browse categories</p>
+              <p className="text-xs text-ink-muted">Choose a category or search for a product</p>
+            </div>
+            <p className="text-xs font-semibold text-primary">
+              {products.length} {products.length === 1 ? "product" : "products"} shown
+            </p>
+          </div>
+
+          <div className="sm:hidden">
+            <label htmlFor="product-category" className="sr-only">
+              Product category
+            </label>
+            <div className="relative">
+              <select
+                id="product-category"
+                value={selectedCategory}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  if (value === "gift-packs") {
+                    scrollToGiftBoxes();
+                    return;
+                  }
+                  setSelectedCategory(value);
+                }}
+                className="w-full appearance-none rounded-xl border border-line bg-brandbg px-4 py-3 pr-10 text-sm font-bold text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+              >
+                <option value="all">All products ({totalProducts})</option>
+                {shopCategories.map((category) => (
+                  <option key={category.key} value={category.key}>
+                    {category.label} ({category.products.length})
+                  </option>
+                ))}
+                {giftPackCategory && (
+                  <option value="gift-packs">
+                    Gift Boxes ({giftPackCategory.products.length}) — go to section
+                  </option>
+                )}
+              </select>
+              <span
+                className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-primary"
+                aria-hidden
+              >
+                ▾
+              </span>
+            </div>
+          </div>
+
+          <div className="hidden flex-wrap gap-2 sm:flex">
             <button
               type="button"
-              onClick={() => setSearch("")}
-              className="rounded-full px-2 py-0.5 text-xs font-semibold text-ink-muted hover:bg-brandbg hover:text-primary"
-              aria-label="Clear search"
+              onClick={() => setSelectedCategory("all")}
+              className={`rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+                selectedCategory === "all"
+                  ? "bg-gradient-to-r from-primary to-primary-dark text-white shadow-[0_5px_14px_rgba(157,2,8,0.25)]"
+                  : "border border-line bg-brandbg text-ink hover:border-primary/35 hover:bg-primary/[0.04]"
+              }`}
             >
-              Clear
+              All <span className="ml-1 opacity-75">{totalProducts}</span>
             </button>
-          )}
-        </div>
-
-        <div className="space-y-5">
-          {loading && filtered.length === 0 && (
-            <p className="rounded-2xl border border-line bg-white/90 py-10 text-center text-sm text-ink-muted shadow-sm">
-              Loading products…
-            </p>
-          )}
-
-          {filtered.map((category) => {
-            const isOpen = hasSearch || openCats[category.key] !== false;
-            const catQty = mounted
-              ? category.products.reduce((sum, p) => sum + (cartItems[p.id] ?? 0), 0)
-              : 0;
-            return (
-              <div key={category.key}>
-                <button
-                  type="button"
-                  onClick={() => toggle(category.key)}
-                  aria-expanded={isOpen}
-                  className="relative flex w-full items-center justify-between gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-primary via-[#b50610] to-primary-dark px-4 py-3.5 text-left text-white shadow-[0_8px_22px_rgba(157,2,8,0.32)] transition hover:brightness-[1.03] active:scale-[0.995]"
+            {shopCategories.map((category) => (
+              <button
+                key={category.key}
+                type="button"
+                onClick={() => setSelectedCategory(category.key)}
+                className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                  selectedCategory === category.key
+                    ? "bg-gradient-to-r from-primary to-primary-dark text-white shadow-[0_5px_14px_rgba(157,2,8,0.25)]"
+                    : "border border-line bg-brandbg text-ink hover:border-primary/35 hover:bg-primary/[0.04]"
+                }`}
+              >
+                {category.label}
+                <span
+                  className={`ml-2 rounded-full px-1.5 py-0.5 text-[0.65rem] ${
+                    selectedCategory === category.key ? "bg-white/20" : "bg-white text-ink-muted"
+                  }`}
                 >
-                  <span
-                    className="pointer-events-none absolute inset-0 opacity-40"
-                    style={{
-                      background:
-                        "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%)",
-                    }}
-                    aria-hidden
-                  />
-                  <span className="relative font-display text-sm font-bold tracking-[0.04em] sm:text-base">
-                    {category.label}
-                  </span>
-                  <span className="relative flex items-center gap-2 text-xs">
-                    <span className="rounded-full bg-white/15 px-2.5 py-1 font-semibold text-white/95 backdrop-blur-sm">
-                      {category.products.length} items
-                      {catQty ? ` · ${catQty} in cart` : ""}
-                    </span>
-                    <span
-                      className={`flex h-7 w-7 items-center justify-center rounded-full bg-white/15 text-sm transition-transform duration-300 ${
-                        isOpen ? "rotate-180" : ""
-                      }`}
-                    >
-                      ▾
-                    </span>
-                  </span>
-                </button>
+                  {category.products.length}
+                </span>
+              </button>
+            ))}
+            {giftPackCategory && (
+              <button
+                type="button"
+                onClick={scrollToGiftBoxes}
+                className="rounded-xl border border-yellow/70 bg-gradient-to-r from-[#fff4d6] to-[#ffe8b8] px-4 py-2.5 text-sm font-bold text-primary-dark shadow-sm transition hover:brightness-105"
+              >
+                Gift Boxes
+                <span className="ml-2 rounded-full bg-white/80 px-1.5 py-0.5 text-[0.65rem] text-primary">
+                  {giftPackCategory.products.length}
+                </span>
+              </button>
+            )}
+          </div>
 
-                {isOpen && (
-                  <div className="mt-2 overflow-hidden rounded-2xl border border-line/70 bg-white shadow-[0_6px_24px_rgba(0,0,0,0.06)]">
-                    {category.products.map((product) => (
-                      <ProductListRow key={product.id} product={product} />
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          {!loading && filtered.length === 0 && (
-            <p className="rounded-2xl border border-dashed border-line bg-white/80 py-12 text-center text-sm text-ink-muted">
-              No products found. Try a different search or refresh the page.
-            </p>
-          )}
+          <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-line bg-brandbg px-4 py-3 transition focus-within:border-primary/50 focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/10">
+            <span className="text-primary/70" aria-hidden>
+              🔍
+            </span>
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search crackers by name or pack..."
+              className="w-full bg-transparent text-sm outline-none placeholder:text-ink-muted"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="rounded-lg bg-white px-2.5 py-1 text-xs font-bold text-primary shadow-sm"
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
+
+        {loading && products.length === 0 ? (
+          <p className="py-12 text-center text-sm text-ink-muted">Loading products…</p>
+        ) : products.length > 0 ? (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <p className="rounded-2xl border border-dashed border-line bg-white/80 py-12 text-center text-sm text-ink-muted">
+            No products found. Try another category or search.
+          </p>
+        )}
       </div>
     </section>
   );
