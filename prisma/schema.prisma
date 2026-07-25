@@ -66,22 +66,23 @@ model Category {
 
 /// Individual crackers products.
 model Product {
-  id          String      @id @default(cuid())
+  id          String          @id @default(cuid())
   name        String
   nameTa      String? // Tamil product name (optional)
-  slug        String      @unique
+  slug        String          @unique
   pack        String
   price       Int // discounted sale price (INR, whole rupees)
   mrp         Int // maximum retail price (INR, whole rupees)
   imageUrl    String
   description String
-  active      Boolean     @default(true)
-  sortOrder   Int         @default(0)
+  active      Boolean         @default(true)
+  sortOrder   Int             @default(0)
   categoryId  String
-  category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category    Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   orderItems  OrderItem[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  reviews     ProductReview[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
   @@index([categoryId])
 }
@@ -113,6 +114,7 @@ model Order {
   lastPendingReminderAt DateTime?       // last admin reminder for unactioned orders
   items             OrderItem[]
   statusHistory     OrderStatusHistory[]
+  reviews           ProductReview[]
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
 
@@ -123,18 +125,40 @@ model Order {
 
 /// Line items of an order (product snapshot kept for historical accuracy).
 model OrderItem {
-  id        String   @id @default(cuid())
+  id        String         @id @default(cuid())
   orderId   String
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order     Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String?
-  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  product   Product?       @relation(fields: [productId], references: [id], onDelete: SetNull)
   name      String
   pack      String
   price     Int
   qty       Int
   amount    Int
+  review    ProductReview?
 
   @@index([orderId])
+}
+
+/// Verified-purchase product reviews (one per order line item).
+model ProductReview {
+  id           String    @id @default(cuid())
+  productId    String
+  product      Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderId      String
+  order        Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItemId  String    @unique
+  orderItem    OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  rating       Int
+  text         String
+  reviewerName String
+  visible      Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([productId, visible, createdAt])
+  @@index([orderId])
+  @@index([visible, createdAt])
 }
 
 /// Storefront page visits for admin analytics (city + time).

@@ -5,6 +5,7 @@ import { SafeImage } from "@/components/SafeImage";
 import { getGiftPackContents } from "@/lib/gift-pack-contents";
 import { productSeoPath } from "@/lib/seo-products";
 import { useCatalog } from "./catalog-context";
+import { ProductReviews } from "./ProductReviews";
 import { useUI } from "@/store/ui";
 import { useCart } from "@/store/cart";
 import { formatPrice, discountPercent } from "@/lib/utils";
@@ -259,6 +260,8 @@ export function ProductModal() {
                 </div>
                 <p className="mt-2 text-sm leading-relaxed text-ink">{product.description}</p>
               </div>
+
+              <ProductReviews productId={product.id} />
 
               {isGiftPack && packItems && packItems.length > 0 && (
                 <div className="overflow-hidden rounded-2xl border border-primary/15 bg-white shadow-sm">

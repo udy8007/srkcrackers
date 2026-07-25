@@ -11,7 +11,8 @@ type EntityFilter =
   | "category"
   | "settings"
   | "account"
-  | "system";
+  | "system"
+  | "review";
 
 interface AuditLogItem {
   id: string;
@@ -43,6 +44,7 @@ const ENTITY_LABELS: Record<EntityFilter, string> = {
   settings: "Settings",
   account: "Account",
   system: "System",
+  review: "Reviews",
 };
 
 const ENTITY_STYLES: Record<string, string> = {
@@ -52,6 +54,7 @@ const ENTITY_STYLES: Record<string, string> = {
   settings: "bg-slate-100 text-slate-700",
   account: "bg-emerald-50 text-emerald-700",
   system: "bg-red/10 text-red",
+  review: "bg-yellow/20 text-primary-dark",
 };
 
 function formatDate(value: string) {

@@ -121,3 +121,35 @@ export interface TrackOrderResult {
   items: OrderItemDTO[];
   statusHistory: StatusHistoryDTO[];
 }
+
+/** Public product review item (no phone / order secrets). */
+export interface ProductReviewDTO {
+  id: string;
+  rating: number;
+  text: string;
+  reviewerName: string;
+  createdAt: string;
+  verifiedPurchase: true;
+}
+
+/** Aggregate rating summary for a product. */
+export interface ProductReviewSummary {
+  average: number;
+  count: number;
+  distribution: Record<1 | 2 | 3 | 4 | 5, number>;
+}
+
+/** Public product reviews response. */
+export interface ProductReviewsResponse {
+  summary: ProductReviewSummary;
+  reviews: ProductReviewDTO[];
+}
+
+/** Payload for verified product review submission. */
+export interface CreateProductReviewInput {
+  orderNumber: string;
+  phone: string;
+  rating: number;
+  text: string;
+  reviewerName?: string;
+}

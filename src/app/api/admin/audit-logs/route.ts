@@ -12,6 +12,7 @@ const ENTITY_TYPES: AuditEntityType[] = [
   "settings",
   "account",
   "system",
+  "review",
 ];
 
 function parsePositiveInt(value: string | null, fallback: number, max: number) {
