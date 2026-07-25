@@ -8,6 +8,7 @@ import {
   normalizePhone,
   serializeReview,
 } from "@/lib/product-reviews";
+import { dispatchNotification, notifyNewProductReview } from "@/lib/notifications";
 import type { CreateProductReviewInput } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -135,6 +136,18 @@ export async function POST(
         createdAt: true,
       },
     });
+
+    dispatchNotification(() =>
+      notifyNewProductReview({
+        reviewId: review.id,
+        productName: product.name,
+        rating: review.rating,
+        reviewerName: review.reviewerName,
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        text: review.text,
+      }),
+    );
 
     const payload = await getProductReviews(productId);
     return NextResponse.json(

@@ -93,12 +93,15 @@ export function NotificationBell() {
         return "🔄";
       case "REPORT_READY":
         return "📉";
+      case "NEW_REVIEW":
+        return "⭐";
       default:
         return "🔔";
     }
   };
 
   const itemHref = (item: NotificationItem) => {
+    if (item.type === "NEW_REVIEW") return "/admin/reviews";
     if (item.orderId) return `/admin/orders/${item.orderId}`;
     if (item.type === "REPORT_READY") return "/admin/reports";
     if (item.type === "DB_BACKUP") return "/admin/settings";
@@ -106,6 +109,7 @@ export function NotificationBell() {
   };
 
   const itemLinkLabel = (item: NotificationItem) => {
+    if (item.type === "NEW_REVIEW") return "Open reviews";
     if (item.orderId) return "View order";
     if (item.type === "REPORT_READY") return "Open reports";
     if (item.type === "DB_BACKUP") return "Open settings";

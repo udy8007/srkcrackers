@@ -418,3 +418,30 @@ export function notifyAutoDelivered(orderIds: string[]) {
     dispatchNotification(() => notifyStatusChange(orderId, "DISPATCHED"));
   }
 }
+
+/** Admin bell + FCM when a verified product review is published. */
+export async function notifyNewProductReview(input: {
+  reviewId: string;
+  productName: string;
+  rating: number;
+  reviewerName: string;
+  orderId: string;
+  orderNumber: string;
+  text: string;
+}) {
+  const origin = resolveSiteOrigin();
+  const reviewsUrl = `${origin}/admin/reviews`;
+  const stars = "★".repeat(Math.min(5, Math.max(1, input.rating)));
+  const snippet = input.text.trim().slice(0, 100);
+
+  await createAdminNotification({
+    type: "NEW_REVIEW",
+    title: `New review · ${input.productName}`,
+    message: `${stars} by ${input.reviewerName} (${input.orderNumber}) — ${snippet}${input.text.trim().length > 100 ? "…" : ""}`,
+    orderId: input.orderId,
+    orderNumber: input.orderNumber,
+    targetUrl: reviewsUrl,
+    pushTitle: "New product review!",
+    pushBody: `${stars} ${input.productName} — ${input.reviewerName}. Tap to open Reviews.`,
+  });
+}
