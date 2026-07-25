@@ -1,0 +1,64 @@
+name: Morning health check
+
+on:
+  schedule:
+    # 8:00 AM IST = 02:30 UTC
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  healthcheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check site health and notify ntfy
+        env:
+          HEALTH_URL: https://www.srkcrackers.in/api/health
+          NTFY_URL: https://ntfy.sh/udyilangovan
+        run: |
+          set +e
+          BODY_FILE="$(mktemp)"
+          HTTP_CODE="$(curl -sS -o "$BODY_FILE" -w "%{http_code}" --max-time 20 "$HEALTH_URL")"
+          CURL_EXIT=$?
+          BODY="$(cat "$BODY_FILE" 2>/dev/null || true)"
+          TIMESTAMP="$(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+
+          if [ "$CURL_EXIT" -ne 0 ]; then
+            STATUS="DOWN"
+            TITLE="SRK Crackers is DOWN"
+            PRIORITY="high"
+            TAGS="rotating_light,x"
+            MESSAGE="Health check failed at ${TIMESTAMP}.
+Could not reach ${HEALTH_URL}
+curl exit code: ${CURL_EXIT}"
+          elif [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            STATUS="UP"
+            TITLE="SRK Crackers is UP"
+            PRIORITY="default"
+            TAGS="white_check_mark"
+            MESSAGE="Site is healthy at ${TIMESTAMP}.
+HTTP ${HTTP_CODE}
+${BODY}"
+          else
+            STATUS="DOWN"
+            TITLE="SRK Crackers is DOWN"
+            PRIORITY="high"
+            TAGS="rotating_light,x"
+            MESSAGE="Health check returned HTTP ${HTTP_CODE} at ${TIMESTAMP}.
+${BODY}"
+          fi
+
+          echo "Result: ${STATUS}"
+          echo "HTTP: ${HTTP_CODE:-n/a}"
+          echo "Body: ${BODY}"
+
+          curl -sS -o /dev/null -w "ntfy HTTP %{http_code}\n" \
+            -H "Title: ${TITLE}" \
+            -H "Priority: ${PRIORITY}" \
+            -H "Tags: ${TAGS}" \
+            -d "${MESSAGE}" \
+            "$NTFY_URL"
+
+          if [ "$STATUS" = "DOWN" ]; then
+            exit 1
+          fi
