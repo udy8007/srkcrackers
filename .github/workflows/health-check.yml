@@ -15,6 +15,7 @@ jobs:
         env:
           HEALTH_URL: https://www.srkcrackers.in/api/health
           NTFY_URL: https://ntfy.sh/udyilangovan
+        shell: bash
         run: |
           set +e
           BODY_FILE="$(mktemp)"
@@ -28,24 +29,19 @@ jobs:
             TITLE="SRK Crackers is DOWN"
             PRIORITY="high"
             TAGS="rotating_light,x"
-            MESSAGE="Health check failed at ${TIMESTAMP}.
-Could not reach ${HEALTH_URL}
-curl exit code: ${CURL_EXIT}"
+            MESSAGE="Health check failed at ${TIMESTAMP}. Could not reach ${HEALTH_URL}. curl exit code: ${CURL_EXIT}"
           elif [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
             STATUS="UP"
             TITLE="SRK Crackers is UP"
             PRIORITY="default"
             TAGS="white_check_mark"
-            MESSAGE="Site is healthy at ${TIMESTAMP}.
-HTTP ${HTTP_CODE}
-${BODY}"
+            MESSAGE="Site is healthy at ${TIMESTAMP}. HTTP ${HTTP_CODE}. ${BODY}"
           else
             STATUS="DOWN"
             TITLE="SRK Crackers is DOWN"
             PRIORITY="high"
             TAGS="rotating_light,x"
-            MESSAGE="Health check returned HTTP ${HTTP_CODE} at ${TIMESTAMP}.
-${BODY}"
+            MESSAGE="Health check returned HTTP ${HTTP_CODE} at ${TIMESTAMP}. ${BODY}"
           fi
 
           echo "Result: ${STATUS}"
