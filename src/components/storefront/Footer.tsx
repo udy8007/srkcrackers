@@ -100,7 +100,7 @@ export function Footer() {
           </a>
 
           <a
-            href="https://myprofilev2.vercel.app/"
+            href="https://udy8007.github.io/udyilangovan/index.html"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 transition hover:text-yellow"
@@ -119,7 +119,7 @@ export function Footer() {
               <path d="M20 4 10 14" />
               <path d="M18 13.5V19a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 19V8a1.5 1.5 0 0 1 1.5-1.5H11" />
             </svg>
-            Powered by Ilangovan
+            Powered by udyilangovan
           </a>
         </div>
       </div>
