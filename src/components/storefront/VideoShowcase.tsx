@@ -9,6 +9,9 @@ const VIDEOS = [
   { src: "/videos/srk-crackers-showcase-2.mp4", title: "Festive Cracker Highlights" },
   { src: "/videos/srk-crackers-showcase-3.mp4", title: "Premium Fireworks Showcase" },
   { src: "/videos/srk-crackers-showcase-4.mp4", title: "Celebration Collection" },
+  { src: "/videos/srk-crackers-showcase-5.mp4", title: "Live Shop Highlights" },
+  { src: "/videos/srk-crackers-showcase-6.mp4", title: "Celebration Moments" },
+  { src: "/videos/srk-crackers-showcase-7.mp4", title: "Festival Collection" },
 ];
 
 function VideoCard({ src, title }: { src: string; title: string }) {
