@@ -13,7 +13,7 @@ const SHINCHAN_FRAMES = [
 type CastSide = "left" | "right";
 
 /** One animated cast for the same-line hero row. */
-export function HeroCastSide({ side }: { side: CastSide }) {
+export function HeroCastSide({ side, className = "" }: { side: CastSide; className?: string }) {
   const [frame, setFrame] = useState(side === "left" ? 0 : 2);
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export function HeroCastSide({ side }: { side: CastSide }) {
   }, []);
 
   return (
-    <div className={`hero-inline-cast hero-inline-cast--${side}`} aria-hidden="true">
+    <div className={`hero-inline-cast hero-inline-cast--${side} ${className}`} aria-hidden="true">
       <div className="hero-inline-cast__burst" />
       <div className="hero-inline-cast__img">
         <Image

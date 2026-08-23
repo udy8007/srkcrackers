@@ -117,30 +117,39 @@ export function SparklerTrail({ className = "" }: { className?: string }) {
 }
 
 /** Special brand frame: glow + bursts + sparkles around the title. */
-export function HeroBrandSpecial({ name }: { name: string }) {
+export function HeroBrandSpecial({
+  name,
+  variant = "day",
+}: {
+  name: string;
+  variant?: "day" | "night";
+}) {
+  const night = variant === "night";
   return (
     <div className="hero-brand-magic relative mx-auto mt-1 inline-flex max-w-full flex-col items-center sm:mt-2">
-      {/* ambient glow behind title */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 h-28 w-[min(100%,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-80 blur-2xl"
+        className="pointer-events-none absolute left-1/2 top-1/2 h-32 w-[min(100%,30rem)] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
         style={{
-          background:
-            "radial-gradient(ellipse at center, rgba(255,195,0,0.35) 0%, rgba(239,35,60,0.12) 45%, transparent 70%)",
+          background: night
+            ? "radial-gradient(ellipse at center, rgba(255,195,0,0.45) 0%, rgba(239,35,60,0.18) 45%, transparent 72%)"
+            : "radial-gradient(ellipse at center, rgba(255,195,0,0.35) 0%, rgba(239,35,60,0.12) 45%, transparent 70%)",
+          opacity: night ? 0.95 : 0.8,
         }}
       />
 
       <div className="relative flex items-center justify-center gap-0.5 sm:gap-2">
         <FireworkBurst
           tone="gold"
-          className="hero-bob pointer-events-none h-9 w-9 shrink-0 sm:h-14 sm:w-14 md:h-16 md:w-16"
+          className="hero-bob pointer-events-none h-10 w-10 shrink-0 sm:h-14 sm:w-14 md:h-[4.25rem] md:w-[4.25rem]"
         />
 
         <div className="relative px-1 text-center">
-          <h2 className="text-festive relative z-[1] font-display text-[clamp(1.65rem,7vw,2.85rem)] font-extrabold leading-none tracking-tight whitespace-nowrap">
+          <h2
+            className={`${night ? "text-festive-gold" : "text-festive"} relative z-[1] font-display text-[clamp(1.85rem,7.4vw,3.15rem)] font-extrabold leading-none tracking-tight whitespace-nowrap`}
+          >
             {name}
           </h2>
-          {/* gold underline flourish */}
           <svg
             aria-hidden
             viewBox="0 0 280 18"
@@ -152,7 +161,7 @@ export function HeroBrandSpecial({ name }: { name: string }) {
               stroke="#ffc300"
               strokeWidth="2.5"
               strokeLinecap="round"
-              opacity="0.85"
+              opacity="0.9"
             />
             <circle cx="140" cy="8" r="2.5" fill="#ef233c" className="hero-spark" />
           </svg>
@@ -160,11 +169,10 @@ export function HeroBrandSpecial({ name }: { name: string }) {
 
         <FireworkBurst
           tone="red"
-          className="hero-bob pointer-events-none h-9 w-9 shrink-0 sm:h-14 sm:w-14 md:h-16 md:w-16"
+          className="hero-bob pointer-events-none h-10 w-10 shrink-0 sm:h-14 sm:w-14 md:h-[4.25rem] md:w-[4.25rem]"
         />
       </div>
 
-      {/* floating spark dots around brand */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-visible">
         {[
           ["8%", "10%", "0s", "bg-yellow"],
@@ -175,7 +183,7 @@ export function HeroBrandSpecial({ name }: { name: string }) {
         ].map(([left, top, delay, color], i) => (
           <span
             key={i}
-            className={`hero-spark absolute h-1.5 w-1.5 rounded-full ${color}`}
+            className={`hero-spark absolute rounded-full ${night ? "h-2 w-2" : "h-1.5 w-1.5"} ${color}`}
             style={{ left, top, animationDelay: delay }}
           />
         ))}

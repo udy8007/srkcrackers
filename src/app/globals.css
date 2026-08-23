@@ -169,13 +169,65 @@ body {
   color: transparent;
 }
 
+.text-festive-gold {
+  background: linear-gradient(100deg, #fff6c2 0%, #ffc300 42%, #f77f00 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 10px rgba(255, 195, 0, 0.35));
+}
+
 /* Soft firework glow behind hero content */
 .hero-festive {
   background:
-    radial-gradient(60% 60% at 20% 15%, rgba(214, 40, 40, 0.12), transparent 60%),
-    radial-gradient(55% 55% at 82% 25%, rgba(255, 195, 0, 0.16), transparent 60%),
-    radial-gradient(70% 70% at 50% 110%, rgba(247, 127, 0, 0.12), transparent 60%),
-    linear-gradient(180deg, #fff6ea 0%, #ffffff 55%, var(--color-brandbg) 100%);
+    radial-gradient(ellipse 100% 55% at 50% 0%, rgba(254, 243, 199, 0.85) 0%, transparent 55%),
+    radial-gradient(circle at 8% 18%, rgba(234, 179, 8, 0.22), transparent 26%),
+    radial-gradient(circle at 88% 12%, rgba(190, 18, 60, 0.16), transparent 28%),
+    radial-gradient(circle at 72% 82%, rgba(194, 65, 12, 0.14), transparent 30%),
+    linear-gradient(160deg, #fff7ed 0%, #fff1f2 35%, #fef3c7 70%, #ffe4e6 100%);
+}
+
+.hero-card-shine {
+  background: linear-gradient(90deg, #be123c, #c2410c, #eab308, #c026d3, #be123c);
+  background-size: 200% 100%;
+  animation: festival-shine 5s linear infinite;
+}
+
+@keyframes festival-shine {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 200% 50%;
+  }
+}
+
+.hero-mini {
+  animation: product-bob 4s ease-in-out infinite;
+}
+
+.hero-mini--featured {
+  animation: product-bob-featured 4s ease-in-out infinite 0.5s;
+}
+
+@keyframes product-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes product-bob-featured {
+  0%,
+  100% {
+    transform: translateY(-6px) scale(1.04);
+  }
+  50% {
+    transform: translateY(-11px) scale(1.04);
+  }
 }
 
 /* Pause marquee on hover */
@@ -451,6 +503,16 @@ body {
   animation-delay: 0.55s;
 }
 
+.hero-inline-cast--mascot {
+  width: clamp(130px, 18vw, 210px);
+  height: clamp(160px, 22vw, 250px);
+}
+
+.hero-inline-cast--center {
+  width: clamp(150px, 24vw, 250px);
+  height: clamp(180px, 28vw, 300px);
+}
+
 .hero-inline-cast--right .hero-inline-cast__img {
   transform: scaleX(-1);
 }
@@ -508,6 +570,10 @@ body {
   height: 40px;
 }
 
+.hero-same-line--night .hero-inline-cast__img {
+  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 16px rgba(255, 195, 0, 0.28));
+}
+
 .hero-same-line__copy {
   max-width: 40rem;
 }
@@ -519,6 +585,13 @@ body {
     height: 72px;
     align-self: flex-end;
     margin-bottom: 0.25rem;
+  }
+
+  .hero-inline-cast--center {
+    width: 150px;
+    height: 180px;
+    align-self: center;
+    margin-bottom: 0;
   }
 
   .hero-inline-cast .celeb-spark-spray--wing,
@@ -604,8 +677,8 @@ body {
   position: relative;
 }
 
-/* ---- Legacy full-sky celeb (unused) ---- */
-.hero-top-sky {
+/* ---- Legacy full-sky celeb (unused outside Crackro hero) ---- */
+.hero-festive .hero-top-sky {
   display: none;
 }
 
@@ -1407,6 +1480,9 @@ body {
   .hero-wing-sparks span,
   .hero-inline-cast,
   .hero-inline-cast__burst,
+  .hero-mini,
+  .hero-mini--featured,
+  .hero-card-shine,
   .celeb-rocket,
   .celeb-bloom,
   .celeb-ember,
