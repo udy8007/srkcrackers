@@ -40,6 +40,12 @@ enum ReportEmailFrequency {
   MONTHLY
 }
 
+enum ArchiveFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
 /// Admin/staff accounts for the dashboard (credentials login).
 model AdminUser {
   id           String             @id @default(cuid())
@@ -368,4 +374,42 @@ model ReportEmailSettings {
   lastError        String?
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
+}
+
+/// Singleton data archive schedule — export old logs by email then purge.
+model ArchiveSettings {
+  id                     String           @id @default("default")
+  enabled                Boolean          @default(false)
+  emailExportEnabled       Boolean          @default(true)
+  frequency              ArchiveFrequency @default(MONTHLY)
+  recipientEmail         String           @default("")
+  runHour                Int              @default(2)
+  runDayOfWeek           Int              @default(0)
+  runDayOfMonth          Int              @default(1)
+  cronExpression         String           @default("0 2 1 * *")
+  retentionMonths        Int              @default(2)
+  includeSiteVisits      Boolean          @default(true)
+  includeErrorLogs       Boolean          @default(true)
+  includeAuditLogs       Boolean          @default(true)
+  includeNotificationLog Boolean          @default(true)
+  lastArchiveAt          DateTime?
+  lastArchiveStatus      String?
+  lastArchiveError       String?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+}
+
+/// History of data archive runs.
+model ArchiveLog {
+  id           String   @id @default(cuid())
+  filename     String
+  sizeBytes    Int
+  recordCounts String?
+  status       String
+  trigger      String
+  recipient    String
+  error        String?
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
 }

@@ -2,6 +2,7 @@ import { ChangePasswordForm } from "./ChangePasswordForm";
 import { EmailSettingsForm } from "./EmailSettingsForm";
 import { NotificationResetControls } from "./NotificationResetControls";
 import { BackupSettingsForm } from "./BackupSettingsForm";
+import { DataArchiveSettingsForm } from "./DataArchiveSettingsForm";
 import { SchedulerSettingsForm } from "./SchedulerSettingsForm";
 import { PushTestForm } from "./PushTestForm";
 import { ReportEmailSettingsForm } from "../reports/ReportEmailSettingsForm";
@@ -17,6 +18,8 @@ export default function SettingsPage() {
         <h1 className="font-display text-2xl font-bold text-ink">Settings</h1>
         <p className="text-sm text-ink-muted">Manage account, email notifications, database backup, and SMTP</p>
       </div>
+
+      <DataArchiveSettingsForm />
 
       <EmailSettingsForm />
 

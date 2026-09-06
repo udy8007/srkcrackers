@@ -14,6 +14,7 @@ export type EmailTrigger =
   | "DELIVERED_CUSTOMER"
   | "PENDING_REMINDER_ADMIN"
   | "DB_BACKUP"
+  | "DATA_ARCHIVE"
   | "REPORT_EMAIL"
   | "TEST";
 

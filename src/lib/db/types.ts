@@ -13,6 +13,8 @@ export type {
   AdminPushLog,
   BackupSettings,
   DbBackupLog,
+  ArchiveSettings,
+  ArchiveLog,
   SchedulerState,
   AdminDeviceToken,
   FirebaseSettings,
@@ -22,4 +24,5 @@ export type {
   UserRole,
   BackupFrequency,
   ReportEmailFrequency,
+  ArchiveFrequency,
 } from "@prisma/client";
