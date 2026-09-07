@@ -1,9 +1,12 @@
-import { unstable_cache, revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { CategoryWithProductsDTO, ProductDTO } from "@/types";
 import type { Category, Product } from "@/lib/db/types";
 
 export const CATALOG_CACHE_TAG = "catalog";
+
+/** Fallback TTL for edge/server cache; admin invalidation clears immediately. */
+export const STOREFRONT_CATALOG_REVALIDATE_SECONDS = 300;
 
 async function loadCatalogFromDb(): Promise<CategoryWithProductsDTO[]> {
   const [categories, products] = (await Promise.all([
@@ -47,7 +50,7 @@ async function loadCatalogFromDb(): Promise<CategoryWithProductsDTO[]> {
 }
 
 const getCachedCatalog = unstable_cache(loadCatalogFromDb, ["storefront-catalog"], {
-  revalidate: 60,
+  revalidate: STOREFRONT_CATALOG_REVALIDATE_SECONDS,
   tags: [CATALOG_CACHE_TAG],
 });
 
@@ -69,6 +72,9 @@ export async function getCatalog(): Promise<CategoryWithProductsDTO[]> {
 /** Call after product/category admin mutations so the storefront refreshes promptly. */
 export function invalidateCatalogCache(): void {
   revalidateTag(CATALOG_CACHE_TAG);
+  revalidatePath("/");
+  revalidatePath("/api/products");
+  revalidatePath("/crackers", "layout");
 }
 
 /** Flat list of all active products. */
