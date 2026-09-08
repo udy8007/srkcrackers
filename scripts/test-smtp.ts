@@ -2,11 +2,11 @@
  * Quick SMTP test — run: npx tsx scripts/test-smtp.ts udyilangovan@gmail.com
  * Uses EmailSettings from database. Set password in admin portal first.
  */
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/lib/create-prisma-client";
 import nodemailer from "nodemailer";
 
 const to = process.argv[2] ?? "udyilangovan@gmail.com";
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 async function main() {
   const settings = await prisma.emailSettings.findUnique({ where: { id: "default" } });

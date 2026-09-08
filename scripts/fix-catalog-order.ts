@@ -4,9 +4,9 @@
  *
  * Usage: npx tsx scripts/fix-catalog-order.ts
  */
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/lib/create-prisma-client";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 /** Desired catalog: category key → label, sortOrder, product slugs in display order */
 const CATALOG: Array<{

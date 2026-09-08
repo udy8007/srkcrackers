@@ -7,9 +7,9 @@
  *
  * Run: npx tsx scripts/cleanup-catalog.ts
  */
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/lib/create-prisma-client";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 const CATEGORY_UPDATES: { key: string; label: string; sortOrder: number; active: boolean }[] = [
   { key: "sparklers", label: "SPARKLERS", sortOrder: 1, active: true },

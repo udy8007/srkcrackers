@@ -6,7 +6,14 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [{ protocol: "https", hostname: "api.qrserver.com" }],
   },
-  serverExternalPackages: ["@prisma/client", "bcryptjs", "firebase-admin"],
+  serverExternalPackages: [
+    "@prisma/client",
+    "@prisma/adapter-libsql",
+    "@libsql/client",
+    "libsql",
+    "bcryptjs",
+    "firebase-admin",
+  ],
   async headers() {
     return [
       {

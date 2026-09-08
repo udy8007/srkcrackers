@@ -1,19 +1,15 @@
-// Vercel build — Supabase Postgres via Prisma (schema sync only; never seed on deploy).
+// Vercel build — Turso (LibSQL) via Prisma (schema sync only; never seed on deploy).
 import { execSync } from "node:child_process";
 
-const RUNTIME_ENV_NAMES = [
+const TURSO_URL_NAMES = [
+  "TURSO_DATABASE_URL",
   "DATABASE_URL",
-  "srk_POSTGRES_PRISMA_URL",
-  "srk_POSTGRES_URL",
-  "POSTGRES_PRISMA_URL",
-  "POSTGRES_URL",
+  "srk_TURSO_DATABASE_URL",
 ];
 
-const DIRECT_ENV_NAMES = [
-  "DIRECT_URL",
-  "srk_POSTGRES_URL_NON_POOLING",
-  "POSTGRES_URL_NON_POOLING",
-  "DATABASE_URL_UNPOOLED",
+const TURSO_TOKEN_NAMES = [
+  "TURSO_AUTH_TOKEN",
+  "srk_TURSO_AUTH_TOKEN",
 ];
 
 function envStatus(name) {
@@ -24,33 +20,6 @@ function envStatus(name) {
   return { name, state: "set", value };
 }
 
-const POSTGRES_URL_RE = /^postgres(?:ql)?:\/\/.+/i;
-
-function normalizePostgresUrl(urlStr) {
-  const s = String(urlStr).trim();
-  return s.startsWith("postgres://") ? s.replace(/^postgres:\/\//, "postgresql://") : s;
-}
-
-function postgresPort(urlStr) {
-  try {
-    return new URL(normalizePostgresUrl(urlStr)).port || "5432";
-  } catch {
-    return null;
-  }
-}
-
-/** Find any env var whose value looks like a Postgres connection string. */
-function discoverPostgresUrlsFromEnv() {
-  const found = [];
-  for (const [name, raw] of Object.entries(process.env)) {
-    if (raw === undefined || raw === null) continue;
-    const value = String(raw).trim();
-    if (!POSTGRES_URL_RE.test(value)) continue;
-    found.push({ name, value: normalizePostgresUrl(value), port: postgresPort(value) });
-  }
-  return found;
-}
-
 function firstEnv(...names) {
   for (const name of names) {
     const { state, value } = envStatus(name);
@@ -59,156 +28,59 @@ function firstEnv(...names) {
   return null;
 }
 
-/** Build Supabase Postgres URLs from integration component vars (srk_POSTGRES_HOST, etc.). */
-function buildFromSrkParts({ pooled = false } = {}) {
-  const host = String(process.env.srk_POSTGRES_HOST || "").trim();
-  const user = String(process.env.srk_POSTGRES_USER || "").trim();
-  const password = String(process.env.srk_POSTGRES_PASSWORD || "").trim();
-  const database = String(process.env.srk_POSTGRES_DATABASE || "postgres").trim();
-  if (!host || !user || !password) return null;
+function resolveTursoEnv() {
+  const urlHit = firstEnv(...TURSO_URL_NAMES);
+  const tokenHit = firstEnv(...TURSO_TOKEN_NAMES);
 
-  const projectRef = host.replace(/^db\./i, "").replace(/\.supabase\.co$/i, "");
-  const dbUser = user.includes(".") ? user : `${user}.${projectRef}`;
-
-  if (pooled) {
-    const discovered = discoverPostgresUrlsFromEnv().find(
-      (u) => u.port === "6543" || /pooler|pgbouncer/i.test(u.value),
-    );
-    if (discovered) return discovered.value;
-
-    const poolHost = String(process.env.srk_POSTGRES_POOLER_HOST || "").trim();
-    if (!poolHost) return null;
-    const params = new URLSearchParams({ sslmode: "require", pgbouncer: "true" });
-    return `postgresql://${encodeURIComponent(dbUser)}:${encodeURIComponent(password)}@${poolHost}:6543/${database}?${params}`;
+  if (!urlHit) {
+    console.error("[vercel-build] No Turso database URL found.");
+    console.error("[vercel-build] Set one of:");
+    for (const name of TURSO_URL_NAMES) console.error(`  - ${name}`);
+    console.error("");
+    console.error("[vercel-build] Example:");
+    console.error('  TURSO_DATABASE_URL="libsql://your-db.aws-ap-south-1.turso.io"');
+    console.error('  TURSO_AUTH_TOKEN="your-turso-token"');
+    process.exit(1);
   }
 
-  const params = new URLSearchParams({ sslmode: "require" });
-  return `postgresql://${encodeURIComponent(dbUser)}:${encodeURIComponent(password)}@${host}:5432/${database}?${params}`;
-}
+  const url = urlHit.value;
+  const isTurso =
+    url.startsWith("libsql://") ||
+    url.startsWith("https://") ||
+    url.includes(".turso.io");
 
-function resolveDbUrls() {
-  const discovered = discoverPostgresUrlsFromEnv();
-
-  let runtimeHit = firstEnv(...RUNTIME_ENV_NAMES);
-  if (!runtimeHit) {
-    const pooled = discovered.find(
-      (u) => u.port === "6543" || /pooler|pgbouncer/i.test(u.value),
-    );
-    const any = discovered[0];
-    const builtPooled = buildFromSrkParts({ pooled: true });
-    const builtDirect = buildFromSrkParts();
-    const value = pooled?.value ?? builtPooled ?? any?.value ?? builtDirect;
-    const source =
-      pooled?.name ?? (builtPooled ? "srk_POSTGRES_* (built pooled)" : any?.name ?? (builtDirect ? "srk_POSTGRES_* (built direct)" : null));
-    if (value) runtimeHit = { value, source };
-  }
-
-  let migrateHit = firstEnv(...DIRECT_ENV_NAMES);
-  if (!migrateHit) {
-    const direct = discovered.find((u) => /NON_POOLING|UNPOOLED|DIRECT/i.test(u.name));
-    const port5432 = discovered.find((u) => u.port === "5432");
-    const builtDirect = buildFromSrkParts();
-    const value = direct?.value ?? builtDirect ?? port5432?.value ?? runtimeHit?.value;
-    const source =
-      direct?.name ??
-      (builtDirect ? "srk_POSTGRES_* (built direct)" : port5432?.name ?? runtimeHit?.source);
-    if (value) migrateHit = { value, source };
+  if (!isTurso) {
+    console.error(`[vercel-build] DATABASE_URL must be a Turso libsql URL, got: ${url.slice(0, 40)}...`);
+    process.exit(1);
   }
 
   return {
-    runtimeUrl: runtimeHit?.value ?? null,
-    migrateUrl: migrateHit?.value ?? null,
-    runtimeSource: runtimeHit?.source ?? null,
-    migrateSource: migrateHit?.source ?? null,
+    databaseUrl: url,
+    authToken: tokenHit?.value ?? "",
+    urlSource: urlHit.source,
+    tokenSource: tokenHit?.source ?? null,
   };
 }
 
-function reportDbEnvProblem() {
-  const candidates = [...new Set([...RUNTIME_ENV_NAMES, ...DIRECT_ENV_NAMES])];
-  const related = Object.keys(process.env)
-    .filter((k) => /DATABASE|POSTGRES|PG|SUPABASE|srk_/i.test(k))
-    .sort();
+const { databaseUrl, authToken, urlSource, tokenSource } = resolveTursoEnv();
 
-  console.error("[vercel-build] No database URL env var with a value was found.");
-  console.error("[vercel-build] Checked (in order):");
-  for (const name of candidates) {
-    const { state } = envStatus(name);
-    const label =
-      state === "set" ? "set" : state === "empty" ? "EMPTY — add your Supabase URL" : "not set";
-    console.error(`  - ${name}: ${label}`);
-  }
+const mask = (u) => u.replace(/:\/\/([^/]+)/, "://****");
+console.log(`[vercel-build] TURSO_DATABASE_URL: ${mask(databaseUrl)}  ← ${urlSource}`);
+console.log(`[vercel-build] TURSO_AUTH_TOKEN:   ${authToken ? "set" : "missing"}${tokenSource ? `  ← ${tokenSource}` : ""}`);
 
-  if (related.length) {
-    console.error("[vercel-build] Other DB-related env keys on this build:");
-    for (const name of related) {
-      if (candidates.includes(name)) continue;
-      const { state } = envStatus(name);
-      console.error(`  - ${name}: ${state === "set" ? "set" : state === "empty" ? "EMPTY" : "not set"}`);
-    }
-  }
-
-  const discovered = discoverPostgresUrlsFromEnv();
-  if (discovered.length) {
-    console.error("[vercel-build] Postgres URL-like values found in:");
-    for (const { name } of discovered) console.error(`  - ${name}`);
-  }
-
-  console.error("");
-  console.error("[vercel-build] Fix on the new Vercel project:");
-  console.error("  1. Vercel → Project → Settings → Environment Variables");
-  console.error("  2. DELETE empty DATABASE_URL and DIRECT_URL placeholders");
-  console.error("  3. Add these with real Supabase values (Production + Preview):");
-  console.error("       srk_POSTGRES_PRISMA_URL");
-  console.error("       srk_POSTGRES_URL_NON_POOLING");
-  console.error("     Or set DATABASE_URL + DIRECT_URL to the same connection strings.");
-  console.error("  4. Save, then Deployments → Redeploy (env changes need a new deploy).");
-}
-
-/** Runtime / pooler URL (Prisma + app). */
-const { runtimeUrl, migrateUrl: rawMigrateUrl, runtimeSource, migrateSource } = resolveDbUrls();
-let migrateUrl = rawMigrateUrl;
-
-if (!migrateUrl) {
-  reportDbEnvProblem();
-  process.exit(1);
-}
-
-/** Prefer a direct host for schema sync (pooler / pgbouncer breaks advisory locks). */
-function toDirect(urlStr) {
-  try {
-    const u = new URL(urlStr);
-    u.hostname = u.hostname.replace("-pooler", "");
-    u.searchParams.delete("pgbouncer");
-    u.searchParams.delete("channel_binding");
-    if (!u.searchParams.has("sslmode")) u.searchParams.set("sslmode", "require");
-    // Supabase pooler uses 6543; direct is typically 5432
-    if (u.port === "6543") u.port = "5432";
-    return u.toString();
-  } catch {
-    return urlStr;
-  }
-}
-
-migrateUrl = toDirect(migrateUrl);
-
-const poolUrl = runtimeUrl || migrateUrl;
-
-const mask = (u) => u.replace(/:\/\/([^:]+):[^@]+@/, "://$1:****@");
-console.log(`[vercel-build] DATABASE_URL (runtime): ${mask(poolUrl)}${runtimeSource ? `  ← ${runtimeSource}` : ""}`);
-console.log(`[vercel-build] DIRECT_URL (schema):   ${mask(migrateUrl)}${migrateSource ? `  ← ${migrateSource}` : ""}`);
-
-const migrateEnv = {
+const buildEnv = {
   ...process.env,
-  DATABASE_URL: poolUrl,
-  DIRECT_URL: migrateUrl,
+  DATABASE_URL: databaseUrl,
+  TURSO_DATABASE_URL: databaseUrl,
+  TURSO_AUTH_TOKEN: authToken,
 };
 
-function run(cmd, env = process.env) {
+function run(cmd, env = buildEnv) {
   console.log(`\n[vercel-build] $ ${cmd}`);
   execSync(cmd, { stdio: "inherit", env });
 }
 
-run("npx prisma generate", migrateEnv);
-// Additive schema sync only. No seed — catalog/admin edits must survive deploys.
-run("npx prisma db push --skip-generate", migrateEnv);
-run("npx next build", migrateEnv);
+run("npx prisma generate");
+// Additive schema sync to Turso (Prisma CLI needs file: for sqlite, so we apply DDL via libsql).
+run("node scripts/prisma-push-turso.mjs");
+run("npx next build");

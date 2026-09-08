@@ -13,7 +13,7 @@ from a secure dashboard.
 | Language         | TypeScript                                    |
 | Styling          | Tailwind CSS v4                               |
 | ORM              | Prisma 6                                      |
-| Database         | PostgreSQL (Supabase) + Firebase FCM only     |
+| Database         | Turso (LibSQL) + Firebase FCM only            |
 | Auth             | NextAuth / Auth.js v5 (credentials, JWT)      |
 | State            | Zustand (cart + UI, localStorage persistence) |
 | Hosting          | Vercel (free tier + free SSL)                 |
@@ -73,16 +73,17 @@ npm install
 
 ### 2. Configure environment
 
-Copy `.env.example` to `.env` and fill in Supabase Postgres + auth values (see [docs/supabase.md](docs/supabase.md)):
+Copy `.env.example` to `.env` and fill in Turso + auth values (see [docs/supabase.md](docs/supabase.md)):
 
 ```bash
 cp .env.example .env
 ```
 
-| Variable         | Purpose                                                      |
-| ---------------- | ----------------------------------------------------------- |
-| `DATABASE_URL`   | Supabase **pooled** URL (runtime, port `6543` / pgbouncer)  |
-| `DIRECT_URL`     | Supabase **direct** URL (schema push, port `5432`)          |
+| Variable              | Purpose                                                      |
+| --------------------- | ----------------------------------------------------------- |
+| `TURSO_DATABASE_URL`  | Turso libsql URL (`libsql://your-db.turso.io`)              |
+| `TURSO_AUTH_TOKEN`    | Turso database auth token                                   |
+| `DATABASE_URL`        | Same libsql URL (used by Prisma CLI)                        |
 | `AUTH_SECRET`    | NextAuth secret — generate with `openssl rand -base64 32`   |
 | `NEXTAUTH_SECRET`| Same value as `AUTH_SECRET` (compatibility)                 |
 | `ADMIN_EMAIL`    | Seed admin email                                            |
@@ -92,7 +93,7 @@ cp .env.example .env
 ### 3. Set up the database
 
 ```bash
-npm run db:push        # sync schema to Supabase
+npm run db:push        # sync schema to Turso
 npm run db:seed        # create-only: categories, products, admin (safe re-run)
 ```
 
@@ -122,7 +123,7 @@ Password: Srk@Admin2026
 | `npm run build`    | `prisma generate` + production build     |
 | `npm run start`    | Start the production server              |
 | `npm run lint`     | Run ESLint                               |
-| `npm run db:push`    | Sync Prisma schema to Supabase          |
+| `npm run db:push`    | Sync Prisma schema to Turso             |
 | `npm run db:seed`    | Create-only seed (no product overwrite) |
 | `npm run db:studio`  | Open Prisma Studio                      |
 
@@ -130,7 +131,7 @@ Password: Srk@Admin2026
 
 1. Push this repo to GitHub.
 2. Import the project on [vercel.com](https://vercel.com).
-3. Add env vars: `DATABASE_URL`, `DIRECT_URL` (or `srk_POSTGRES_*`), `AUTH_SECRET`, `NEXTAUTH_SECRET`, and optionally `FIREBASE_SERVICE_ACCOUNT_JSON` for FCM.
+3. Add env vars: `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `DATABASE_URL`, `AUTH_SECRET`, `NEXTAUTH_SECRET`, and optionally `FIREBASE_SERVICE_ACCOUNT_JSON` for FCM.
    Set `NEXTAUTH_URL`/`AUTH_URL` to your Vercel domain (or rely on `AUTH_TRUST_HOST=true`).
 4. Build command uses `scripts/vercel-build.mjs` (`prisma generate` + `db push` + `next build`). **No seed on deploy.**
 5. After the first deploy, run create-only seed once against production:

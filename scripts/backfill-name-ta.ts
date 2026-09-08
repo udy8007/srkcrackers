@@ -2,7 +2,7 @@
  * Backfill Product.nameTa from English → Tamil mapping.
  * Run: npx tsx scripts/backfill-name-ta.ts
  */
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/lib/create-prisma-client";
 
 const NAME_TA: Record<string, string> = {
   "7 cm Electric Sparklers": "7 செ.மீ. எலக்ட்ரிக் கம்பி மத்தாப்பு",
@@ -152,7 +152,7 @@ function resolveTamil(dbName: string): string | null {
 }
 
 async function main() {
-  const prisma = new PrismaClient();
+  const prisma = createPrismaClient();
   try {
     const products = await prisma.product.findMany({
       select: { id: true, name: true, nameTa: true },

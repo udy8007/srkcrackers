@@ -57,6 +57,10 @@ mobile-admin/android/capacitor-cordova-android-plugins/
 # Local database dumps (contain customer data)
 /backups/
 
+# Turso schema push temp files
+.turso-push-temp.*
+.migration-temp.db
+
 # Firebase Admin SDK private key (never commit)
 .firebase-service-account.json
 

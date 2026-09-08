@@ -1,4 +1,4 @@
-# Prisma schema (Supabase Postgres)
+# Prisma schema (Turso LibSQL)
 
 Active data layer for the app. See [docs/supabase.md](../docs/supabase.md).
 

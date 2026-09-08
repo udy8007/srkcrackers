@@ -5,10 +5,10 @@
  *
  * Usage: npx tsx scripts/sync-catalog.ts
  */
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/lib/create-prisma-client";
 import { CATEGORIES, PRODUCTS } from "../prisma/seed-data";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 function slugify(value: string): string {
   return value

@@ -2,9 +2,9 @@
  * Upsert Festival Gift Packs category + 3 products (20% off MRP).
  * Usage: npx tsx scripts/seed-gift-packs.ts
  */
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/lib/create-prisma-client";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 const PACKS = [
   {
