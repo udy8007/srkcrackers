@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sqliteContains } from "@/lib/sqlite-search";
 
 export const dynamic = "force-dynamic";
 
@@ -22,11 +23,11 @@ export async function GET(request: NextRequest) {
   }
   if (q) {
     where.OR = [
-      { enquiryNumber: { contains: q, mode: "insensitive" } },
-      { name: { contains: q, mode: "insensitive" } },
-      { phone: { contains: q } },
-      { email: { contains: q, mode: "insensitive" } },
-      { message: { contains: q, mode: "insensitive" } },
+      { enquiryNumber: sqliteContains(q) },
+      { name: sqliteContains(q) },
+      { phone: sqliteContains(q) },
+      { email: sqliteContains(q) },
+      { message: sqliteContains(q) },
     ];
   }
 

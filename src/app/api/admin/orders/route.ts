@@ -3,6 +3,7 @@ import type { OrderStatus } from "@/lib/db/types";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { ORDER_STATUSES } from "@/lib/constants";
+import { sqliteContains } from "@/lib/sqlite-search";
 
 export const dynamic = "force-dynamic";
 
@@ -28,9 +29,9 @@ export async function GET(request: NextRequest) {
   }
   if (q) {
     where.OR = [
-      { orderNumber: { contains: q, mode: "insensitive" } },
-      { phone: { contains: q } },
-      { customerName: { contains: q, mode: "insensitive" } },
+      { orderNumber: sqliteContains(q) },
+      { phone: sqliteContains(q) },
+      { customerName: sqliteContains(q) },
     ];
   }
   if (from || to) {

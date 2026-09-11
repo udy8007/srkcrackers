@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { actorFromSession, writeAuditLog } from "@/lib/audit-log";
 import { invalidateCatalogCache } from "@/lib/catalog";
 import { slugify } from "@/lib/slugify";
+import { sqliteContains } from "@/lib/sqlite-search";
 import type { Product } from "@/lib/db/types";
 
 export const dynamic = "force-dynamic";
@@ -57,9 +58,11 @@ export async function GET(request: NextRequest) {
   if (categoryId) where.categoryId = categoryId;
   if (q) {
     where.OR = [
-      { name: { contains: q, mode: "insensitive" } },
-      { nameTa: { contains: q, mode: "insensitive" } },
-      { pack: { contains: q, mode: "insensitive" } },
+      { name: sqliteContains(q) },
+      { nameTa: sqliteContains(q) },
+      { pack: sqliteContains(q) },
+      { description: sqliteContains(q) },
+      { slug: sqliteContains(q) },
     ];
   }
 

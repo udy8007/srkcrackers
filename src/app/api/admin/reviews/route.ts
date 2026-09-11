@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { sqliteContains } from "@/lib/sqlite-search";
 
 export const dynamic = "force-dynamic";
 
@@ -21,10 +22,10 @@ export async function GET(request: NextRequest) {
   if (visibility === "hidden") where.visible = false;
   if (q) {
     where.OR = [
-      { reviewerName: { contains: q, mode: "insensitive" } },
-      { text: { contains: q, mode: "insensitive" } },
-      { order: { orderNumber: { contains: q, mode: "insensitive" } } },
-      { product: { name: { contains: q, mode: "insensitive" } } },
+      { reviewerName: sqliteContains(q) },
+      { text: sqliteContains(q) },
+      { order: { orderNumber: sqliteContains(q) } },
+      { product: { name: sqliteContains(q) } },
     ];
   }
 

@@ -88,6 +88,7 @@ export function ProductsManager() {
   const [page, setPage] = useState(0);
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [loading, setLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -121,14 +122,21 @@ export function ProductsManager() {
       params.set("skip", String((pageOverride ?? page) * PAGE_SIZE));
 
       const prodRes = await fetch(`/api/admin/products?${params.toString()}`);
-      if (prodRes.ok) {
-        const data = await prodRes.json();
-        const list = data.products as AdminProduct[];
-        setProducts(list);
-        setTotal(data.total);
-        setStats(data.stats ?? { total: data.total, active: 0, hidden: 0 });
-        setDrafts(Object.fromEntries(list.map((p) => [p.id, toDraft(p)])));
+      const data = await prodRes.json().catch(() => ({}));
+      if (!prodRes.ok) {
+        setProducts([]);
+        setTotal(0);
+        setMessage({
+          type: "err",
+          text: typeof data.error === "string" ? data.error : "Could not load products.",
+        });
+        return;
       }
+      const list = data.products as AdminProduct[];
+      setProducts(list);
+      setTotal(data.total);
+      setStats(data.stats ?? { total: data.total, active: 0, hidden: 0 });
+      setDrafts(Object.fromEntries(list.map((p) => [p.id, toDraft(p)])));
     } finally {
       setLoading(false);
     }
@@ -140,15 +148,21 @@ export function ProductsManager() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      void load();
+      setSearch(searchInput.trim());
+      setPage(0);
+      setSelected(new Set());
     }, 250);
     return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
+    void load();
   }, [load]);
 
   useEffect(() => {
     setPage(0);
     setSelected(new Set());
-  }, [search, statusFilter, categoryFilter]);
+  }, [statusFilter, categoryFilter, search]);
 
   const updateDraft = (id: string, patch: Partial<Draft>) =>
     setDrafts((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
@@ -420,8 +434,8 @@ export function ProductsManager() {
       <div className="flex flex-wrap items-center gap-2">
         <input
           className="input max-w-xs"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
           placeholder="Search products..."
         />
         <select

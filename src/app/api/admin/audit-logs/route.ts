@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import type { AuditEntityType } from "@/lib/audit-log";
+import { sqliteContains } from "@/lib/sqlite-search";
 
 export const dynamic = "force-dynamic";
 
@@ -42,11 +43,11 @@ export async function GET(request: NextRequest) {
   if (action) where.action = action;
   if (q) {
     where.OR = [
-      { summary: { contains: q, mode: "insensitive" } },
-      { actorEmail: { contains: q, mode: "insensitive" } },
-      { actorName: { contains: q, mode: "insensitive" } },
-      { entityId: { contains: q, mode: "insensitive" } },
-      { action: { contains: q, mode: "insensitive" } },
+      { summary: sqliteContains(q) },
+      { actorEmail: sqliteContains(q) },
+      { actorName: sqliteContains(q) },
+      { entityId: sqliteContains(q) },
+      { action: sqliteContains(q) },
     ];
   }
 
