@@ -228,6 +228,110 @@ export function buildAdminPendingReminderEmail(
   };
 }
 
+export interface EnquiryEmailContext {
+  enquiryNumber: string;
+  name: string;
+  phone: string;
+  email?: string | null;
+  message: string;
+  status: "PENDING" | "RESOLVED";
+  adminNote?: string | null;
+  createdAt: string;
+  adminEnquiryUrl: string;
+}
+
+export function buildAdminNewEnquiryEmail(ctx: EnquiryEmailContext): { subject: string; html: string } {
+  const body = `
+    <h2 style="margin-top:0;color:#9d0208">📩 New Enquiry Received</h2>
+    <div class="alert urgent">
+      <strong>Action required:</strong> A customer enquiry needs your response within 2 hours.
+    </div>
+    <div class="meta">
+      <p><strong>Enquiry ID:</strong> ${esc(ctx.enquiryNumber)}</p>
+      <p><strong>Name:</strong> ${esc(ctx.name)}</p>
+      <p><strong>Phone:</strong> ${esc(ctx.phone)}</p>
+      ${ctx.email ? `<p><strong>Email:</strong> ${esc(ctx.email)}</p>` : ""}
+      <p><strong>Submitted:</strong> ${esc(new Date(ctx.createdAt).toLocaleString("en-IN"))}</p>
+    </div>
+    <p><strong>Message:</strong></p>
+    <div class="meta" style="white-space:pre-wrap">${esc(ctx.message)}</div>
+    <p style="text-align:center">
+      <a class="btn" href="${esc(ctx.adminEnquiryUrl)}">View Enquiry in Admin</a>
+    </p>
+  `;
+
+  return {
+    subject: `📩 New Enquiry ${ctx.enquiryNumber} — ${ctx.name}`,
+    html: emailLayout(`New Enquiry ${ctx.enquiryNumber}`, body),
+  };
+}
+
+export function buildCustomerEnquiryResolvedEmail(ctx: EnquiryEmailContext): { subject: string; html: string } {
+  const body = `
+    <h2 style="margin-top:0;color:#9d0208">Your Enquiry Has Been Resolved</h2>
+    <p>Dear <strong>${esc(ctx.name)}</strong>,</p>
+    <p>Thank you for contacting <strong>${esc(BUSINESS.name)}</strong>. We have reviewed and resolved your enquiry.</p>
+    <div class="meta">
+      <p><strong>Enquiry ID:</strong> ${esc(ctx.enquiryNumber)}</p>
+      ${ctx.adminNote ? `<p><strong>Response:</strong> ${esc(ctx.adminNote)}</p>` : ""}
+    </div>
+    <p>If you have any further questions, please call us at ${esc(BUSINESS.phoneDisplay)} or WhatsApp us anytime.</p>
+    <p style="text-align:center">
+      <a class="btn" href="${esc(BUSINESS.url)}">Visit Our Store</a>
+    </p>
+  `;
+
+  return {
+    subject: `Enquiry Resolved — ${ctx.enquiryNumber} | ${BUSINESS.name}`,
+    html: emailLayout(`Enquiry Resolved ${ctx.enquiryNumber}`, body),
+  };
+}
+
+export function buildAdminEnquiryPendingReminderEmail(
+  enquiries: EnquiryEmailContext[],
+  adminEnquiriesUrl: string,
+): { subject: string; html: string } {
+  const rows = enquiries
+    .map(
+      (e) => `
+      <tr>
+        <td style="padding:8px;border-bottom:1px solid #ebe1d7">${esc(e.enquiryNumber)}</td>
+        <td style="padding:8px;border-bottom:1px solid #ebe1d7">${esc(e.name)}</td>
+        <td style="padding:8px;border-bottom:1px solid #ebe1d7">${esc(e.phone)}</td>
+        <td style="padding:8px;border-bottom:1px solid #ebe1d7">
+          <a href="${esc(e.adminEnquiryUrl)}" style="color:#9d0208">View</a>
+        </td>
+      </tr>`,
+    )
+    .join("");
+
+  const body = `
+    <h2 style="margin-top:0;color:#9d0208">⏰ Pending Enquiries Reminder</h2>
+    <div class="alert urgent">
+      <strong>${enquiries.length} enquiry(ies)</strong> have been waiting more than 2 hours without resolution.
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead>
+        <tr style="background:#fff8f2">
+          <th style="padding:8px;text-align:left">Enquiry</th>
+          <th style="padding:8px;text-align:left">Name</th>
+          <th style="padding:8px;text-align:left">Phone</th>
+          <th style="padding:8px;text-align:left"></th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p style="text-align:center">
+      <a class="btn" href="${esc(adminEnquiriesUrl)}">Open Enquiries Dashboard</a>
+    </p>
+  `;
+
+  return {
+    subject: `⏰ Reminder: ${enquiries.length} pending enquiry(ies) need action`,
+    html: emailLayout("Pending Enquiries Reminder", body),
+  };
+}
+
 export function buildTestEmail(): { subject: string; html: string } {
   const body = `
     <h2 style="margin-top:0;color:#9d0208">Test Email</h2>

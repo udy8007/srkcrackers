@@ -7,12 +7,17 @@ import { getEmailSettings, resolveAdminNotifyEmail, resolveSiteOrigin } from "@/
 import { sendEmail } from "@/lib/email";
 import { sendAdminPush } from "@/lib/admin-push";
 import {
+  buildAdminEnquiryPendingReminderEmail,
+  buildAdminNewEnquiryEmail,
   buildAdminNewOrderEmail,
   buildAdminPendingReminderEmail,
+  buildCustomerEnquiryResolvedEmail,
   buildCustomerOrderConfirmationEmail,
   buildCustomerStatusChangeEmail,
+  type EnquiryEmailContext,
   type OrderEmailContext,
 } from "@/lib/email-templates";
+import type { Enquiry } from "@/lib/db/types";
 import type { PrintInvoiceData } from "@/lib/print-invoice-html";
 
 const PENDING_STATUSES: OrderStatus[] = ["PLACED", "VERIFYING"];
@@ -81,6 +86,8 @@ export async function createAdminNotification(input: {
   message: string;
   orderId?: string;
   orderNumber?: string;
+  enquiryId?: string;
+  enquiryNumber?: string;
   /** Deep link for FCM tap (defaults to /admin). */
   targetUrl?: string;
   /** Optional FCM title/body override (bell still uses title/message). */
@@ -108,6 +115,8 @@ export async function createAdminNotification(input: {
         type: input.type,
         ...(input.orderId ? { order_id: input.orderId } : {}),
         ...(input.orderNumber ? { order_number: input.orderNumber } : {}),
+        ...(input.enquiryId ? { enquiry_id: input.enquiryId } : {}),
+        ...(input.enquiryNumber ? { enquiry_number: input.enquiryNumber } : {}),
       },
     });
 
@@ -119,6 +128,8 @@ export async function createAdminNotification(input: {
         targetUrl: resolvedTargetUrl,
         orderId: input.orderId,
         orderNumber: input.orderNumber,
+        enquiryId: input.enquiryId,
+        enquiryNumber: input.enquiryNumber,
         status: result.failed > 0 ? (result.sent > 0 ? "PARTIAL" : "FAILED") : "SENT",
         sent: result.sent,
         failed: result.failed,
@@ -138,12 +149,28 @@ export async function createAdminNotification(input: {
         targetUrl: resolvedTargetUrl,
         orderId: input.orderId,
         orderNumber: input.orderNumber,
+        enquiryId: input.enquiryId,
+        enquiryNumber: input.enquiryNumber,
         status: "FAILED",
         error: message,
       },
     });
     console.error("[createAdminNotification] FCM push failed:", error);
   }
+}
+
+function buildEnquiryContext(enquiry: Enquiry, origin: string): EnquiryEmailContext {
+  return {
+    enquiryNumber: enquiry.enquiryNumber,
+    name: enquiry.name,
+    phone: enquiry.phone,
+    email: enquiry.email,
+    message: enquiry.message,
+    status: enquiry.status,
+    adminNote: enquiry.adminNote,
+    createdAt: enquiry.createdAt.toISOString(),
+    adminEnquiryUrl: `${origin}/admin/enquiries/${enquiry.id}`,
+  };
 }
 
 /** Schedule notification work after the HTTP response (Vercel-safe). Never throws to callers. */
@@ -417,6 +444,146 @@ export function notifyAutoDelivered(orderIds: string[]) {
   for (const orderId of orderIds) {
     dispatchNotification(() => notifyStatusChange(orderId, "DISPATCHED"));
   }
+}
+
+/** Send admin alert when a new enquiry is submitted. */
+export async function notifyEnquiryPlaced(enquiryId: string) {
+  const enquiry = await prisma.enquiry.findUnique({ where: { id: enquiryId } });
+  if (!enquiry) return;
+
+  const settings = await getEmailSettings();
+  const origin = resolveSiteOrigin();
+  const ctx = buildEnquiryContext(enquiry, origin);
+  const adminTo = resolveAdminNotifyEmail(settings);
+
+  if (settings.enabled && settings.notifyAdminNewEnquiry) {
+    if (!adminTo) {
+      console.warn(
+        `[notifyEnquiryPlaced] Skipped admin email for ${enquiry.enquiryNumber}: no admin notification email configured`,
+      );
+    } else {
+      try {
+        const { subject, html } = buildAdminNewEnquiryEmail(ctx);
+        const result = await sendEmail({
+          to: adminTo,
+          subject,
+          html,
+          trigger: "ENQUIRY_PLACED_ADMIN",
+        });
+        if (!result.ok) {
+          console.error(
+            `[notifyEnquiryPlaced] Admin email failed for ${enquiry.enquiryNumber}:`,
+            result.error,
+          );
+        }
+      } catch (error) {
+        console.error(`[notifyEnquiryPlaced] Admin email error for ${enquiry.enquiryNumber}:`, error);
+      }
+    }
+  }
+
+  const snippet = enquiry.message.trim().slice(0, 80);
+  await createAdminNotification({
+    type: "NEW_ENQUIRY",
+    title: `New enquiry ${enquiry.enquiryNumber}`,
+    message: `${enquiry.name} (${enquiry.phone}) — ${snippet}${enquiry.message.trim().length > 80 ? "…" : ""}`,
+    enquiryId: enquiry.id,
+    enquiryNumber: enquiry.enquiryNumber,
+    targetUrl: ctx.adminEnquiryUrl,
+    pushTitle: "New Enquiry Received!",
+    pushBody: `${enquiry.name} · ${enquiry.phone} — ${snippet}${enquiry.message.trim().length > 80 ? "…" : ""}`,
+  });
+}
+
+/** Notify customer when admin marks enquiry as resolved. */
+export async function notifyEnquiryResolved(enquiryId: string) {
+  const enquiry = await prisma.enquiry.findUnique({ where: { id: enquiryId } });
+  if (!enquiry || enquiry.status !== "RESOLVED") return;
+
+  const settings = await getEmailSettings();
+  const origin = resolveSiteOrigin();
+  const ctx = buildEnquiryContext(enquiry, origin);
+
+  if (settings.enabled && settings.notifyCustomerEnquiryResolved && enquiry.email?.trim()) {
+    try {
+      const { subject, html } = buildCustomerEnquiryResolvedEmail(ctx);
+      const result = await sendEmail({
+        to: enquiry.email.trim(),
+        subject,
+        html,
+        trigger: "ENQUIRY_RESOLVED_CUSTOMER",
+      });
+      if (!result.ok) {
+        console.error(
+          `[notifyEnquiryResolved] Customer email failed for ${enquiry.enquiryNumber}:`,
+          result.error,
+        );
+      }
+    } catch (error) {
+      console.error(`[notifyEnquiryResolved] Customer email error for ${enquiry.enquiryNumber}:`, error);
+    }
+  }
+}
+
+/** Remind admin about enquiries still pending after N hours. */
+export async function sendPendingEnquiryReminders(): Promise<{ reminded: number }> {
+  const settings = await getEmailSettings();
+  if (!settings.enabled || !settings.notifyAdminEnquiryPendingReminder) {
+    return { reminded: 0 };
+  }
+
+  if (!settings.adminNotifyEmail.trim() && !settings.fromEmail.trim() && !settings.username.trim()) {
+    return { reminded: 0 };
+  }
+
+  const hours = Math.max(1, settings.pendingReminderHours);
+  const threshold = new Date(Date.now() - hours * 60 * 60 * 1000);
+  const adminTo = resolveAdminNotifyEmail(settings);
+
+  const pending = await prisma.enquiry.findMany({
+    where: {
+      status: "PENDING",
+      OR: [
+        { lastPendingReminderAt: null, createdAt: { lte: threshold } },
+        { lastPendingReminderAt: { lte: threshold } },
+      ],
+    },
+    orderBy: { createdAt: "asc" },
+    take: 50,
+  });
+
+  if (pending.length === 0) return { reminded: 0 };
+
+  const origin = resolveSiteOrigin();
+  const contexts = pending.map((e) => buildEnquiryContext(e, origin));
+  const enquiriesUrl = `${origin}/admin/enquiries`;
+
+  const { subject, html } = buildAdminEnquiryPendingReminderEmail(contexts, enquiriesUrl);
+  const result = await sendEmail({
+    to: adminTo,
+    subject,
+    html,
+    trigger: "ENQUIRY_PENDING_REMINDER_ADMIN",
+  });
+
+  if (!result.ok) return { reminded: 0 };
+
+  const now = new Date();
+  await prisma.enquiry.updateMany({
+    where: { id: { in: pending.map((e) => e.id) } },
+    data: { lastPendingReminderAt: now },
+  });
+
+  await createAdminNotification({
+    type: "ENQUIRY_PENDING_REMINDER",
+    title: `${pending.length} pending enquiry(ies) need action`,
+    message: "Reminder for enquiries awaiting resolution for more than 2 hours.",
+    targetUrl: enquiriesUrl,
+    pushTitle: "Pending enquiries need action",
+    pushBody: `${pending.length} enquiry(ies) still awaiting resolution.`,
+  });
+
+  return { reminded: pending.length };
 }
 
 /** Admin bell + FCM when a verified product review is published. */

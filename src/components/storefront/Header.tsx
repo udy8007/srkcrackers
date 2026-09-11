@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useCart, selectCartCount } from "@/store/cart";
+import { useWishlist, selectWishlistCount } from "@/store/wishlist";
 import { useUI } from "@/store/ui";
 import { useMounted } from "@/lib/hooks";
 import { BUSINESS } from "@/lib/constants";
@@ -9,13 +10,17 @@ import { NAV_LINKS } from "./nav";
 
 export function Header() {
   const items = useCart((state) => state.items);
+  const wishlistIds = useWishlist((state) => state.ids);
   const mobileNavOpen = useUI((state) => state.mobileNavOpen);
   const toggleMobileNav = useUI((state) => state.toggleMobileNav);
   const closeMobileNav = useUI((state) => state.closeMobileNav);
   const toggleCart = useUI((state) => state.toggleCart);
+  const toggleWishlist = useUI((state) => state.toggleWishlist);
   const cartOpen = useUI((state) => state.cartOpen);
+  const wishlistOpen = useUI((state) => state.wishlistOpen);
   const mounted = useMounted();
   const count = mounted ? selectCartCount(items) : 0;
+  const wishlistCount = mounted ? selectWishlistCount(wishlistIds) : 0;
 
   return (
     <header className="sticky top-0 z-50 bg-gradient-to-r from-primary-dark via-primary to-primary-dark shadow-[0_2px_14px_rgba(157,2,8,0.4)]">
@@ -44,25 +49,40 @@ export function Header() {
           </span>
         </a>
 
-        <nav className="hidden min-w-0 flex-1 justify-center gap-0.5 lg:flex">
+        <nav className="hidden min-w-0 flex-1 justify-center gap-0 lg:flex xl:gap-0.5">
           {NAV_LINKS.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className="rounded-md px-3.5 py-1.5 text-[0.85rem] font-medium text-white/90 transition hover:bg-white/15 hover:text-white"
+              className="whitespace-nowrap rounded-md px-2 py-1.5 text-[0.78rem] font-medium text-white/90 transition hover:bg-white/15 hover:text-white xl:px-2.5 xl:text-[0.82rem]"
             >
               {link.label}
             </a>
           ))}
         </nav>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1.5">
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5">
+          <button
+            type="button"
+            onClick={toggleWishlist}
+            aria-label={`View wishlist${wishlistCount > 0 ? ` (${wishlistCount} items)` : ""}`}
+            aria-expanded={wishlistOpen}
+            className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-base text-white transition hover:bg-white/20 sm:h-11 sm:w-11"
+          >
+            <span aria-hidden>❤️</span>
+            {wishlistCount > 0 && (
+              <span className="absolute -right-1 -top-1 inline-flex h-[1.1rem] min-w-[1.1rem] items-center justify-center rounded-full bg-yellow px-0.5 text-[0.62rem] font-bold leading-none text-primary-dark">
+                {wishlistCount}
+              </span>
+            )}
+          </button>
+
           <button
             type="button"
             onClick={toggleCart}
             aria-label="View cart"
             aria-expanded={cartOpen}
-            className="flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-lg bg-yellow px-3 text-[0.85rem] font-bold text-primary-dark transition hover:brightness-105"
+            className="flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-lg bg-yellow px-2.5 text-[0.85rem] font-bold text-primary-dark transition hover:brightness-105 sm:h-11 sm:min-w-11 sm:px-3"
           >
             <svg
               viewBox="0 0 24 24"

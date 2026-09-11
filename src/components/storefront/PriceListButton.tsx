@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useCatalog } from "./catalog-context";
 import { useToast } from "@/store/toast";
 import { downloadPriceList } from "@/lib/pricelist";
 
@@ -12,7 +11,6 @@ export function PriceListButton({
   className?: string;
   label?: string;
 }) {
-  const { categories } = useCatalog();
   const showToast = useToast((s) => s.show);
   const [loading, setLoading] = useState(false);
 
@@ -21,7 +19,11 @@ export function PriceListButton({
     setLoading(true);
     showToast("Preparing price list PDF...");
     try {
-      await downloadPriceList(categories);
+      const res = await fetch("/api/products?full=1");
+      if (!res.ok) throw new Error("Failed to load catalog");
+      const data = (await res.json()) as { categories?: Parameters<typeof downloadPriceList>[0] };
+      if (!data.categories?.length) throw new Error("Catalog empty");
+      await downloadPriceList(data.categories);
     } catch {
       showToast("Could not generate the PDF. Please try again.");
     } finally {

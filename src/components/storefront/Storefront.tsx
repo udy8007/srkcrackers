@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect } from "react";
-import type { CategoryWithProductsDTO } from "@/types";
+import type { CategoryMetaDTO } from "@/types";
 import { CatalogProvider } from "./catalog-context";
 import { useUI } from "@/store/ui";
 import { TopBar } from "./TopBar";
@@ -10,6 +10,7 @@ import { MarqueeBars } from "./Marquee";
 import { Hero } from "./Hero";
 import { Highlights } from "./Highlights";
 import { CustomerFeedback } from "./CustomerFeedback";
+import { EnquiryForm } from "./EnquiryForm";
 import { ProductsSection } from "./ProductsSection";
 import { GiftPacksSection } from "./GiftPacksSection";
 import { HowToOrder } from "./HowToOrder";
@@ -23,6 +24,7 @@ import { MapSection } from "./MapSection";
 import { Footer } from "./Footer";
 import { StickyBar } from "./StickyBar";
 import { CartDrawer } from "./CartDrawer";
+import { WishlistDrawer } from "./WishlistDrawer";
 import { CheckoutModal } from "./CheckoutModal";
 import { ProductModal } from "./ProductModal";
 import { FloatingDock } from "./FloatingDock";
@@ -30,10 +32,11 @@ import { ScrollReveal } from "./ScrollReveal";
 import { VisitTracker } from "./VisitTracker";
 import { Toast } from "./Toast";
 
-export function Storefront({ categories }: { categories: CategoryWithProductsDTO[] }) {
+export function Storefront({ categories }: { categories: CategoryMetaDTO[] }) {
   const closeProduct = useUI((s) => s.closeProduct);
   const closeCheckout = useUI((s) => s.closeCheckout);
   const closeCart = useUI((s) => s.closeCart);
+  const closeWishlist = useUI((s) => s.closeWishlist);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -41,11 +44,12 @@ export function Storefront({ categories }: { categories: CategoryWithProductsDTO
         closeProduct();
         closeCheckout();
         closeCart();
+        closeWishlist();
       }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [closeProduct, closeCheckout, closeCart]);
+  }, [closeProduct, closeCheckout, closeCart, closeWishlist]);
 
   return (
     <CatalogProvider categories={categories}>
@@ -69,6 +73,7 @@ export function Storefront({ categories }: { categories: CategoryWithProductsDTO
           <VideoShowcase />
           <MapSection />
           <CustomerFeedback />
+          <EnquiryForm />
         </main>
         <Footer />
       </div>
@@ -78,6 +83,7 @@ export function Storefront({ categories }: { categories: CategoryWithProductsDTO
       <StickyBar />
       <FloatingDock />
       <CartDrawer />
+      <WishlistDrawer />
       <ProductModal />
       <CheckoutModal />
       <Toast />

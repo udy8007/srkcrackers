@@ -1,13 +1,17 @@
 import "server-only";
 
 import {
+  buildAdminEnquiryPendingReminderEmail,
+  buildAdminNewEnquiryEmail,
   buildAdminNewOrderEmail,
   buildAdminPendingReminderEmail,
   buildAdminStatusChangeEmail,
+  buildCustomerEnquiryResolvedEmail,
   buildCustomerOrderConfirmationEmail,
   buildCustomerStatusChangeEmail,
   buildDatabaseBackupPreviewEmail,
   buildTestEmail,
+  type EnquiryEmailContext,
 } from "@/lib/email-templates";
 import type { PrintInvoiceData } from "@/lib/print-invoice-html";
 import type { OrderStatus } from "@/lib/db/types";
@@ -21,6 +25,9 @@ export const EMAIL_PREVIEW_TRIGGERS = [
   "ORDER_PLACED_ADMIN",
   "STATUS_CHANGE_ADMIN",
   "PENDING_REMINDER_ADMIN",
+  "ENQUIRY_PLACED_ADMIN",
+  "ENQUIRY_RESOLVED_CUSTOMER",
+  "ENQUIRY_PENDING_REMINDER_ADMIN",
   "DB_BACKUP",
   "TEST",
 ] as const;
@@ -41,6 +48,19 @@ function sampleContext(status: OrderStatus = "VERIFYING"): OrderEmailContext {
     createdAt: new Date().toISOString(),
     adminOrderUrl: `${origin}/admin/orders/sample-order-id`,
     trackUrl: `${origin}/?track=SRK-20260707-0042&phone=9841916899`,
+  };
+}
+
+function sampleEnquiryContext(origin: string): EnquiryEmailContext {
+  return {
+    enquiryNumber: "ENQ-20260911-A3F2",
+    name: "Ravi Kumar",
+    phone: "9841916899",
+    email: "customer@example.com",
+    message: "I need bulk pricing for gift boxes. Can you deliver to Ambattur?",
+    status: "PENDING",
+    createdAt: new Date().toISOString(),
+    adminEnquiryUrl: `${origin}/admin/enquiries/sample-enquiry-id`,
   };
 }
 
@@ -109,6 +129,26 @@ export function getEmailPreview(trigger: EmailPreviewTrigger): { subject: string
           },
         ],
         `${origin}/admin/orders`,
+      );
+    case "ENQUIRY_PLACED_ADMIN":
+      return buildAdminNewEnquiryEmail(sampleEnquiryContext(origin));
+    case "ENQUIRY_RESOLVED_CUSTOMER":
+      return buildCustomerEnquiryResolvedEmail({
+        ...sampleEnquiryContext(origin),
+        status: "RESOLVED",
+        adminNote: "We can deliver gift boxes to Ambattur. Please call us to confirm quantity.",
+      });
+    case "ENQUIRY_PENDING_REMINDER_ADMIN":
+      return buildAdminEnquiryPendingReminderEmail(
+        [
+          sampleEnquiryContext(origin),
+          {
+            ...sampleEnquiryContext(origin),
+            enquiryNumber: "ENQ-20260911-B7K1",
+            name: "Priya S.",
+          },
+        ],
+        `${origin}/admin/enquiries`,
       );
     case "DB_BACKUP":
       return buildDatabaseBackupPreviewEmail();

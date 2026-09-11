@@ -5,6 +5,9 @@ export type EmailPreviewTrigger =
   | "ORDER_PLACED_ADMIN"
   | "STATUS_CHANGE_ADMIN"
   | "PENDING_REMINDER_ADMIN"
+  | "ENQUIRY_PLACED_ADMIN"
+  | "ENQUIRY_RESOLVED_CUSTOMER"
+  | "ENQUIRY_PENDING_REMINDER_ADMIN"
   | "DB_BACKUP"
   | "TEST";
 
@@ -15,7 +18,10 @@ export interface NotificationTriggerMeta {
     | "notifyCustomerDelivered"
     | "notifyAdminNewOrder"
     | "notifyAdminStatusChange"
-    | "notifyAdminPendingReminder";
+    | "notifyAdminPendingReminder"
+    | "notifyAdminNewEnquiry"
+    | "notifyCustomerEnquiryResolved"
+    | "notifyAdminEnquiryPendingReminder";
   previewTrigger: EmailPreviewTrigger;
   label: string;
   description: string;
@@ -79,6 +85,33 @@ export const NOTIFICATION_TRIGGER_META: NotificationTriggerMeta[] = [
       "Placed/Verifying email reminder, plus FCM push for incomplete checkouts (payment pending — please contact) with order deep link",
     audience: "Admin",
     timing: "Repeating — every N hours via in-app scheduler until resolved/cancelled",
+    icon: "⏰",
+  },
+  {
+    formKey: "notifyAdminNewEnquiry",
+    previewTrigger: "ENQUIRY_PLACED_ADMIN",
+    label: "Admin — new enquiry alert",
+    description: "Urgent alert with customer details and link to admin enquiry page",
+    audience: "Admin",
+    timing: "Instant — when customer submits enquiry form",
+    icon: "📩",
+  },
+  {
+    formKey: "notifyCustomerEnquiryResolved",
+    previewTrigger: "ENQUIRY_RESOLVED_CUSTOMER",
+    label: "Customer — enquiry resolved",
+    description: "Resolution confirmation with optional admin response note",
+    audience: "Customer",
+    timing: "Instant — when admin marks enquiry as resolved (email required)",
+    icon: "✅",
+  },
+  {
+    formKey: "notifyAdminEnquiryPendingReminder",
+    previewTrigger: "ENQUIRY_PENDING_REMINDER_ADMIN",
+    label: "Admin — pending enquiry reminder",
+    description: "Email + FCM push for enquiries still pending after N hours",
+    audience: "Admin",
+    timing: "Repeating — every N hours via in-app scheduler until resolved",
     icon: "⏰",
   },
 ];

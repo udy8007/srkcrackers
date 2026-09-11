@@ -80,6 +80,18 @@ export async function PATCH(request: NextRequest) {
       typeof body.pendingReminderHours === "number"
         ? Math.max(1, Math.min(72, body.pendingReminderHours))
         : existing.pendingReminderHours,
+    notifyAdminNewEnquiry:
+      typeof body.notifyAdminNewEnquiry === "boolean"
+        ? body.notifyAdminNewEnquiry
+        : existing.notifyAdminNewEnquiry,
+    notifyCustomerEnquiryResolved:
+      typeof body.notifyCustomerEnquiryResolved === "boolean"
+        ? body.notifyCustomerEnquiryResolved
+        : existing.notifyCustomerEnquiryResolved,
+    notifyAdminEnquiryPendingReminder:
+      typeof body.notifyAdminEnquiryPendingReminder === "boolean"
+        ? body.notifyAdminEnquiryPendingReminder
+        : existing.notifyAdminEnquiryPendingReminder,
   };
 
   const updated = await prisma.emailSettings.upsert({

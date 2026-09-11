@@ -1,115 +1,37 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { SafeImage } from "@/components/SafeImage";
-import { useMounted } from "@/lib/hooks";
-import { formatPrice } from "@/lib/utils";
-import { useCart } from "@/store/cart";
-import { useUI } from "@/store/ui";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ProductDTO } from "@/types";
 import { OrderOffersBanner } from "./OrderOffersBanner";
 import { PriceListButton } from "./PriceListButton";
 import { SectionDecor } from "./FestiveDecor";
 import { SectionHead } from "./SectionHead";
 import { useCatalog } from "./catalog-context";
+import { ProductCard } from "./ProductCard";
+import { ProductGridSkeleton } from "./ProductCardSkeleton";
+import { ProductPagination } from "./ProductPagination";
 
-function discountPct(mrp: number, price: number): number | null {
-  return mrp > price ? Math.round(((mrp - price) / mrp) * 100) : null;
-}
-
-function ProductCard({ product }: { product: ProductDTO }) {
-  const openProduct = useUI((state) => state.openProduct);
-  const changeQty = useCart((state) => state.changeQty);
-  const qty = useCart((state) => state.items[product.id] ?? 0);
-  const mounted = useMounted();
-  const shownQty = mounted ? qty : 0;
-  const discount = discountPct(product.mrp, product.price);
-
-  return (
-    <article
-      className={`group flex h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_7px_24px_rgba(90,0,8,0.08)] transition hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(90,0,8,0.14)] ${
-        shownQty > 0 ? "border-primary/40 ring-2 ring-primary/15" : "border-[#ead9c8]"
-      }`}
-    >
-      <button
-        type="button"
-        onClick={() => openProduct(product.id)}
-        className="relative flex aspect-square w-full items-center justify-center overflow-hidden bg-gradient-to-b from-[#fff9f1] to-[#ffead7] p-4"
-      >
-        <SafeImage
-          src={product.imageUrl}
-          alt={product.name}
-          width={400}
-          height={400}
-          sizes="(max-width: 640px) 88vw, (max-width: 1024px) 45vw, 25vw"
-          className="h-full w-full object-contain drop-shadow-md transition duration-300 group-hover:scale-[1.03]"
-        />
-        {discount && (
-          <span className="absolute left-3 top-3 rounded-md bg-yellow px-2.5 py-1 text-xs font-extrabold text-primary-dark shadow-sm">
-            {discount}% Off
-          </span>
-        )}
-      </button>
-
-      <div className="flex flex-1 flex-col p-4">
-        <button
-          type="button"
-          onClick={() => openProduct(product.id)}
-          className="flex flex-1 flex-col text-left transition hover:opacity-90"
-        >
-          <span className="font-display text-base font-bold leading-snug text-ink group-hover:text-primary">
-            {product.name}
-          </span>
-          {product.nameTa && (
-            <span className="mt-1 line-clamp-1 text-sm text-ink/70" lang="ta">
-              {product.nameTa}
-            </span>
-          )}
-          <span className="mt-1 text-xs text-ink-muted">{product.pack}</span>
-
-          <span className="mt-auto flex items-baseline gap-2 pt-4">
-            <span className="text-xl font-extrabold text-primary">{formatPrice(product.price)}</span>
-            <span className="text-xs text-ink-muted line-through">{formatPrice(product.mrp)}</span>
-          </span>
-        </button>
-
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <span className="text-xs font-semibold text-ink-muted">
-            {shownQty > 0 ? `${shownQty} in cart` : "Quantity"}
-          </span>
-          <div className="inline-flex items-center overflow-hidden rounded-full border border-line bg-white shadow-sm">
-            <button
-              type="button"
-              aria-label={`Remove ${product.name}`}
-              onClick={() => changeQty(product.id, -1)}
-              className="flex h-9 w-9 items-center justify-center bg-brandbg text-lg font-bold text-primary hover:bg-primary/10"
-            >
-              −
-            </button>
-            <span className="w-8 text-center text-sm font-bold tabular-nums text-ink">{shownQty}</span>
-            <button
-              type="button"
-              aria-label={`Add ${product.name}`}
-              onClick={() => changeQty(product.id, 1)}
-              className="flex h-9 w-9 items-center justify-center bg-primary text-lg font-bold text-white hover:brightness-110"
-            >
-              +
-            </button>
-          </div>
-        </div>
-      </div>
-    </article>
-  );
-}
+const PAGE_SIZE = 12;
+const SEARCH_DEBOUNCE_MS = 350;
 
 function scrollToGiftBoxes() {
   document.getElementById("gift-packs")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+function scrollToProductsGrid() {
+  document.getElementById("products-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 export function ProductsSection() {
-  const { categories, loading } = useCatalog();
+  const { categories, cacheProducts, getCategoryLabel, loading: metaLoading } = useCatalog();
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [page, setPage] = useState(1);
+  const [products, setProducts] = useState<ProductDTO[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
 
   const giftPackCategory = useMemo(
     () => categories.find((category) => category.key === "gift-packs"),
@@ -120,24 +42,61 @@ export function ProductsSection() {
     [categories],
   );
   const totalProducts = useMemo(
-    () => shopCategories.reduce((total, category) => total + category.products.length, 0),
+    () => shopCategories.reduce((sum, category) => sum + category.productCount, 0),
     [shopCategories],
   );
-  const query = search.trim().toLowerCase();
 
-  const products = useMemo(() => {
-    return shopCategories
-      .filter((category) => selectedCategory === "all" || category.key === selectedCategory)
-      .flatMap((category) => category.products)
-      .filter(
-        (product) =>
-          !query ||
-          product.name.toLowerCase().includes(query) ||
-          (product.nameTa?.toLowerCase().includes(query) ?? false) ||
-          product.pack.toLowerCase().includes(query) ||
-          product.description.toLowerCase().includes(query),
-      );
-  }, [shopCategories, selectedCategory, query]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [selectedCategory, debouncedSearch]);
+
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: String(PAGE_SIZE),
+        excludeCategory: "gift-packs",
+      });
+      if (selectedCategory !== "all") params.set("category", selectedCategory);
+      if (debouncedSearch) params.set("q", debouncedSearch);
+
+      const res = await fetch(`/api/products?${params.toString()}`, { cache: "no-store" });
+      if (!res.ok) return;
+
+      const data = (await res.json()) as {
+        products?: ProductDTO[];
+        total?: number;
+        totalPages?: number;
+      };
+
+      const nextProducts = data.products ?? [];
+      setProducts(nextProducts);
+      setTotal(data.total ?? 0);
+      setTotalPages(data.totalPages ?? 1);
+      cacheProducts(nextProducts);
+    } catch (error) {
+      console.error("[products] Failed to load page:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, selectedCategory, debouncedSearch, cacheProducts]);
+
+  useEffect(() => {
+    void fetchProducts();
+  }, [fetchProducts]);
+
+  const handlePageChange = (nextPage: number) => {
+    setPage(nextPage);
+    scrollToProductsGrid();
+  };
+
+  const isInitialLoad = (metaLoading || loading) && products.length === 0;
 
   return (
     <section id="products" className="relative isolate overflow-hidden bg-brandbg px-4 py-14">
@@ -166,7 +125,7 @@ export function ProductsSection() {
               <p className="text-xs text-ink-muted">Choose a category or search for a product</p>
             </div>
             <p className="text-xs font-semibold text-primary">
-              {products.length} {products.length === 1 ? "product" : "products"} shown
+              {loading ? "Loading…" : `${total} ${total === 1 ? "product" : "products"} found`}
             </p>
           </div>
 
@@ -191,12 +150,12 @@ export function ProductsSection() {
                 <option value="all">All products ({totalProducts})</option>
                 {shopCategories.map((category) => (
                   <option key={category.key} value={category.key}>
-                    {category.label} ({category.products.length})
+                    {category.label} ({category.productCount})
                   </option>
                 ))}
                 {giftPackCategory && (
                   <option value="gift-packs">
-                    Gift Boxes ({giftPackCategory.products.length}) — go to section
+                    Gift Boxes ({giftPackCategory.productCount}) — go to section
                   </option>
                 )}
               </select>
@@ -238,7 +197,7 @@ export function ProductsSection() {
                     selectedCategory === category.key ? "bg-white/20" : "bg-white text-ink-muted"
                   }`}
                 >
-                  {category.products.length}
+                  {category.productCount}
                 </span>
               </button>
             ))}
@@ -250,7 +209,7 @@ export function ProductsSection() {
               >
                 Gift Boxes
                 <span className="ml-2 rounded-full bg-white/80 px-1.5 py-0.5 text-[0.65rem] text-primary">
-                  {giftPackCategory.products.length}
+                  {giftPackCategory.productCount}
                 </span>
               </button>
             )}
@@ -279,19 +238,41 @@ export function ProductsSection() {
           </div>
         </div>
 
-        {loading && products.length === 0 ? (
-          <p className="py-12 text-center text-sm text-ink-muted">Loading products…</p>
-        ) : products.length > 0 ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <p className="rounded-2xl border border-dashed border-line bg-white/80 py-12 text-center text-sm text-ink-muted">
-            No products found. Try another category or search.
-          </p>
-        )}
+        <div id="products-grid" className="scroll-mt-28">
+          {isInitialLoad ? (
+            <ProductGridSkeleton count={PAGE_SIZE} />
+          ) : products.length > 0 ? (
+            <>
+              <div
+                className={`grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${
+                  loading ? "pointer-events-none opacity-60" : ""
+                }`}
+              >
+                {products.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    categoryLabel={getCategoryLabel(product.categoryKey)}
+                  />
+                ))}
+              </div>
+              <ProductPagination
+                page={page}
+                totalPages={totalPages}
+                total={total}
+                pageSize={PAGE_SIZE}
+                onPageChange={handlePageChange}
+                loading={loading}
+              />
+            </>
+          ) : loading ? (
+            <ProductGridSkeleton count={PAGE_SIZE} />
+          ) : (
+            <p className="rounded-2xl border border-dashed border-line bg-white/80 py-12 text-center text-sm text-ink-muted">
+              No products found. Try another category or search.
+            </p>
+          )}
+        </div>
       </div>
     </section>
   );

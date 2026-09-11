@@ -1,4 +1,4 @@
-import type { OrderStatus } from "@/lib/db/types";
+import type { EnquiryStatus, OrderStatus } from "@/lib/db/types";
 
 /** Product shape returned to the storefront. */
 export interface ProductDTO {
@@ -14,11 +14,27 @@ export interface ProductDTO {
   categoryKey: string;
 }
 
+/** Category metadata for storefront filters (no product payload). */
+export interface CategoryMetaDTO {
+  key: string;
+  label: string;
+  productCount: number;
+}
+
 /** A category with its products, used to render the accordion. */
 export interface CategoryWithProductsDTO {
   key: string;
   label: string;
   products: ProductDTO[];
+}
+
+/** Paginated storefront product response. */
+export interface ProductsPageDTO {
+  products: ProductDTO[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 /** A single line item submitted with an order. */
@@ -143,6 +159,20 @@ export interface ProductReviewSummary {
 export interface ProductReviewsResponse {
   summary: ProductReviewSummary;
   reviews: ProductReviewDTO[];
+}
+
+/** Payload sent to POST /api/enquiries. */
+export interface CreateEnquiryInput {
+  name: string;
+  phone: string;
+  email?: string;
+  message: string;
+}
+
+/** Public enquiry submission result. */
+export interface CreateEnquiryResult {
+  enquiryNumber: string;
+  status: EnquiryStatus;
 }
 
 /** Payload for verified product review submission. */

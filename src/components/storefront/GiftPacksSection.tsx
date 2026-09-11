@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { SafeImage } from "@/components/SafeImage";
 import { useMounted } from "@/lib/hooks";
 import { formatPrice } from "@/lib/utils";
@@ -9,6 +10,8 @@ import type { ProductDTO } from "@/types";
 import { SectionHead } from "./SectionHead";
 import { SectionDecor } from "./FestiveDecor";
 import { useCatalog } from "./catalog-context";
+import { ProductGridSkeleton } from "./ProductCardSkeleton";
+import { WishlistButton } from "./WishlistButton";
 
 const CARD_ACCENTS = ["#e8a317", "#c45c26", "#9d0208"] as const;
 
@@ -26,11 +29,15 @@ function GiftPackCard({ product, accent }: { product: ProductDTO; accent: string
 
   return (
     <article
-      className={`flex h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_8px_28px_rgba(90,0,8,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_36px_rgba(90,0,8,0.14)] ${
+      className={`relative flex h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_8px_28px_rgba(90,0,8,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_36px_rgba(90,0,8,0.14)] ${
         inCart ? "border-primary/35 ring-2 ring-primary/15" : "border-[#ead9c8]"
       }`}
       style={{ borderTopWidth: 5, borderTopColor: accent }}
     >
+      <div className="absolute right-3 top-3 z-10">
+        <WishlistButton productId={product.id} productName={product.name} size="sm" />
+      </div>
+
       <button
         type="button"
         onClick={() => openProduct(product.id)}
@@ -109,8 +116,47 @@ function GiftPackCard({ product, accent }: { product: ProductDTO; accent: string
 }
 
 export function GiftPacksSection() {
-  const { categories, loading } = useCatalog();
-  const giftPacks = categories.find((category) => category.key === "gift-packs")?.products ?? [];
+  const { categories, cacheProducts } = useCatalog();
+  const [giftPacks, setGiftPacks] = useState<ProductDTO[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const giftPackCount = categories.find((category) => category.key === "gift-packs")?.productCount ?? 0;
+
+  useEffect(() => {
+    if (giftPackCount === 0) {
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+
+    (async () => {
+      try {
+        const params = new URLSearchParams({
+          page: "1",
+          pageSize: "24",
+          category: "gift-packs",
+        });
+        const res = await fetch(`/api/products?${params.toString()}`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { products?: ProductDTO[] };
+        if (!cancelled) {
+          const products = data.products ?? [];
+          setGiftPacks(products);
+          cacheProducts(products);
+        }
+      } catch (error) {
+        console.error("[gift-packs] Failed to load:", error);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [giftPackCount, cacheProducts]);
 
   if (!loading && giftPacks.length === 0) return null;
 
@@ -123,7 +169,9 @@ export function GiftPacksSection() {
           subtitle="Ready-made collections · Clear pricing · Tap + to add"
         />
 
-        {giftPacks.length > 0 ? (
+        {loading ? (
+          <ProductGridSkeleton count={3} />
+        ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {giftPacks.map((product, index) => (
               <GiftPackCard
@@ -133,8 +181,6 @@ export function GiftPacksSection() {
               />
             ))}
           </div>
-        ) : (
-          <p className="py-8 text-center text-sm text-ink-muted">Loading gift packs…</p>
         )}
       </div>
     </section>

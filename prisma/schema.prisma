@@ -45,6 +45,11 @@ enum ArchiveFrequency {
   MONTHLY
 }
 
+enum EnquiryStatus {
+  PENDING
+  RESOLVED
+}
+
 /// Admin/staff accounts for the dashboard (credentials login).
 model AdminUser {
   id           String             @id @default(cuid())
@@ -166,6 +171,26 @@ model ProductReview {
   @@index([visible, createdAt])
 }
 
+/// General contact enquiry submitted from the storefront (not an order).
+model Enquiry {
+  id                    String        @id @default(cuid())
+  enquiryNumber         String        @unique // ENQ-YYYYMMDD-XXXX
+  name                  String
+  phone                 String
+  email                 String?
+  message               String
+  status                EnquiryStatus @default(PENDING)
+  adminNote             String?
+  lastPendingReminderAt DateTime?
+  resolvedAt            DateTime?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  @@index([phone])
+  @@index([status])
+  @@index([createdAt])
+}
+
 /// Storefront page visits for admin analytics (city + time).
 model SiteVisit {
   id        String   @id @default(cuid())
@@ -212,6 +237,9 @@ model EmailSettings {
   notifyAdminStatusChange    Boolean @default(false)
   notifyAdminPendingReminder Boolean @default(true)
   pendingReminderHours       Int     @default(2)
+  notifyAdminNewEnquiry        Boolean @default(true)
+  notifyCustomerEnquiryResolved Boolean @default(true)
+  notifyAdminEnquiryPendingReminder Boolean @default(true)
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
 }
@@ -234,36 +262,41 @@ model EmailLog {
 
 /// In-app admin notification alerts.
 model AdminNotification {
-  id          String   @id @default(cuid())
-  type        String
-  title       String
-  message     String
-  orderId     String?
-  orderNumber String?
-  read        Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id            String   @id @default(cuid())
+  type          String
+  title         String
+  message       String
+  orderId       String?
+  orderNumber   String?
+  enquiryId     String?
+  enquiryNumber String?
+  read          Boolean  @default(false)
+  createdAt     DateTime @default(now())
 
   @@index([read, createdAt])
 }
 
 /// Audit log of outbound admin FCM push attempts.
 model AdminPushLog {
-  id          String   @id @default(cuid())
-  type        String
-  title       String
-  body        String
-  targetUrl   String
-  orderId     String?
-  orderNumber String?
-  status      String
-  sent        Int      @default(0)
-  failed      Int      @default(0)
-  removed     Int      @default(0)
-  error       String?
-  createdAt   DateTime @default(now())
+  id            String   @id @default(cuid())
+  type          String
+  title         String
+  body          String
+  targetUrl     String
+  orderId       String?
+  orderNumber   String?
+  enquiryId     String?
+  enquiryNumber String?
+  status        String
+  sent          Int      @default(0)
+  failed        Int      @default(0)
+  removed       Int      @default(0)
+  error         String?
+  createdAt     DateTime @default(now())
 
   @@index([createdAt])
   @@index([orderId])
+  @@index([enquiryId])
   @@index([type])
   @@index([status])
 }

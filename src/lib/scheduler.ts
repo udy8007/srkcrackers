@@ -6,6 +6,7 @@ import { getEmailSettings } from "@/lib/email-settings";
 import {
   notifyAutoDelivered,
   sendIncompleteCheckoutReminders,
+  sendPendingEnquiryReminders,
   sendPendingOrderReminders,
 } from "@/lib/notifications";
 import { runScheduledReportEmailIfDue } from "@/lib/report-email";
@@ -73,11 +74,21 @@ export async function runSchedulerTick(
   const reminderMs = Math.max(1, emailSettings.pendingReminderHours) * 60 * 60 * 1000;
   const reminderDue =
     !state.lastReminderAt || now - state.lastReminderAt.getTime() >= reminderMs;
-  if (reminderDue && emailSettings.notifyAdminPendingReminder) {
-    const pending = await sendPendingOrderReminders();
-    const incomplete = await sendIncompleteCheckoutReminders();
-    result.reminded = pending.reminded + incomplete.reminded;
-    updates.lastReminderAt = new Date();
+  if (reminderDue) {
+    let reminded = 0;
+    if (emailSettings.notifyAdminPendingReminder) {
+      const pending = await sendPendingOrderReminders();
+      const incomplete = await sendIncompleteCheckoutReminders();
+      reminded += pending.reminded + incomplete.reminded;
+    }
+    if (emailSettings.notifyAdminEnquiryPendingReminder) {
+      const enquiryPending = await sendPendingEnquiryReminders();
+      reminded += enquiryPending.reminded;
+    }
+    if (reminded > 0) {
+      result.reminded = reminded;
+      updates.lastReminderAt = new Date();
+    }
   }
 
   // Scheduled DB backup (daily / monthly / yearly logic in db-backup.ts)

@@ -3,14 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SafeImage } from "@/components/SafeImage";
 import { getGiftPackContents } from "@/lib/gift-pack-contents";
-import { productSeoPath } from "@/lib/seo-products";
 import { useCatalog } from "./catalog-context";
 import { ProductReviews } from "./ProductReviews";
+import { WishlistButton } from "./WishlistButton";
 import { useUI } from "@/store/ui";
 import { useCart } from "@/store/cart";
 import { formatPrice, discountPercent } from "@/lib/utils";
-import Link from "next/link";
-
 const ZOOM = 2.15;
 
 function MagicProductZoom({ src, alt }: { src: string; alt: string }) {
@@ -131,7 +129,7 @@ function MagicProductZoom({ src, alt }: { src: string; alt: string }) {
 }
 
 export function ProductModal() {
-  const { getProduct, categories } = useCatalog();
+  const { getProduct, getCategoryLabel } = useCatalog();
   const productModalId = useUI((s) => s.productModalId);
   const closeProduct = useUI((s) => s.closeProduct);
   const changeQty = useCart((s) => s.changeQty);
@@ -154,8 +152,9 @@ export function ProductModal() {
 
   if (!product) return null;
 
-  const categoryLabel = categories.find((c) => c.key === product.categoryKey)?.label ?? "";
+  const categoryLabel = getCategoryLabel(product.categoryKey);
   const off = discountPercent(product.mrp, product.price);
+  const savings = product.mrp - product.price;
   const packItems = getGiftPackContents(product.slug);
   const isGiftPack = product.categoryKey === "gift-packs" || packItems != null;
 
@@ -182,28 +181,42 @@ export function ProductModal() {
         />
 
         {/* Top bar */}
-        <div className="relative z-20 flex items-center gap-3 border-b border-line/80 bg-white/55 px-4 py-3 backdrop-blur-xl sm:px-6">
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-primary">
-              {categoryLabel}
-            </p>
-            <h4 className="truncate font-display text-base font-bold text-ink sm:text-lg">
-              {product.name}
-            </h4>
-            {product.nameTa ? (
-              <p className="truncate text-sm text-ink/75" lang="ta">
-                {product.nameTa}
-              </p>
-            ) : null}
+        <div className="relative z-20 border-b border-line/80 bg-white/60 px-4 py-3 backdrop-blur-xl sm:px-6">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-yellow via-primary to-primary-dark"
+          />
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex min-w-0 flex-1 items-start gap-2.5 sm:gap-3">
+              <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-yellow/20 text-lg shadow-sm sm:flex sm:h-11 sm:w-11 sm:text-xl">
+                🎆
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-primary sm:text-[0.65rem]">
+                  {categoryLabel || "Premium Crackers"}
+                </p>
+                <h4 className="line-clamp-2 font-display text-[0.95rem] font-bold leading-snug text-ink sm:text-lg">
+                  {product.name}
+                </h4>
+                {product.nameTa ? (
+                  <p className="line-clamp-1 text-xs text-ink/75 sm:text-sm" lang="ta">
+                    {product.nameTa}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+              <WishlistButton productId={product.id} productName={product.name} size="sm" />
+              <button
+                type="button"
+                onClick={closeProduct}
+                aria-label="Close product details"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-base text-ink shadow-sm transition hover:border-primary hover:bg-primary hover:text-white sm:h-11 sm:w-11 sm:text-lg"
+              >
+                ✕
+              </button>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={closeProduct}
-            aria-label="Close product details"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line bg-white text-lg text-ink shadow-sm transition hover:scale-105 hover:border-primary hover:bg-primary hover:text-white active:scale-95"
-          >
-            ✕
-          </button>
         </div>
 
         {/* Body: stacked mobile / split desktop */}
@@ -221,10 +234,18 @@ export function ProductModal() {
           <div className="relative flex min-h-0 flex-1 flex-col lg:w-[46%]">
             <div className="scrollbar-thin flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 pb-28 pt-3 sm:px-6 lg:px-8 lg:pb-8 lg:pt-6">
               <div>
-                <span className="inline-flex items-center rounded-full border border-primary/15 bg-primary/5 px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-primary">
-                  {categoryLabel}
-                </span>
-                <h3 className="mt-3 font-display text-[1.65rem] font-bold leading-tight text-ink sm:text-3xl">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="product-detail-chip text-primary">
+                    🏷️ {categoryLabel || "Crackers"}
+                  </span>
+                  <span className="product-detail-chip">📦 {product.pack}</span>
+                  {off > 0 && (
+                    <span className="product-detail-chip bg-gradient-to-r from-yellow/20 to-primary/10 text-primary-dark">
+                      🔥 {off}% OFF
+                    </span>
+                  )}
+                </div>
+                <h3 className="mt-4 font-display text-[1.65rem] font-bold leading-tight text-ink sm:text-3xl">
                   {product.name}
                 </h3>
                 {product.nameTa ? (
@@ -232,33 +253,61 @@ export function ProductModal() {
                     {product.nameTa}
                   </p>
                 ) : null}
-                <p className="mt-1.5 text-sm text-ink-muted">{product.pack}</p>
               </div>
 
-              <div className="flex flex-wrap items-end gap-3">
-                <div>
-                  <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-ink-muted">
-                    Offer price
-                  </p>
-                  <div className="mt-0.5 flex flex-wrap items-baseline gap-2.5">
-                    <span className="font-display text-3xl font-bold text-green sm:text-4xl">
-                      {formatPrice(product.price)}
-                    </span>
-                    <span className="text-base text-ink-muted line-through">
-                      {formatPrice(product.mrp)}
-                    </span>
+              <div className="product-detail-price-card p-4 sm:p-5">
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-yellow/25 blur-2xl"
+                />
+                <div className="relative flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-ink-muted">
+                      Festival offer price
+                    </p>
+                    <div className="mt-1 flex flex-wrap items-baseline gap-2.5">
+                      <span className="font-display text-3xl font-extrabold text-primary sm:text-4xl">
+                        {formatPrice(product.price)}
+                      </span>
+                      <span className="text-base text-ink-muted line-through">
+                        {formatPrice(product.mrp)}
+                      </span>
+                    </div>
                   </div>
+                  {savings > 0 && (
+                    <div className="rounded-2xl bg-green/10 px-3 py-2 text-right">
+                      <p className="text-[0.62rem] font-bold uppercase tracking-wide text-green">
+                        You save
+                      </p>
+                      <p className="font-display text-lg font-extrabold text-green">
+                        {formatPrice(savings)}
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <span className="mb-1 rounded-full bg-gradient-to-r from-red to-primary-dark px-3 py-1 text-xs font-bold text-white shadow-sm">
-                  {off}% OFF
-                </span>
+
+                {off > 0 && (
+                  <div className="relative mt-4">
+                    <div className="mb-1.5 flex items-center justify-between text-[0.65rem] font-bold uppercase tracking-wide text-ink-muted">
+                      <span>Discount strength</span>
+                      <span className="text-primary">{off}% off MRP</span>
+                    </div>
+                    <div className="product-detail-savings-bar">
+                      <div
+                        className="product-detail-savings-fill"
+                        style={{ width: `${Math.min(off, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="rounded-2xl border border-line/90 bg-white/80 p-4 shadow-sm backdrop-blur-sm">
-                <div className="text-[0.7rem] font-bold uppercase tracking-[0.12em] text-ink-muted">
+              <div className="product-detail-panel p-4 sm:p-5">
+                <div className="product-detail-panel-head">
+                  <span aria-hidden>📋</span>
                   Product description
                 </div>
-                <p className="mt-2 text-sm leading-relaxed text-ink">{product.description}</p>
+                <p className="mt-3 text-sm leading-relaxed text-ink">{product.description}</p>
               </div>
 
               <ProductReviews productId={product.id} />
@@ -311,36 +360,29 @@ export function ProductModal() {
                 </div>
               )}
 
-              <Link
-                href={productSeoPath(product.slug)}
-                className="inline-flex text-sm font-semibold text-primary underline-offset-2 hover:underline"
-              >
-                Open SEO product page →
-              </Link>
-
               {/* Desktop qty */}
-              <div className="hidden items-center justify-between gap-4 rounded-2xl border border-line bg-white p-4 shadow-sm lg:flex">
+              <div className="product-detail-panel hidden items-center justify-between gap-4 p-4 lg:flex">
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-semibold text-ink">Quantity</span>
-                  <div className="inline-flex items-center overflow-hidden rounded-xl border border-line">
+                  <span className="text-sm font-semibold text-ink">Add to cart</span>
+                  <div className="product-card-stepper inline-flex items-center overflow-hidden rounded-full">
                     <button
                       type="button"
                       onClick={() => changeQty(product.id, -1)}
-                      className="flex h-11 w-11 items-center justify-center bg-brandbg text-lg font-bold text-primary transition hover:bg-line"
+                      className="flex h-11 w-11 items-center justify-center bg-[#fff4ea] text-lg font-bold text-primary transition hover:bg-primary/10"
                     >
                       −
                     </button>
-                    <span className="w-12 text-center text-base font-bold">{qty}</span>
+                    <span className="w-12 bg-white text-center text-base font-bold">{qty}</span>
                     <button
                       type="button"
                       onClick={() => changeQty(product.id, 1)}
-                      className="flex h-11 w-11 items-center justify-center bg-primary text-lg font-bold text-white transition hover:bg-primary-dark"
+                      className="flex h-11 w-11 items-center justify-center bg-gradient-to-b from-primary to-primary-dark text-lg font-bold text-white transition hover:brightness-110"
                     >
                       +
                     </button>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="rounded-2xl bg-gradient-to-r from-primary/5 to-yellow/10 px-4 py-2 text-right">
                   <div className="text-[0.65rem] font-semibold uppercase tracking-wide text-ink-muted">
                     Line amount
                   </div>
@@ -353,26 +395,29 @@ export function ProductModal() {
 
             {/* Mobile sticky cart bar */}
             <div className="absolute inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 px-4 py-3 shadow-[0_-12px_30px_-18px_rgba(0,0,0,0.25)] backdrop-blur-xl lg:hidden">
+              <div className="mb-2 h-0.5 w-full rounded-full bg-gradient-to-r from-yellow via-primary to-primary-dark opacity-70" />
               <div className="flex items-center justify-between gap-3">
-                <div className="inline-flex items-center overflow-hidden rounded-xl border border-line">
+                <div className="product-card-stepper inline-flex items-center overflow-hidden rounded-full">
                   <button
                     type="button"
                     onClick={() => changeQty(product.id, -1)}
-                    className="flex h-11 w-11 items-center justify-center bg-brandbg text-lg font-bold text-primary"
+                    className="flex h-11 w-11 items-center justify-center bg-[#fff4ea] text-lg font-bold text-primary"
                   >
                     −
                   </button>
-                  <span className="w-10 text-center font-bold">{qty}</span>
+                  <span className="w-10 bg-white text-center font-bold">{qty}</span>
                   <button
                     type="button"
                     onClick={() => changeQty(product.id, 1)}
-                    className="flex h-11 w-11 items-center justify-center bg-primary text-lg font-bold text-white"
+                    className="flex h-11 w-11 items-center justify-center bg-gradient-to-b from-primary to-primary-dark text-lg font-bold text-white"
                   >
                     +
                   </button>
                 </div>
-                <div className="min-w-0 text-right">
-                  <div className="text-[0.65rem] text-ink-muted">Line amount</div>
+                <div className="min-w-0 flex-1 rounded-2xl bg-gradient-to-r from-primary/5 to-yellow/10 px-3 py-2 text-right">
+                  <div className="text-[0.65rem] font-semibold uppercase tracking-wide text-ink-muted">
+                    Line amount
+                  </div>
                   <strong className="block truncate text-lg text-primary">
                     {formatPrice(qty * product.price)}
                   </strong>

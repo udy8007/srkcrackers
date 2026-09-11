@@ -22,6 +22,9 @@ interface EmailSettingsFormData {
   notifyAdminStatusChange: boolean;
   notifyAdminPendingReminder: boolean;
   pendingReminderHours: number;
+  notifyAdminNewEnquiry: boolean;
+  notifyCustomerEnquiryResolved: boolean;
+  notifyAdminEnquiryPendingReminder: boolean;
 }
 
 const DEFAULTS: EmailSettingsFormData = {
@@ -42,6 +45,9 @@ const DEFAULTS: EmailSettingsFormData = {
   notifyAdminStatusChange: false,
   notifyAdminPendingReminder: true,
   pendingReminderHours: 2,
+  notifyAdminNewEnquiry: true,
+  notifyCustomerEnquiryResolved: true,
+  notifyAdminEnquiryPendingReminder: true,
 };
 
 export function EmailSettingsForm() {

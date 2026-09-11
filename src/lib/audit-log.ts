@@ -7,7 +7,8 @@ export type AuditEntityType =
   | "settings"
   | "account"
   | "system"
-  | "review";
+  | "review"
+  | "enquiry";
 
 export type AuditActor = {
   id?: string | null;

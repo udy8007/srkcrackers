@@ -11,6 +11,7 @@ import { AdminPushRegistrar } from "@/components/admin/AdminPushRegistrar";
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: "📊" },
   { href: "/admin/orders", label: "Orders", icon: "📦", badgeKey: "pending" as const },
+  { href: "/admin/enquiries", label: "Enquiries", icon: "📩", badgeKey: "enquiries" as const },
   { href: "/admin/products", label: "Products", icon: "🎆" },
   { href: "/admin/reviews", label: "Reviews", icon: "⭐" },
   { href: "/admin/categories", label: "Categories", icon: "🏷️" },
@@ -34,12 +35,14 @@ export function AdminShell({
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [pendingOrders, setPendingOrders] = useState(0);
+  const [pendingEnquiries, setPendingEnquiries] = useState(0);
 
   useEffect(() => {
     fetch("/api/admin/overview")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (data?.orders?.pending != null) setPendingOrders(data.orders.pending);
+        if (data?.enquiries?.pending != null) setPendingEnquiries(data.enquiries.pending);
       })
       .catch(() => {});
   }, [pathname]);
@@ -141,6 +144,16 @@ export function AdminShell({
                     )}
                   >
                     {pendingOrders}
+                  </span>
+                )}
+                {item.badgeKey === "enquiries" && pendingEnquiries > 0 && (
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[0.65rem] font-bold",
+                      isActive(item.href) ? "bg-white/25 text-white" : "bg-amber-100 text-amber-700",
+                    )}
+                  >
+                    {pendingEnquiries}
                   </span>
                 )}
               </Link>

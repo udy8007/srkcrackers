@@ -16,7 +16,7 @@ export async function GET() {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
 
-  const [grouped, todayCount, revenue, productStats, categories, activeProductRows] =
+  const [grouped, todayCount, revenue, productStats, categories, activeProductRows, pendingEnquiries, todayEnquiries] =
     await Promise.all([
       prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
       prisma.order.count({ where: { createdAt: { gte: startOfToday } } }),
@@ -33,6 +33,8 @@ export async function GET() {
         where: { active: true },
         select: { categoryId: true },
       }),
+      prisma.enquiry.count({ where: { status: "PENDING" } }),
+      prisma.enquiry.count({ where: { createdAt: { gte: startOfToday } } }),
     ]);
 
   const byStatus = Object.fromEntries(grouped.map((g) => [g.status, g._count._all]));
@@ -55,6 +57,10 @@ export async function GET() {
       abandoned: byStatus.PAYMENT_PENDING ?? 0,
     },
     products: { active: activeProducts, hidden: hiddenProducts, total: activeProducts + hiddenProducts },
+    enquiries: {
+      pending: pendingEnquiries,
+      today: todayEnquiries,
+    },
     categories: categories.map((c) => ({
       id: c.id,
       key: c.key,

@@ -1,4 +1,4 @@
-import type { OrderStatus } from "@/lib/db/types";
+import type { EnquiryStatus, OrderStatus } from "@/lib/db/types";
 
 /** Central business configuration for SRK Crackers. */
 export const BUSINESS = {
@@ -47,8 +47,8 @@ export const LICENSE_INFO = {
   pincode: "600055",
   issuedOn: "19 Jun 2026",
   validUpTo: "18 Jun 2029",
-  capacity: "100 KGS OF FIREWORKS",
-  working: "500 KGS OF CELLULOID / NITRATION",
+  capacity: "25 KGS OF FIREWORKS",
+  working: "25 KGS OF CELLULOID / NITRATION",
 } as const;
 
 export interface OrderStatusMeta {
@@ -78,6 +78,11 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = ORDER_STATUSES.re
   },
   {} as Record<OrderStatus, string>,
 );
+
+export const ENQUIRY_STATUS_LABEL: Record<EnquiryStatus, string> = {
+  PENDING: "Pending",
+  RESOLVED: "Resolved",
+};
 
 export const INDIAN_STATES = [
   "Tamil Nadu",

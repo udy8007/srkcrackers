@@ -1,14 +1,17 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/store/cart";
-import type { CategoryWithProductsDTO, ProductDTO } from "@/types";
+import { useWishlist } from "@/store/wishlist";
+import type { CategoryMetaDTO, ProductDTO } from "@/types";
 import { calculateShipping } from "@/lib/utils";
 
 interface CatalogContextValue {
-  categories: CategoryWithProductsDTO[];
+  categories: CategoryMetaDTO[];
   products: ProductDTO[];
   getProduct: (id: string) => ProductDTO | undefined;
+  getCategoryLabel: (key: string) => string;
+  cacheProducts: (products: ProductDTO[]) => void;
   loading: boolean;
 }
 
@@ -18,13 +21,14 @@ export function CatalogProvider({
   categories: initialCategories,
   children,
 }: {
-  categories: CategoryWithProductsDTO[];
+  categories: CategoryMetaDTO[];
   children: React.ReactNode;
 }) {
   const [categories, setCategories] = useState(initialCategories);
   const [loading, setLoading] = useState(initialCategories.length === 0);
+  const [productCache, setProductCache] = useState<Map<string, ProductDTO>>(() => new Map());
+  const resolvingIds = useRef(new Set<string>());
 
-  // Keep in sync if the server re-renders with fresh props.
   useEffect(() => {
     if (initialCategories.length > 0) {
       setCategories(initialCategories);
@@ -32,7 +36,6 @@ export function CatalogProvider({
     }
   }, [initialCategories]);
 
-  // Recover from intermittent empty SSR / stale empty cache.
   useEffect(() => {
     if (categories.length > 0) return;
 
@@ -41,14 +44,14 @@ export function CatalogProvider({
 
     (async () => {
       try {
-        const res = await fetch("/api/products", { cache: "no-store" });
+        const res = await fetch("/api/products?page=1&pageSize=1", { cache: "no-store" });
         if (!res.ok) return;
-        const data = (await res.json()) as { categories?: CategoryWithProductsDTO[] };
+        const data = (await res.json()) as { categories?: CategoryMetaDTO[] };
         if (!cancelled && data.categories && data.categories.length > 0) {
           setCategories(data.categories);
         }
       } catch (error) {
-        console.error("[catalog] Failed to refetch products:", error);
+        console.error("[catalog] Failed to refetch category meta:", error);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -59,22 +62,71 @@ export function CatalogProvider({
     };
   }, [categories.length]);
 
+  const cacheProducts = useCallback((products: ProductDTO[]) => {
+    if (products.length === 0) return;
+    setProductCache((current) => {
+      const next = new Map(current);
+      for (const product of products) {
+        next.set(product.id, product);
+      }
+      return next;
+    });
+  }, []);
+
+  const resolveMissingProducts = useCallback(
+    async (ids: string[]) => {
+      const missing = ids.filter((id) => !productCache.has(id) && !resolvingIds.current.has(id));
+      if (missing.length === 0) return;
+
+      for (const id of missing) resolvingIds.current.add(id);
+
+      try {
+        const res = await fetch(`/api/products/resolve?ids=${missing.join(",")}`, {
+          cache: "no-store",
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as { products?: ProductDTO[] };
+        if (data.products?.length) cacheProducts(data.products);
+      } catch (error) {
+        console.error("[catalog] Failed to resolve cart products:", error);
+      } finally {
+        for (const id of missing) resolvingIds.current.delete(id);
+      }
+    },
+    [cacheProducts, productCache],
+  );
+
+  const cartItems = useCart((state) => state.items);
+  const wishlistIds = useWishlist((state) => state.ids);
+  useEffect(() => {
+    const cartProductIds = Object.keys(cartItems).filter((id) => cartItems[id] > 0);
+    const ids = [...new Set([...cartProductIds, ...wishlistIds])];
+    if (ids.length === 0) return;
+    void resolveMissingProducts(ids);
+  }, [cartItems, wishlistIds, resolveMissingProducts]);
+
   const value = useMemo<CatalogContextValue>(() => {
-    const products = categories.flatMap((category) => category.products);
-    const byId = new Map(products.map((product) => [product.id, product]));
+    const products = Array.from(productCache.values());
+    const categoryLabels = new Map(categories.map((category) => [category.key, category.label]));
+
     return {
       categories,
       products,
-      getProduct: (id: string) => byId.get(id),
+      getProduct: (id: string) => productCache.get(id),
+      getCategoryLabel: (key: string) => categoryLabels.get(key) ?? "",
+      cacheProducts,
       loading,
     };
-  }, [categories, loading]);
+  }, [categories, productCache, cacheProducts, loading]);
 
-  const pruneInvalid = useCart((s) => s.pruneInvalid);
+  const pruneCartInvalid = useCart((s) => s.pruneInvalid);
+  const pruneWishlistInvalid = useWishlist((s) => s.pruneInvalid);
   useEffect(() => {
     if (value.products.length === 0) return;
-    pruneInvalid(value.products.map((product) => product.id));
-  }, [value.products, pruneInvalid]);
+    const validIds = value.products.map((product) => product.id);
+    pruneCartInvalid(validIds);
+    pruneWishlistInvalid(validIds);
+  }, [value.products, pruneCartInvalid, pruneWishlistInvalid]);
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }
