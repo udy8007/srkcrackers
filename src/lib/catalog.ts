@@ -13,7 +13,7 @@ export const CATALOG_CACHE_TAG = "catalog";
 /** Fallback TTL for edge/server cache; admin invalidation clears immediately. */
 export const STOREFRONT_CATALOG_REVALIDATE_SECONDS = 300;
 
-export const DEFAULT_PRODUCTS_PAGE_SIZE = 12;
+export const DEFAULT_PRODUCTS_PAGE_SIZE = 10;
 export const MAX_PRODUCTS_PAGE_SIZE = 48;
 
 export interface ProductsPageQuery {

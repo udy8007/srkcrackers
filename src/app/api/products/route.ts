@@ -11,7 +11,7 @@ import {
 /** Must match STOREFRONT_CATALOG_REVALIDATE_SECONDS in @/lib/catalog */
 export const revalidate = 300;
 
-const CATALOG_CACHE_CONTROL = `public, s-maxage=${STOREFRONT_CATALOG_REVALIDATE_SECONDS}, stale-while-revalidate=600`;
+const CATALOG_CACHE_CONTROL = `public, max-age=${STOREFRONT_CATALOG_REVALIDATE_SECONDS}, s-maxage=${STOREFRONT_CATALOG_REVALIDATE_SECONDS}, stale-while-revalidate=600`;
 
 export async function GET(request: NextRequest) {
   try {

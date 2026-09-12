@@ -1,25 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { ProductDTO } from "@/types";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useProductFeed } from "@/hooks/useProductFeed";
+import { PRODUCT_FEED_PAGE_SIZE } from "@/lib/storefront-product-cache";
 import { OrderOffersBanner } from "./OrderOffersBanner";
 import { PriceListButton } from "./PriceListButton";
 import { SectionDecor } from "./FestiveDecor";
 import { SectionHead } from "./SectionHead";
 import { useCatalog } from "./catalog-context";
 import { ProductCard } from "./ProductCard";
-import { ProductGridSkeleton } from "./ProductCardSkeleton";
-import { ProductPagination } from "./ProductPagination";
+import { ProductCardSkeleton, ProductGridSkeleton } from "./ProductCardSkeleton";
 
-const PAGE_SIZE = 12;
 const SEARCH_DEBOUNCE_MS = 350;
 
 function scrollToGiftBoxes() {
   document.getElementById("gift-packs")?.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-function scrollToProductsGrid() {
-  document.getElementById("products-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 export function ProductsSection() {
@@ -27,11 +22,20 @@ export function ProductsSection() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [page, setPage] = useState(1);
-  const [products, setProducts] = useState<ProductDTO[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  const onProductsLoaded = useCallback(
+    (loaded: Parameters<typeof cacheProducts>[0]) => {
+      cacheProducts(loaded);
+    },
+    [cacheProducts],
+  );
+
+  const { products, total, loading, loadingMore, error, hasMore, loadMore } = useProductFeed({
+    category: selectedCategory,
+    search: debouncedSearch,
+    onProductsLoaded,
+  });
 
   const giftPackCategory = useMemo(
     () => categories.find((category) => category.key === "gift-packs"),
@@ -52,49 +56,19 @@ export function ProductsSection() {
   }, [search]);
 
   useEffect(() => {
-    setPage(1);
-  }, [selectedCategory, debouncedSearch]);
+    const node = loadMoreRef.current;
+    if (!node || !hasMore) return;
 
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: String(page),
-        pageSize: String(PAGE_SIZE),
-        excludeCategory: "gift-packs",
-      });
-      if (selectedCategory !== "all") params.set("category", selectedCategory);
-      if (debouncedSearch) params.set("q", debouncedSearch);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) void loadMore();
+      },
+      { rootMargin: "240px" },
+    );
 
-      const res = await fetch(`/api/products?${params.toString()}`, { cache: "no-store" });
-      if (!res.ok) return;
-
-      const data = (await res.json()) as {
-        products?: ProductDTO[];
-        total?: number;
-        totalPages?: number;
-      };
-
-      const nextProducts = data.products ?? [];
-      setProducts(nextProducts);
-      setTotal(data.total ?? 0);
-      setTotalPages(data.totalPages ?? 1);
-      cacheProducts(nextProducts);
-    } catch (error) {
-      console.error("[products] Failed to load page:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [page, selectedCategory, debouncedSearch, cacheProducts]);
-
-  useEffect(() => {
-    void fetchProducts();
-  }, [fetchProducts]);
-
-  const handlePageChange = (nextPage: number) => {
-    setPage(nextPage);
-    scrollToProductsGrid();
-  };
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMore, loadMore, products.length]);
 
   const isInitialLoad = (metaLoading || loading) && products.length === 0;
 
@@ -125,7 +99,9 @@ export function ProductsSection() {
               <p className="text-xs text-ink-muted">Choose a category or search for a product</p>
             </div>
             <p className="text-xs font-semibold text-primary">
-              {loading ? "Loading…" : `${total} ${total === 1 ? "product" : "products"} found`}
+              {loading && products.length === 0
+                ? "Loading…"
+                : `${total} ${total === 1 ? "product" : "products"} found`}
             </p>
           </div>
 
@@ -240,14 +216,14 @@ export function ProductsSection() {
 
         <div id="products-grid" className="scroll-mt-28">
           {isInitialLoad ? (
-            <ProductGridSkeleton count={PAGE_SIZE} />
+            <ProductGridSkeleton count={PRODUCT_FEED_PAGE_SIZE} />
+          ) : error && products.length === 0 ? (
+            <p className="rounded-2xl border border-dashed border-red/30 bg-red/5 py-12 text-center text-sm text-red">
+              Could not load products. Please refresh the page.
+            </p>
           ) : products.length > 0 ? (
             <>
-              <div
-                className={`grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${
-                  loading ? "pointer-events-none opacity-60" : ""
-                }`}
-              >
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {products.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -256,17 +232,33 @@ export function ProductsSection() {
                   />
                 ))}
               </div>
-              <ProductPagination
-                page={page}
-                totalPages={totalPages}
-                total={total}
-                pageSize={PAGE_SIZE}
-                onPageChange={handlePageChange}
-                loading={loading}
-              />
+
+              <div ref={loadMoreRef} className="mt-8 flex flex-col items-center gap-3">
+                <p className="text-center text-xs font-medium text-ink-muted sm:text-sm">
+                  Showing{" "}
+                  <span className="font-bold text-ink">{products.length}</span> of{" "}
+                  <span className="font-bold text-ink">{total}</span> products
+                </p>
+
+                {loadingMore && (
+                  <div className="grid w-full gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {Array.from({ length: Math.min(PRODUCT_FEED_PAGE_SIZE, total - products.length) }).map(
+                      (_, index) => (
+                        <ProductCardSkeleton key={`loading-more-${index}`} />
+                      ),
+                    )}
+                  </div>
+                )}
+
+                {!loadingMore && hasMore && (
+                  <p className="text-xs font-semibold text-primary">Scroll down to load more…</p>
+                )}
+
+                {!hasMore && products.length > 0 && (
+                  <p className="text-xs font-semibold text-ink-muted">You&apos;ve seen all products</p>
+                )}
+              </div>
             </>
-          ) : loading ? (
-            <ProductGridSkeleton count={PAGE_SIZE} />
           ) : (
             <p className="rounded-2xl border border-dashed border-line bg-white/80 py-12 text-center text-sm text-ink-muted">
               No products found. Try another category or search.
