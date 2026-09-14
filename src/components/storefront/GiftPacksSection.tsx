@@ -15,10 +15,19 @@ import { WishlistButton } from "./WishlistButton";
 
 const CARD_ACCENTS = ["#e8a317", "#c45c26", "#9d0208"] as const;
 
-function GiftPackCard({ product, accent }: { product: ProductDTO; accent: string }) {
+function GiftPackCard({
+  product,
+  accent,
+  navProductIds,
+}: {
+  product: ProductDTO;
+  accent: string;
+  navProductIds: string[];
+}) {
   const changeQty = useCart((state) => state.changeQty);
   const qty = useCart((state) => state.items[product.id] ?? 0);
   const openProduct = useUI((state) => state.openProduct);
+  const openDetails = () => openProduct(product.id, { navIds: navProductIds });
   const mounted = useMounted();
   const shownQty = mounted ? qty : 0;
   const discount =
@@ -40,7 +49,7 @@ function GiftPackCard({ product, accent }: { product: ProductDTO; accent: string
 
       <button
         type="button"
-        onClick={() => openProduct(product.id)}
+        onClick={openDetails}
         className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-gradient-to-b from-[#fff8ef] to-[#ffe9d4] p-3"
       >
         <SafeImage
@@ -56,7 +65,7 @@ function GiftPackCard({ product, accent }: { product: ProductDTO; accent: string
       <div className="flex flex-1 flex-col p-4 sm:p-5">
         <button
           type="button"
-          onClick={() => openProduct(product.id)}
+          onClick={openDetails}
           className="flex flex-1 flex-col text-left transition hover:opacity-90"
         >
           {discount > 0 && (
@@ -122,6 +131,7 @@ export function GiftPacksSection() {
     () => products.filter((product) => product.categoryKey === "gift-packs"),
     [products],
   );
+  const giftPackNavIds = useMemo(() => giftPacks.map((product) => product.id), [giftPacks]);
 
   if (!loading && giftPacks.length === 0) return null;
 
@@ -143,6 +153,7 @@ export function GiftPacksSection() {
                 key={product.id}
                 product={product}
                 accent={CARD_ACCENTS[index % CARD_ACCENTS.length]}
+                navProductIds={giftPackNavIds}
               />
             ))}
           </div>

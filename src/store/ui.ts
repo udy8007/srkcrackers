@@ -5,14 +5,19 @@ export interface TrackPrefill {
   phone: string;
 }
 
+interface OpenProductOptions {
+  navIds?: string[];
+}
+
 interface UIState {
   productModalId: string | null;
+  productModalNavIds: string[] | null;
   checkoutOpen: boolean;
   cartOpen: boolean;
   wishlistOpen: boolean;
   mobileNavOpen: boolean;
   trackPrefill: TrackPrefill | null;
-  openProduct: (id: string) => void;
+  openProduct: (id: string, options?: OpenProductOptions) => void;
   closeProduct: () => void;
   openCheckout: () => void;
   closeCheckout: () => void;
@@ -29,13 +34,18 @@ interface UIState {
 
 export const useUI = create<UIState>((set) => ({
   productModalId: null,
+  productModalNavIds: null,
   checkoutOpen: false,
   cartOpen: false,
   wishlistOpen: false,
   mobileNavOpen: false,
   trackPrefill: null,
-  openProduct: (id) => set({ productModalId: id }),
-  closeProduct: () => set({ productModalId: null }),
+  openProduct: (id, options) =>
+    set((state) => ({
+      productModalId: id,
+      productModalNavIds: options?.navIds ?? state.productModalNavIds,
+    })),
+  closeProduct: () => set({ productModalId: null, productModalNavIds: null }),
   openCheckout: () => set({ checkoutOpen: true, cartOpen: false, wishlistOpen: false }),
   closeCheckout: () => set({ checkoutOpen: false }),
   openCart: () => set({ cartOpen: true, wishlistOpen: false, mobileNavOpen: false }),

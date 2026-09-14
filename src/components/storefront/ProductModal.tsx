@@ -128,27 +128,86 @@ function MagicProductZoom({ src, alt }: { src: string; alt: string }) {
   );
 }
 
+function NavArrow({
+  direction,
+  label,
+  onClick,
+}: {
+  direction: "prev" | "next";
+  label: string;
+  onClick: () => void;
+}) {
+  const isPrev = direction === "prev";
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      aria-label={label}
+      className={`absolute top-1/2 z-[75] flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-ink/55 text-xl font-bold text-white shadow-lg backdrop-blur-md transition hover:bg-primary hover:border-primary sm:h-12 sm:w-12 ${
+        isPrev ? "left-2 sm:left-4" : "right-2 sm:right-4"
+      }`}
+    >
+      {isPrev ? "‹" : "›"}
+    </button>
+  );
+}
+
 export function ProductModal() {
   const { getProduct, getCategoryLabel } = useCatalog();
   const productModalId = useUI((s) => s.productModalId);
+  const productModalNavIds = useUI((s) => s.productModalNavIds);
   const closeProduct = useUI((s) => s.closeProduct);
+  const openProduct = useUI((s) => s.openProduct);
   const changeQty = useCart((s) => s.changeQty);
   const qty = useCart((s) => (productModalId ? s.items[productModalId] ?? 0 : 0));
+  const detailsScrollRef = useRef<HTMLDivElement>(null);
 
   const product = productModalId ? getProduct(productModalId) : undefined;
+
+  const navIndex =
+    productModalId && productModalNavIds ? productModalNavIds.indexOf(productModalId) : -1;
+  const prevId =
+    navIndex > 0 && productModalNavIds ? productModalNavIds[navIndex - 1] : null;
+  const nextId =
+    navIndex >= 0 && productModalNavIds && navIndex < productModalNavIds.length - 1
+      ? productModalNavIds[navIndex + 1]
+      : null;
+  const hasNav = productModalNavIds != null && productModalNavIds.length > 1 && navIndex >= 0;
+
+  const goToProduct = useCallback(
+    (id: string) => {
+      openProduct(id);
+      detailsScrollRef.current?.scrollTo({ top: 0 });
+    },
+    [openProduct],
+  );
 
   useEffect(() => {
     if (!product) return;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeProduct();
+      if (e.key === "Escape") {
+        closeProduct();
+        return;
+      }
+      if (e.key === "ArrowLeft" && prevId) {
+        e.preventDefault();
+        goToProduct(prevId);
+      }
+      if (e.key === "ArrowRight" && nextId) {
+        e.preventDefault();
+        goToProduct(nextId);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = "";
       window.removeEventListener("keydown", onKey);
     };
-  }, [product, closeProduct]);
+  }, [product, closeProduct, prevId, nextId, goToProduct]);
 
   if (!product) return null;
 
@@ -166,6 +225,13 @@ export function ProductModal() {
       aria-modal="true"
       aria-label={product.name}
     >
+      {hasNav && prevId && (
+        <NavArrow direction="prev" label="Previous product" onClick={() => goToProduct(prevId)} />
+      )}
+      {hasNav && nextId && (
+        <NavArrow direction="next" label="Next product" onClick={() => goToProduct(nextId)} />
+      )}
+
       <div
         className="animate-pop relative flex h-[100dvh] w-full max-w-6xl flex-col overflow-hidden bg-[#fff8f2] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.45)] sm:h-[min(90dvh,820px)] sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
@@ -203,9 +269,39 @@ export function ProductModal() {
                     {product.nameTa}
                   </p>
                 ) : null}
+                {hasNav && (
+                  <p className="mt-0.5 text-[0.62rem] font-semibold text-ink-muted sm:hidden">
+                    Product {navIndex + 1} of {productModalNavIds!.length}
+                  </p>
+                )}
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+              {hasNav && (
+                <div className="hidden items-center gap-1 rounded-full border border-line bg-white/90 px-1 py-0.5 shadow-sm sm:flex">
+                  <button
+                    type="button"
+                    disabled={!prevId}
+                    onClick={() => prevId && goToProduct(prevId)}
+                    aria-label="Previous product"
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold text-ink transition hover:bg-primary/10 disabled:opacity-30"
+                  >
+                    ‹
+                  </button>
+                  <span className="min-w-[3.25rem] text-center text-[0.65rem] font-bold tabular-nums text-ink-muted">
+                    {navIndex + 1} / {productModalNavIds!.length}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={!nextId}
+                    onClick={() => nextId && goToProduct(nextId)}
+                    aria-label="Next product"
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold text-ink transition hover:bg-primary/10 disabled:opacity-30"
+                  >
+                    ›
+                  </button>
+                </div>
+              )}
               <WishlistButton productId={product.id} productName={product.name} size="sm" />
               <button
                 type="button"
@@ -232,7 +328,10 @@ export function ProductModal() {
 
           {/* Details */}
           <div className="relative flex min-h-0 flex-1 flex-col lg:w-[46%]">
-            <div className="scrollbar-thin flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 pb-28 pt-3 sm:px-6 lg:px-8 lg:pb-8 lg:pt-6">
+            <div
+              ref={detailsScrollRef}
+              className="scrollbar-thin flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 pb-28 pt-3 sm:px-6 lg:px-8 lg:pb-8 lg:pt-6"
+            >
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="product-detail-chip text-primary">

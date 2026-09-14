@@ -15,10 +15,13 @@ function discountPct(mrp: number, price: number): number | null {
 interface ProductCardProps {
   product: ProductDTO;
   categoryLabel?: string;
+  navProductIds?: string[];
 }
 
-export function ProductCard({ product, categoryLabel }: ProductCardProps) {
+export function ProductCard({ product, categoryLabel, navProductIds }: ProductCardProps) {
   const openProduct = useUI((state) => state.openProduct);
+  const openDetails = () =>
+    openProduct(product.id, navProductIds?.length ? { navIds: navProductIds } : undefined);
   const changeQty = useCart((state) => state.changeQty);
   const qty = useCart((state) => state.items[product.id] ?? 0);
   const mounted = useMounted();
@@ -49,7 +52,7 @@ export function ProductCard({ product, categoryLabel }: ProductCardProps) {
 
       <button
         type="button"
-        onClick={() => openProduct(product.id)}
+        onClick={openDetails}
         className="product-card-media relative flex aspect-square w-full items-center justify-center overflow-hidden p-5"
       >
         <div className="product-card-glow pointer-events-none absolute inset-0" aria-hidden />
@@ -98,7 +101,7 @@ export function ProductCard({ product, categoryLabel }: ProductCardProps) {
 
         <button
           type="button"
-          onClick={() => openProduct(product.id)}
+          onClick={openDetails}
           className="flex flex-1 flex-col text-left transition hover:opacity-90"
         >
           <span className="font-display text-[1.02rem] font-bold leading-snug text-ink transition group-hover:text-primary">
