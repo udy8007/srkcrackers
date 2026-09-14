@@ -11,7 +11,7 @@ import type { ProductDTO } from "@/types";
 export function ProductDeepLink() {
   const searchParams = useSearchParams();
   const openProduct = useUI((state) => state.openProduct);
-  const { products, cacheProducts } = useCatalog();
+  const { products, addProducts } = useCatalog();
   const handled = useRef<string | null>(null);
 
   useEffect(() => {
@@ -39,14 +39,12 @@ export function ProductDeepLink() {
 
     (async () => {
       try {
-        const res = await fetch(`/api/products/resolve?slug=${encodeURIComponent(slug)}`, {
-          cache: "no-store",
-        });
+        const res = await fetch(`/api/products/resolve?slug=${encodeURIComponent(slug)}`);
         if (!res.ok || cancelled) return;
         const data = (await res.json()) as { products?: ProductDTO[] };
         const product = data.products?.[0];
         if (!product || cancelled) return;
-        cacheProducts([product]);
+        addProducts([product]);
         openResolved(product);
       } catch (error) {
         console.error("[deep-link] Failed to resolve product:", error);
@@ -56,7 +54,7 @@ export function ProductDeepLink() {
     return () => {
       cancelled = true;
     };
-  }, [searchParams, products, cacheProducts, openProduct]);
+  }, [searchParams, products, addProducts, openProduct]);
 
   return null;
 }

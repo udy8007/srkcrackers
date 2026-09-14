@@ -1,24 +1,13 @@
-import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type {
   CategoryMetaDTO,
   CategoryWithProductsDTO,
   ProductDTO,
-  ProductsPageDTO,
 } from "@/types";
 import type { Category, Product } from "@/lib/db/types";
 
-export const CATALOG_CACHE_TAG = "catalog";
-
-/** Fallback TTL for edge/server cache; admin invalidation clears immediately. */
-export const STOREFRONT_CATALOG_REVALIDATE_SECONDS = 300;
-
-export const DEFAULT_PRODUCTS_PAGE_SIZE = 10;
-export const MAX_PRODUCTS_PAGE_SIZE = 48;
-
-export interface ProductsPageQuery {
-  page?: number;
-  pageSize?: number;
+export interface ProductsFilterQuery {
   category?: string;
   excludeCategory?: string;
   query?: string;
@@ -69,23 +58,7 @@ async function loadCatalogFromDb(): Promise<CategoryWithProductsDTO[]> {
     .filter((category) => category.products.length > 0);
 }
 
-const getCachedCatalog = unstable_cache(loadCatalogFromDb, ["storefront-catalog"], {
-  revalidate: STOREFRONT_CATALOG_REVALIDATE_SECONDS,
-  tags: [CATALOG_CACHE_TAG],
-});
-
-/**
- * Prefer the short-lived cache, but never serve a stuck empty catalog
- * (e.g. after a deploy against an empty DB that was seeded later).
- * Falls back when Next.js refuses large cache entries (>2MB).
- */
 export async function getCatalog(): Promise<CategoryWithProductsDTO[]> {
-  try {
-    const cached = await getCachedCatalog();
-    if (cached.length > 0) return cached;
-  } catch (error) {
-    console.warn("Catalog cache unavailable, loading from DB:", error);
-  }
   return loadCatalogFromDb();
 }
 
@@ -109,23 +82,12 @@ async function loadCategoryMetaFromDb(): Promise<CategoryMetaDTO[]> {
     }));
 }
 
-const getCachedCategoryMeta = unstable_cache(loadCategoryMetaFromDb, ["storefront-category-meta"], {
-  revalidate: STOREFRONT_CATALOG_REVALIDATE_SECONDS,
-  tags: [CATALOG_CACHE_TAG],
-});
-
 /** Active categories with product counts — no product payloads. */
 export async function getCategoryMeta(): Promise<CategoryMetaDTO[]> {
-  try {
-    const cached = await getCachedCategoryMeta();
-    if (cached.length > 0) return cached;
-  } catch (error) {
-    console.warn("Category meta cache unavailable, loading from DB:", error);
-  }
   return loadCategoryMetaFromDb();
 }
 
-async function buildProductsWhere(query: ProductsPageQuery): Promise<Record<string, unknown>> {
+async function buildProductsWhere(query: ProductsFilterQuery): Promise<Record<string, unknown>> {
   const where: Record<string, unknown> = { active: true };
   const categoryKey = query.category?.trim();
   const excludeCategory = query.excludeCategory?.trim();
@@ -157,33 +119,21 @@ async function buildProductsWhere(query: ProductsPageQuery): Promise<Record<stri
   return where;
 }
 
-/** Paginated active products for the storefront grid. */
-export async function getProductsPage(query: ProductsPageQuery = {}): Promise<ProductsPageDTO> {
-  const page = Math.max(query.page ?? 1, 1);
-  const pageSize = Math.min(
-    Math.max(query.pageSize ?? DEFAULT_PRODUCTS_PAGE_SIZE, 1),
-    MAX_PRODUCTS_PAGE_SIZE,
-  );
-  const skip = (page - 1) * pageSize;
+/** Active products for the storefront grid (all matching results). */
+export async function getFilteredProducts(
+  query: ProductsFilterQuery = {},
+): Promise<{ products: ProductDTO[]; total: number }> {
   const where = await buildProductsWhere(query);
 
-  const [products, total] = await Promise.all([
-    prisma.product.findMany({
-      where,
-      orderBy: [{ category: { sortOrder: "asc" } }, { sortOrder: "asc" }],
-      skip,
-      take: pageSize,
-      include: { category: { select: { key: true } } },
-    }),
-    prisma.product.count({ where }),
-  ]);
+  const products = await prisma.product.findMany({
+    where,
+    orderBy: [{ category: { sortOrder: "asc" } }, { sortOrder: "asc" }],
+    include: { category: { select: { key: true } } },
+  });
 
   return {
     products: products.map((product) => mapProductToDTO(product, product.category.key)),
-    total,
-    page,
-    pageSize,
-    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    total: products.length,
   };
 }
 
@@ -214,7 +164,6 @@ export async function resolveProducts(options: {
 
 /** Call after product/category admin mutations so the storefront refreshes promptly. */
 export function invalidateCatalogCache(): void {
-  revalidateTag(CATALOG_CACHE_TAG);
   revalidatePath("/");
   revalidatePath("/api/products");
   revalidatePath("/api/products/resolve");

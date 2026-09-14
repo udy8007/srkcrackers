@@ -1,15 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useProductFeed } from "@/hooks/useProductFeed";
-import { PRODUCT_FEED_PAGE_SIZE } from "@/lib/storefront-product-cache";
+import { useEffect, useMemo, useState } from "react";
 import { OrderOffersBanner } from "./OrderOffersBanner";
 import { PriceListButton } from "./PriceListButton";
 import { SectionDecor } from "./FestiveDecor";
 import { SectionHead } from "./SectionHead";
 import { useCatalog } from "./catalog-context";
 import { ProductCard } from "./ProductCard";
-import { ProductCardSkeleton, ProductGridSkeleton } from "./ProductCardSkeleton";
+import { ProductGridSkeleton } from "./ProductCardSkeleton";
 
 const SEARCH_DEBOUNCE_MS = 350;
 
@@ -17,25 +15,37 @@ function scrollToGiftBoxes() {
   document.getElementById("gift-packs")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+function matchesSearch(product: { name: string; nameTa: string | null; pack: string; description: string }, query: string) {
+  const q = query.toLowerCase();
+  return (
+    product.name.toLowerCase().includes(q) ||
+    (product.nameTa?.toLowerCase().includes(q) ?? false) ||
+    product.pack.toLowerCase().includes(q) ||
+    product.description.toLowerCase().includes(q)
+  );
+}
+
 export function ProductsSection() {
-  const { categories, cacheProducts, getCategoryLabel, loading: metaLoading } = useCatalog();
+  const { categories, products: allProducts, getCategoryLabel, loading } = useCatalog();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  const onProductsLoaded = useCallback(
-    (loaded: Parameters<typeof cacheProducts>[0]) => {
-      cacheProducts(loaded);
-    },
-    [cacheProducts],
+  const shopProducts = useMemo(
+    () => allProducts.filter((product) => product.categoryKey !== "gift-packs"),
+    [allProducts],
   );
 
-  const { products, total, loading, loadingMore, error, hasMore, loadMore } = useProductFeed({
-    category: selectedCategory,
-    search: debouncedSearch,
-    onProductsLoaded,
-  });
+  const products = useMemo(() => {
+    let list = shopProducts;
+    if (selectedCategory !== "all") {
+      list = list.filter((product) => product.categoryKey === selectedCategory);
+    }
+    if (debouncedSearch) {
+      list = list.filter((product) => matchesSearch(product, debouncedSearch));
+    }
+    return list;
+  }, [shopProducts, selectedCategory, debouncedSearch]);
 
   const giftPackCategory = useMemo(
     () => categories.find((category) => category.key === "gift-packs"),
@@ -55,22 +65,7 @@ export function ProductsSection() {
     return () => window.clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
-    const node = loadMoreRef.current;
-    if (!node || !hasMore) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) void loadMore();
-      },
-      { rootMargin: "240px" },
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [hasMore, loadMore, products.length]);
-
-  const isInitialLoad = (metaLoading || loading) && products.length === 0;
+  const isInitialLoad = loading && allProducts.length === 0;
 
   return (
     <section id="products" className="relative isolate overflow-hidden bg-brandbg px-4 py-14">
@@ -99,9 +94,9 @@ export function ProductsSection() {
               <p className="text-xs text-ink-muted">Choose a category or search for a product</p>
             </div>
             <p className="text-xs font-semibold text-primary">
-              {loading && products.length === 0
+              {isInitialLoad
                 ? "Loading…"
-                : `${total} ${total === 1 ? "product" : "products"} found`}
+                : `${products.length} ${products.length === 1 ? "product" : "products"} found`}
             </p>
           </div>
 
@@ -216,49 +211,17 @@ export function ProductsSection() {
 
         <div id="products-grid" className="scroll-mt-28">
           {isInitialLoad ? (
-            <ProductGridSkeleton count={PRODUCT_FEED_PAGE_SIZE} />
-          ) : error && products.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-red/30 bg-red/5 py-12 text-center text-sm text-red">
-              Could not load products. Please refresh the page.
-            </p>
+            <ProductGridSkeleton count={8} />
           ) : products.length > 0 ? (
-            <>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {products.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    categoryLabel={getCategoryLabel(product.categoryKey)}
-                  />
-                ))}
-              </div>
-
-              <div ref={loadMoreRef} className="mt-8 flex flex-col items-center gap-3">
-                <p className="text-center text-xs font-medium text-ink-muted sm:text-sm">
-                  Showing{" "}
-                  <span className="font-bold text-ink">{products.length}</span> of{" "}
-                  <span className="font-bold text-ink">{total}</span> products
-                </p>
-
-                {loadingMore && (
-                  <div className="grid w-full gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {Array.from({ length: Math.min(PRODUCT_FEED_PAGE_SIZE, total - products.length) }).map(
-                      (_, index) => (
-                        <ProductCardSkeleton key={`loading-more-${index}`} />
-                      ),
-                    )}
-                  </div>
-                )}
-
-                {!loadingMore && hasMore && (
-                  <p className="text-xs font-semibold text-primary">Scroll down to load more…</p>
-                )}
-
-                {!hasMore && products.length > 0 && (
-                  <p className="text-xs font-semibold text-ink-muted">You&apos;ve seen all products</p>
-                )}
-              </div>
-            </>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  categoryLabel={getCategoryLabel(product.categoryKey)}
+                />
+              ))}
+            </div>
           ) : (
             <p className="rounded-2xl border border-dashed border-line bg-white/80 py-12 text-center text-sm text-ink-muted">
               No products found. Try another category or search.

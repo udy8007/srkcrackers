@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect } from "react";
-import type { CategoryMetaDTO } from "@/types";
+import type { CategoryMetaDTO, ProductDTO } from "@/types";
 import { CatalogProvider } from "./catalog-context";
 import { useUI } from "@/store/ui";
 import { TopBar } from "./TopBar";
@@ -32,7 +32,13 @@ import { ScrollReveal } from "./ScrollReveal";
 import { VisitTracker } from "./VisitTracker";
 import { Toast } from "./Toast";
 
-export function Storefront({ categories }: { categories: CategoryMetaDTO[] }) {
+export function Storefront({
+  categories,
+  products,
+}: {
+  categories: CategoryMetaDTO[];
+  products: ProductDTO[];
+}) {
   const closeProduct = useUI((s) => s.closeProduct);
   const closeCheckout = useUI((s) => s.closeCheckout);
   const closeCart = useUI((s) => s.closeCart);
@@ -52,7 +58,7 @@ export function Storefront({ categories }: { categories: CategoryMetaDTO[] }) {
   }, [closeProduct, closeCheckout, closeCart, closeWishlist]);
 
   return (
-    <CatalogProvider categories={categories}>
+    <CatalogProvider categories={categories} products={products}>
       <Suspense fallback={null}>
         <TrackOrderDeepLink />
         <ProductDeepLink />

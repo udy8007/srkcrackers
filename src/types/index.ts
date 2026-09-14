@@ -28,15 +28,6 @@ export interface CategoryWithProductsDTO {
   products: ProductDTO[];
 }
 
-/** Paginated storefront product response. */
-export interface ProductsPageDTO {
-  products: ProductDTO[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
-
 /** A single line item submitted with an order. */
 export interface CartLineInput {
   productId: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { SafeImage } from "@/components/SafeImage";
 import { useMounted } from "@/lib/hooks";
 import { formatPrice } from "@/lib/utils";
@@ -116,47 +116,12 @@ function GiftPackCard({ product, accent }: { product: ProductDTO; accent: string
 }
 
 export function GiftPacksSection() {
-  const { categories, cacheProducts } = useCatalog();
-  const [giftPacks, setGiftPacks] = useState<ProductDTO[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { products, loading } = useCatalog();
 
-  const giftPackCount = categories.find((category) => category.key === "gift-packs")?.productCount ?? 0;
-
-  useEffect(() => {
-    if (giftPackCount === 0) {
-      setLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setLoading(true);
-
-    (async () => {
-      try {
-        const params = new URLSearchParams({
-          page: "1",
-          pageSize: "24",
-          category: "gift-packs",
-        });
-        const res = await fetch(`/api/products?${params.toString()}`, { cache: "no-store" });
-        if (!res.ok) return;
-        const data = (await res.json()) as { products?: ProductDTO[] };
-        if (!cancelled) {
-          const products = data.products ?? [];
-          setGiftPacks(products);
-          cacheProducts(products);
-        }
-      } catch (error) {
-        console.error("[gift-packs] Failed to load:", error);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [giftPackCount, cacheProducts]);
+  const giftPacks = useMemo(
+    () => products.filter((product) => product.categoryKey === "gift-packs"),
+    [products],
+  );
 
   if (!loading && giftPacks.length === 0) return null;
 
@@ -169,7 +134,7 @@ export function GiftPacksSection() {
           subtitle="Ready-made collections · Clear pricing · Tap + to add"
         />
 
-        {loading ? (
+        {loading && giftPacks.length === 0 ? (
           <ProductGridSkeleton count={3} />
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
