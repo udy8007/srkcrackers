@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
       },
     });
     const enriched = await withCategory(product);
-    invalidateCatalogCache();
+    await invalidateCatalogCache();
     await writeAuditLog({
       actor: actorFromSession(session.user),
       action: "PRODUCT_CREATE",

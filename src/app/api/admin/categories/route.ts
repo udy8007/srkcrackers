@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  invalidateCatalogCache();
+  await invalidateCatalogCache();
   await writeAuditLog({
     actor: actorFromSession(session.user),
     action: "CATEGORY_CREATE",

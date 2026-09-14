@@ -35,7 +35,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       data,
     });
     const productCount = await prisma.product.count({ where: { categoryId: id } });
-    invalidateCatalogCache();
+    await invalidateCatalogCache();
     await writeAuditLog({
       actor: actorFromSession(session.user),
       action: "CATEGORY_UPDATE",

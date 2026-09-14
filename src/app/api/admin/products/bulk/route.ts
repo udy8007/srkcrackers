@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
   if (action === "delete") {
     const result = await prisma.product.deleteMany({ where: { id: { in: ids } } });
-    invalidateCatalogCache();
+    await invalidateCatalogCache();
     await writeAuditLog({
       actor: actorFromSession(session.user),
       action: "PRODUCT_BULK_DELETE",
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     where: { id: { in: ids } },
     data: { active },
   });
-  invalidateCatalogCache();
+  await invalidateCatalogCache();
   await writeAuditLog({
     actor: actorFromSession(session.user),
     action: active ? "PRODUCT_BULK_ENABLE" : "PRODUCT_BULK_DISABLE",

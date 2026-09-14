@@ -104,7 +104,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       where: { id },
       data,
     });
-    invalidateCatalogCache();
+    await invalidateCatalogCache();
     await writeAuditLog({
       actor: actorFromSession(session.user),
       action: "PRODUCT_UPDATE",
@@ -135,7 +135,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
     await prisma.product.delete({ where: { id } });
-    invalidateCatalogCache();
+    await invalidateCatalogCache();
     await writeAuditLog({
       actor: actorFromSession(session.user),
       action: "PRODUCT_DELETE",

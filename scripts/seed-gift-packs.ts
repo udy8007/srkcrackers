@@ -1,5 +1,5 @@
 /**
- * Upsert Festival Gift Packs category + 3 products (20% off MRP).
+ * Upsert Festival Gift Packs category + 4 products.
  * Usage: npx tsx scripts/seed-gift-packs.ts
  */
 import { createPrismaClient } from "../src/lib/create-prisma-client";
@@ -8,39 +8,52 @@ const prisma = createPrismaClient();
 
 const PACKS = [
   {
-    slug: "amazing-gift-pack",
-    name: "Amazing Gift Pack",
-    pack: "30 Items Gift Pack",
+    slug: "16-items-gift-pack",
+    name: "16 Items Gift Pack",
+    pack: "16 Items Gift Pack",
     mrp: 1500,
-    price: 1200, // 20% off
-    imageUrl: "/products/gift-packs/amazing-gift-pack.png",
+    price: 240,
+    imageUrl: "/products/gift-packs/16-items-gift-pack.jpg",
     sortOrder: 1,
     description:
-      "Festival gift pack with 30 items including Gold Lakshmi, Bijili, Flower Pot Big, Disco Wheel, Sparklers, Ground Chakra Big, and more.",
+      "Festival gift pack with 16 items including Bijli, Lakshmi, Kuruvi, Disco Wheel, Sparklers, and more.",
   },
   {
-    slug: "golden-gift-pack",
-    name: "Golden Pack",
-    pack: "40 Items Gift Pack",
-    mrp: 1800,
-    price: 1440, // 20% off
-    imageUrl: "/products/gift-packs/golden-gift-pack.png",
+    slug: "21-items-gift-pack",
+    name: "21 Items Gift Pack",
+    pack: "21 Items Gift Pack",
+    mrp: 1500,
+    price: 285,
+    imageUrl: "/products/gift-packs/21-items-gift-pack.jpg",
     sortOrder: 2,
     description:
-      "Festival gift pack with 40 items including Bijili, Gold Lakshmi, Lakshmi crackers, Sparklers, Flower Pot Big, Ground Chakra Big, and more.",
+      "Festival gift pack with 21 items including Lakshmi, Kuruvi, Military Boom, Flowerpot, Chakra, and more.",
   },
   {
-    slug: "mayur-gift-box",
-    name: "Mayur Gift Box",
-    pack: "30 Items Gift Box",
+    slug: "25-items-gift-pack",
+    name: "25 Items Gift Pack",
+    pack: "25 Items Gift Pack",
     mrp: 1500,
-    price: 1200, // 20% off
-    imageUrl: "/products/gift-packs/mayur-gift-box.png",
+    price: 350,
+    imageUrl: "/products/gift-packs/25-items-gift-pack.jpg",
     sortOrder: 3,
     description:
-      "Festival gift box with 30 items including Bijili, Flower Pot Big, Ground Chakra Big, Disco Wheel, Sparklers, and more.",
+      "Festival gift pack with 25 items including Bijli, Lakshmi, Parrot, Flower Pot, Sparklers, and more.",
+  },
+  {
+    slug: "30-items-gift-pack",
+    name: "30 Items Gift Pack",
+    pack: "30 Items Gift Pack",
+    mrp: 1500,
+    price: 550,
+    imageUrl: "/products/gift-packs/30-items-gift-pack.jpg",
+    sortOrder: 4,
+    description:
+      "Festival gift pack with 30 items including Bijili, Lakshmi, Flower Pot Big, Chakra Big, Sparklers, and more.",
   },
 ] as const;
+
+const LEGACY_SLUGS = ["amazing-gift-pack", "golden-gift-pack", "mayur-gift-box"];
 
 async function main() {
   const category = await prisma.category.upsert({
@@ -86,6 +99,16 @@ async function main() {
       },
     });
     console.log(`✓ ${pack.name} — MRP ₹${pack.mrp} → ₹${pack.price}`);
+  }
+
+  for (const slug of LEGACY_SLUGS) {
+    const deactivated = await prisma.product.updateMany({
+      where: { slug },
+      data: { active: false },
+    });
+    if (deactivated.count > 0) {
+      console.log(`✗ Deactivated legacy pack: ${slug}`);
+    }
   }
 
   console.log(`\nCategory: ${category.label} (${category.key})`);

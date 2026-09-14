@@ -1,11 +1,11 @@
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
+import { getMasterDataSnapshot, syncMasterDataCache } from "@/lib/master-data-cache";
 import type {
   CategoryMetaDTO,
   CategoryWithProductsDTO,
   ProductDTO,
 } from "@/types";
-import type { Category, Product } from "@/lib/db/types";
+import type { Product } from "@/lib/db/types";
 
 export interface ProductsFilterQuery {
   category?: string;
@@ -28,112 +28,96 @@ function mapProductToDTO(product: Product, categoryKey: string): ProductDTO {
   };
 }
 
-async function loadCatalogFromDb(): Promise<CategoryWithProductsDTO[]> {
-  const [categories, products] = (await Promise.all([
-    prisma.category.findMany({
-      where: { active: true },
-      orderBy: { sortOrder: "asc" },
-    }),
-    prisma.product.findMany({
-      where: { active: true },
-      orderBy: { sortOrder: "asc" },
-    }),
-  ])) as [Category[], Product[]];
+function buildCatalogFromSnapshot(): Promise<CategoryWithProductsDTO[]> {
+  return getMasterDataSnapshot().then(({ categories, products, categoryById }) => {
+    const productsByCategory = new Map<string, Product[]>();
+    for (const product of products) {
+      const list = productsByCategory.get(product.categoryId) ?? [];
+      list.push(product);
+      productsByCategory.set(product.categoryId, list);
+    }
 
-  const productsByCategory = new Map<string, Product[]>();
-  for (const product of products) {
-    const list = productsByCategory.get(product.categoryId) ?? [];
-    list.push(product);
-    productsByCategory.set(product.categoryId, list);
-  }
-
-  return categories
-    .map((category) => ({
-      key: category.key,
-      label: category.label,
-      products: (productsByCategory.get(category.id) ?? []).map((product) =>
-        mapProductToDTO(product, category.key),
-      ),
-    }))
-    .filter((category) => category.products.length > 0);
+    return categories
+      .map((category) => ({
+        key: category.key,
+        label: category.label,
+        products: (productsByCategory.get(category.id) ?? []).map((product) =>
+          mapProductToDTO(product, category.key),
+        ),
+      }))
+      .filter((category) => category.products.length > 0);
+  });
 }
 
 export async function getCatalog(): Promise<CategoryWithProductsDTO[]> {
-  return loadCatalogFromDb();
-}
-
-async function loadCategoryMetaFromDb(): Promise<CategoryMetaDTO[]> {
-  const categories = await prisma.category.findMany({
-    where: { active: true },
-    orderBy: { sortOrder: "asc" },
-    include: {
-      _count: {
-        select: { products: { where: { active: true } } },
-      },
-    },
-  });
-
-  return categories
-    .filter((category) => category._count.products > 0)
-    .map((category) => ({
-      key: category.key,
-      label: category.label,
-      productCount: category._count.products,
-    }));
+  return buildCatalogFromSnapshot();
 }
 
 /** Active categories with product counts — no product payloads. */
 export async function getCategoryMeta(): Promise<CategoryMetaDTO[]> {
-  return loadCategoryMetaFromDb();
+  const { categories, products } = await getMasterDataSnapshot();
+
+  const productCountByCategory = new Map<string, number>();
+  for (const product of products) {
+    productCountByCategory.set(
+      product.categoryId,
+      (productCountByCategory.get(product.categoryId) ?? 0) + 1,
+    );
+  }
+
+  return categories
+    .map((category) => ({
+      key: category.key,
+      label: category.label,
+      productCount: productCountByCategory.get(category.id) ?? 0,
+    }))
+    .filter((category) => category.productCount > 0);
 }
 
-async function buildProductsWhere(query: ProductsFilterQuery): Promise<Record<string, unknown>> {
-  const where: Record<string, unknown> = { active: true };
-  const categoryKey = query.category?.trim();
-  const excludeCategory = query.excludeCategory?.trim();
-  const search = query.query?.trim();
-
-  if (categoryKey && categoryKey !== "all") {
-    const category = await prisma.category.findFirst({
-      where: { key: categoryKey, active: true },
-      select: { id: true },
-    });
-    if (category) where.categoryId = category.id;
-  } else if (excludeCategory) {
-    const category = await prisma.category.findFirst({
-      where: { key: excludeCategory },
-      select: { id: true },
-    });
-    if (category) where.categoryId = { not: category.id };
-  }
-
-  if (search) {
-    where.OR = [
-      { name: { contains: search } },
-      { nameTa: { contains: search } },
-      { pack: { contains: search } },
-      { description: { contains: search } },
-    ];
-  }
-
-  return where;
+function productMatchesSearch(product: Product, search: string): boolean {
+  return [product.name, product.nameTa, product.pack, product.description].some(
+    (value) => value?.includes(search) ?? false,
+  );
 }
 
 /** Active products for the storefront grid (all matching results). */
 export async function getFilteredProducts(
   query: ProductsFilterQuery = {},
 ): Promise<{ products: ProductDTO[]; total: number }> {
-  const where = await buildProductsWhere(query);
+  const { products, categoryByKey, categoryById } = await getMasterDataSnapshot();
 
-  const products = await prisma.product.findMany({
-    where,
-    orderBy: [{ category: { sortOrder: "asc" } }, { sortOrder: "asc" }],
-    include: { category: { select: { key: true } } },
+  const categoryKey = query.category?.trim();
+  const excludeCategory = query.excludeCategory?.trim();
+  const search = query.query?.trim();
+
+  let filtered = products;
+
+  if (categoryKey && categoryKey !== "all") {
+    const category = categoryByKey.get(categoryKey);
+    filtered = category ? filtered.filter((product) => product.categoryId === category.id) : [];
+  } else if (excludeCategory) {
+    const category = categoryByKey.get(excludeCategory);
+    if (category) {
+      filtered = filtered.filter((product) => product.categoryId !== category.id);
+    }
+  }
+
+  if (search) {
+    filtered = filtered.filter((product) => productMatchesSearch(product, search));
+  }
+
+  filtered.sort((a, b) => {
+    const categorySortA = categoryById.get(a.categoryId)?.sortOrder ?? 0;
+    const categorySortB = categoryById.get(b.categoryId)?.sortOrder ?? 0;
+    if (categorySortA !== categorySortB) return categorySortA - categorySortB;
+    return a.sortOrder - b.sortOrder;
   });
 
   return {
-    products: products.map((product) => mapProductToDTO(product, product.category.key)),
-    total: products.length,
+    products: filtered.map((product) =>
+      mapProductToDTO(product, categoryById.get(product.categoryId)?.key ?? ""),
+    ),
+    total: filtered.length,
   };
 }
 
@@ -147,23 +131,24 @@ export async function resolveProducts(options: {
 
   if (ids.length === 0 && !slug) return [];
 
-  const where =
-    ids.length > 0 && slug
-      ? { active: true, OR: [{ id: { in: ids } }, { slug }] }
-      : ids.length > 0
-        ? { active: true, id: { in: ids } }
-        : { active: true, slug };
+  const { products, categoryById } = await getMasterDataSnapshot();
 
-  const products = await prisma.product.findMany({
-    where,
-    include: { category: { select: { key: true } } },
+  const matched = products.filter((product) => {
+    if (ids.length > 0 && slug) {
+      return ids.includes(product.id) || product.slug === slug;
+    }
+    if (ids.length > 0) return ids.includes(product.id);
+    return product.slug === slug;
   });
 
-  return products.map((product) => mapProductToDTO(product, product.category.key));
+  return matched.map((product) =>
+    mapProductToDTO(product, categoryById.get(product.categoryId)?.key ?? ""),
+  );
 }
 
-/** Call after product/category admin mutations so the storefront refreshes promptly. */
-export function invalidateCatalogCache(): void {
+/** Reload master-data cache and revalidate storefront paths after admin mutations. */
+export async function invalidateCatalogCache(): Promise<void> {
+  await syncMasterDataCache();
   revalidatePath("/");
   revalidatePath("/api/products");
   revalidatePath("/api/products/resolve");
