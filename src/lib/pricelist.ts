@@ -18,8 +18,26 @@ const MUTED: RGB = [110, 95, 95];
 
 const rupees = (n: number) => `Rs. ${n.toLocaleString("en-IN")}`;
 
+export type PriceListProgressStep = "libraries" | "assets" | "generating" | "complete";
+
+export interface PriceListProgress {
+  step: PriceListProgressStep;
+  message: string;
+  percent: number;
+}
+
+export type PriceListProgressCallback = (progress: PriceListProgress) => void;
+
 /** Build and download a branded price-list PDF from the live catalog. */
-export async function downloadPriceList(categories: CategoryWithProductsDTO[]) {
+export async function downloadPriceList(
+  categories: CategoryWithProductsDTO[],
+  onProgress?: PriceListProgressCallback,
+) {
+  const report = (step: PriceListProgressStep, message: string, percent: number) => {
+    onProgress?.({ step, message, percent });
+  };
+
+  report("libraries", "Loading PDF tools...", 25);
   const [{ default: jsPDF }, autoTableMod] = await Promise.all([
     import("jspdf"),
     import("jspdf-autotable"),
@@ -36,8 +54,11 @@ export async function downloadPriceList(categories: CategoryWithProductsDTO[]) {
     year: "numeric",
   });
 
+  report("assets", "Loading shop logo and QR code...", 45);
   const logo = await loadImageDataUrl("/logo.png");
   const qr = await loadImageDataUrl(buildStoreQrImageUrl(140));
+
+  report("generating", "Building your price list PDF...", 70);
 
   const drawHeader = () => {
     if (logo) doc.addImage(logo, "PNG", margin, 22, 56, 56);
@@ -149,6 +170,7 @@ export async function downloadPriceList(categories: CategoryWithProductsDTO[]) {
     doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, pageHeight - 26, { align: "right" });
   }
 
+  report("complete", "Starting download...", 100);
   const stamp = new Date().toISOString().slice(0, 10);
   doc.save(`SRK-Crackers-Price-List-${stamp}.pdf`);
 }
