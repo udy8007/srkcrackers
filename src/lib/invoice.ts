@@ -79,7 +79,21 @@ export async function downloadOrderInvoice(data: InvoiceData) {
   drawHeader();
 
   const infoTop = 132;
+  const colGap = 18;
   const colRight = pageWidth / 2 + 8;
+  const leftColWidth = colRight - margin - colGap;
+  const rightColWidth = pageWidth - margin - colRight;
+  const lineHeight = 12;
+
+  const drawWrappedLines = (lines: string[], x: number, startY: number, maxWidth: number) => {
+    let y = startY;
+    for (const line of lines) {
+      const wrapped = doc.splitTextToSize(line, maxWidth) as string[];
+      doc.text(wrapped, x, y);
+      y += wrapped.length * lineHeight;
+    }
+    return y;
+  };
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
@@ -97,11 +111,7 @@ export async function downloadOrderInvoice(data: InvoiceData) {
     ...formatInvoiceAddressLines(data.customer),
   ].filter(Boolean) as string[];
 
-  let billY = infoTop + 14;
-  for (const line of billLines) {
-    doc.text(line, margin, billY);
-    billY += 12;
-  }
+  const billY = drawWrappedLines(billLines, margin, infoTop + 14, leftColWidth);
 
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...RED_DARK);
@@ -116,11 +126,7 @@ export async function downloadOrderInvoice(data: InvoiceData) {
     `Payment: ${data.paymentMethod ?? "UPI"}`,
     `UPI ID: ${data.upiId ?? BUSINESS.upiId}`,
   ];
-  let detailY = infoTop + 14;
-  for (const line of detailLines) {
-    doc.text(line, colRight, detailY);
-    detailY += 12;
-  }
+  const detailY = drawWrappedLines(detailLines, colRight, infoTop + 14, rightColWidth);
 
   const tableStart = Math.max(billY, detailY) + 10;
   const tableWidth = pageWidth - 2 * margin;

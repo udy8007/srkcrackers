@@ -178,6 +178,9 @@ export function buildPrintInvoiceHtml(
       gap: 20px;
       margin-bottom: 18px;
     }
+    .info-block {
+      min-width: 0;
+    }
     .info-block h3 {
       margin: 0 0 8px;
       font-size: 11px;
@@ -186,7 +189,12 @@ export function buildPrintInvoiceHtml(
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
-    .info-block p { margin: 0 0 4px; color: #2b1f1f; }
+    .info-block p {
+      margin: 0 0 4px;
+      color: #2b1f1f;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
     table {
       width: 100%;
       border-collapse: collapse;

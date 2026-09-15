@@ -4,6 +4,23 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { CategoryMetaDTO } from "@/types";
 
+const FILTER_GEAR_HINT_KEY = "srk-filter-gear-hint";
+const MOBILE_MAX_WIDTH = 767;
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(`(max-width: ${MOBILE_MAX_WIDTH}px)`);
+    const sync = () => setIsMobile(media.matches);
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
+
+  return isMobile;
+}
+
 function FilterFloatingPortal({
   active,
   children,
@@ -84,6 +101,7 @@ export function ProductFilters({
 }: ProductFiltersProps) {
   const panelRef = useRef<HTMLDivElement>(null);
 
+  const isMobile = useIsMobile();
   const hasActiveFilter = selectedCategory !== "all" || search.trim().length > 0;
 
   const scrollToFilters = () => {
@@ -110,7 +128,7 @@ export function ProductFilters({
         <FullFilterPanel {...sharedProps} compact={filterStuck} />
       </div>
 
-      <FilterFloatingPortal active={filterStuck}>
+      <FilterFloatingPortal active={filterStuck && isMobile}>
         <FilterGearFab
           hasActiveFilter={hasActiveFilter}
           productsCount={productsCount}
@@ -286,20 +304,52 @@ function FilterGearFab({
   isInitialLoad: boolean;
   onClick: () => void;
 }) {
+  const [hintVisible, setHintVisible] = useState(false);
+
+  useEffect(() => {
+    let alreadyShown = false;
+    try {
+      alreadyShown = sessionStorage.getItem(FILTER_GEAR_HINT_KEY) === "1";
+    } catch {
+      alreadyShown = false;
+    }
+    if (alreadyShown) return;
+
+    try {
+      sessionStorage.setItem(FILTER_GEAR_HINT_KEY, "1");
+    } catch {
+      /* ignore quota / private mode */
+    }
+
+    setHintVisible(true);
+    const timer = window.setTimeout(() => setHintVisible(false), 3600);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label="Jump to filters"
-      className="product-filter-gear-fab fixed z-[55] flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition"
-    >
-      <GearIcon className="h-7 w-7" />
-      {hasActiveFilter && (
-        <span className="product-filter-gear-badge absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[0.62rem] font-extrabold">
-          {isInitialLoad ? "…" : productsCount > 99 ? "99+" : productsCount}
-        </span>
-      )}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          setHintVisible(false);
+          onClick();
+        }}
+        aria-label="Jump to filters"
+        className="product-filter-gear-fab md:hidden fixed z-[55] flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition"
+      >
+        <GearIcon className="h-7 w-7" />
+        {hasActiveFilter && (
+          <span className="product-filter-gear-badge absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[0.62rem] font-extrabold">
+            {isInitialLoad ? "…" : productsCount > 99 ? "99+" : productsCount}
+          </span>
+        )}
+      </button>
+      {hintVisible ? (
+        <p className="product-filter-gear-hint md:hidden" role="status">
+          Tap to jump back to filters
+        </p>
+      ) : null}
+    </>
   );
 }
 
