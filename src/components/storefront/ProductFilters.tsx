@@ -3,6 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { CategoryMetaDTO } from "@/types";
+import {
+  Burst,
+  Chakkar,
+  Firecracker,
+  FlowerPot,
+  Mandala,
+  Marigold,
+  Rocket,
+  Sparkle,
+  Sparkler,
+} from "./FestiveDecor";
 
 const FILTER_GEAR_HINT_KEY = "srk-filter-gear-hint";
 const MOBILE_MAX_WIDTH = 767;
@@ -54,20 +65,119 @@ function GearIcon({ className = "h-6 w-6" }: { className?: string }) {
   );
 }
 
-function getCategoryIcon(key: string): string {
-  if (key === "all") return "🎆";
-  if (key.includes("sparkler")) return "✨";
-  if (key.includes("match")) return "🔥";
-  if (key.includes("sky") || key.includes("fancy")) return "🎇";
-  if (key.includes("ground")) return "🌟";
-  if (key.includes("rocket")) return "🚀";
-  if (key.includes("fountain") || key.includes("flower")) return "🌸";
-  if (key.includes("bomb")) return "💥";
-  if (key.includes("sound") || key.includes("lakshmi")) return "🔊";
-  if (key.includes("kid")) return "🎈";
-  if (key.includes("wala") || key.includes("garland")) return "📿";
-  if (key.includes("gift")) return "🎁";
-  return "🧨";
+type CategoryTheme =
+  | "all"
+  | "sparkler"
+  | "match"
+  | "sky"
+  | "ground"
+  | "rocket"
+  | "flower"
+  | "bomb"
+  | "sound"
+  | "kid"
+  | "wala"
+  | "gift"
+  | "cracker";
+
+function getCategoryTheme(key: string): CategoryTheme {
+  if (key === "all") return "all";
+  if (key.includes("gift")) return "gift";
+  if (key.includes("sparkler")) return "sparkler";
+  if (key.includes("match")) return "match";
+  if (key.includes("rocket")) return "rocket";
+  if (key.includes("fountain") || key.includes("flower")) return "flower";
+  if (key.includes("ground")) return "ground";
+  if (key.includes("sky") || key.includes("fancy")) return "sky";
+  if (key.includes("bomb")) return "bomb";
+  if (key.includes("sound") || key.includes("lakshmi")) return "sound";
+  if (key.includes("kid")) return "kid";
+  if (key.includes("wala") || key.includes("garland")) return "wala";
+  return "cracker";
+}
+
+function GiftGlyph({ className = "h-7 w-7" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} fill="currentColor" aria-hidden>
+      <path d="M12 24h40v8H12z" />
+      <path d="M14 32h36v22a4 4 0 0 1-4 4H18a4 4 0 0 1-4-4V32z" />
+      <path d="M30 24h4v34h-4z" opacity="0.55" />
+      <path d="M32 24c-9-12-18-4-12 6h12" />
+      <path d="M32 24c9-12 18-4 12 6H32" />
+    </svg>
+  );
+}
+
+function MatchGlyph({ className = "h-7 w-7" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} aria-hidden>
+      <path d="M22 52 40 18" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" />
+      <path d="M37 10c6 2 10 8 8 14-4-1-7-5-8-10-3 2-5 6-5 10-4-6-2-12 5-14z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function SoundGlyph({ className = "h-7 w-7" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} fill="none" stroke="currentColor" strokeWidth="2.6" aria-hidden>
+      <path d="M18 26h8l12-10v32L26 38h-8a4 4 0 0 1-4-4v-4a4 4 0 0 1 4-4z" fill="currentColor" stroke="none" />
+      <path d="M44 24c3 4 3 12 0 16" strokeLinecap="round" />
+      <path d="M50 18c6 7 6 21 0 28" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function BalloonGlyph({ className = "h-7 w-7" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} aria-hidden>
+      <ellipse cx="32" cy="26" rx="13" ry="16" fill="currentColor" />
+      <path d="M32 42v14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+      <path d="M27 42h10l-5 5z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function GarlandGlyph({ className = "h-7 w-7" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} aria-hidden>
+      <path d="M10 18c10 16 34 16 44 0" fill="none" stroke="currentColor" strokeWidth="2.4" />
+      <rect x="14" y="26" width="7" height="22" rx="2" fill="currentColor" />
+      <rect x="28" y="30" width="7" height="22" rx="2" fill="currentColor" />
+      <rect x="42" y="26" width="7" height="22" rx="2" fill="currentColor" />
+    </svg>
+  );
+}
+
+function CategoryGlyph({ theme, className = "h-7 w-7" }: { theme: CategoryTheme; className?: string }) {
+  switch (theme) {
+    case "all":
+      return <Burst className={className} />;
+    case "sparkler":
+      return <Sparkler className={className} />;
+    case "match":
+      return <MatchGlyph className={className} />;
+    case "sky":
+      return <Burst className={className} />;
+    case "ground":
+      return <Chakkar className={className} />;
+    case "rocket":
+      return <Rocket className={className} />;
+    case "flower":
+      return <FlowerPot className={className} />;
+    case "bomb":
+    case "cracker":
+      return <Firecracker className={className} />;
+    case "sound":
+      return <SoundGlyph className={className} />;
+    case "kid":
+      return <BalloonGlyph className={className} />;
+    case "wala":
+      return <GarlandGlyph className={className} />;
+    case "gift":
+      return <GiftGlyph className={className} />;
+    default:
+      return <Firecracker className={className} />;
+  }
 }
 
 interface ProductFiltersProps {
@@ -146,39 +256,37 @@ function FestiveBackdrop({ compact = false }: { compact?: boolean }) {
   return (
     <>
       <div aria-hidden className="product-filter-wash pointer-events-none absolute inset-0" />
-      <div
-        aria-hidden
-        className={`pointer-events-none absolute rounded-full bg-yellow/30 blur-2xl ${
-          compact ? "-left-4 -top-6 h-16 w-16" : "-left-6 -top-8 h-28 w-28"
+      <div aria-hidden className="product-filter-rangoli pointer-events-none absolute inset-0" />
+      <Mandala
+        className={`pointer-events-none absolute text-primary/[0.08] ${
+          compact ? "-right-6 -top-8 h-24 w-24" : "-right-8 -top-10 h-40 w-40"
         }`}
       />
-      <div
-        aria-hidden
-        className={`pointer-events-none absolute rounded-full bg-primary/20 blur-2xl ${
-          compact ? "-bottom-4 -right-4 h-20 w-20" : "-bottom-10 -right-6 h-32 w-32"
+      <Mandala
+        className={`pointer-events-none absolute text-gold/20 ${
+          compact ? "-bottom-10 -left-8 h-28 w-28" : "-bottom-14 -left-12 h-44 w-44"
         }`}
       />
-      <svg
-        aria-hidden
-        className={`pointer-events-none absolute text-primary/[0.07] ${
-          compact ? "right-3 top-2 h-10 w-10" : "right-4 top-3 h-16 w-16"
+      <Marigold
+        className={`pointer-events-none absolute drop-shadow-sm ${
+          compact ? "right-10 top-2 h-5 w-5" : "right-16 top-4 h-7 w-7"
         }`}
-        viewBox="0 0 64 64"
-        fill="currentColor"
-      >
-        <path d="M32 4l2 10 10 2-10 2-2 10-2-10-10-2 10-2 2-10zm18 18l1.5 6 6 1.5-6 1.5-1.5 6-1.5-6-6-1.5 6-1.5 1.5-6zM12 40l1 4 4 1-4 1-1 4-1-4-4-1 4-1 1-4z" />
-      </svg>
+      />
+      <Sparkler
+        className={`pointer-events-none absolute text-gold/35 ${
+          compact ? "left-3 bottom-2 h-8 w-8" : "left-4 bottom-3 h-12 w-12"
+        }`}
+      />
+      <Rocket
+        className={`pointer-events-none absolute rotate-12 text-primary/15 ${
+          compact ? "right-2 bottom-1 h-8 w-8" : "right-3 bottom-2 h-14 w-14"
+        }`}
+      />
       {!compact && (
         <>
-          <span aria-hidden className="product-filter-spark product-filter-spark--1 absolute text-lg">
-            ✨
-          </span>
-          <span aria-hidden className="product-filter-spark product-filter-spark--2 absolute text-base">
-            🎇
-          </span>
-          <span aria-hidden className="product-filter-spark product-filter-spark--3 absolute text-sm">
-            ✦
-          </span>
+          <Sparkle className="product-filter-spark product-filter-spark--1 absolute h-4 w-4 text-gold" />
+          <Sparkle className="product-filter-spark product-filter-spark--2 absolute h-3.5 w-3.5 text-orange" />
+          <Sparkle className="product-filter-spark product-filter-spark--3 absolute h-3 w-3 text-primary" />
         </>
       )}
       <div className="product-filter-rim pointer-events-none absolute inset-x-0 top-0" aria-hidden />
@@ -208,11 +316,11 @@ function FullFilterPanel({
         <div className={`flex items-start justify-between gap-3 ${compact ? "mb-3" : "mb-5"}`}>
           <div className="flex min-w-0 items-start gap-3">
             <div
-              className={`product-filter-badge flex shrink-0 items-center justify-center rounded-2xl shadow-md ${
-                compact ? "h-10 w-10 text-xl" : "h-12 w-12 text-2xl"
+              className={`product-filter-badge relative flex shrink-0 items-center justify-center overflow-hidden rounded-2xl shadow-md ${
+                compact ? "h-10 w-10" : "h-12 w-12"
               }`}
             >
-              🎆
+              <Burst className={`relative z-[1] text-primary ${compact ? "h-6 w-6" : "h-7 w-7"}`} />
             </div>
             <div className="min-w-0">
               <p className={`font-display font-bold text-ink ${compact ? "text-base sm:text-lg" : "text-xl sm:text-2xl"}`}>
@@ -220,66 +328,55 @@ function FullFilterPanel({
               </p>
               {!compact && (
                 <p className="mt-0.5 text-sm text-ink-muted">
-                  Choose a category or search for a product
+                  Pick a firework type — or search by name
                 </p>
               )}
             </div>
           </div>
 
-          <div className={`product-filter-count shrink-0 text-center ${compact ? "rounded-full px-3 py-1.5" : "rounded-2xl px-4 py-2"}`}>
-            <p className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-primary/75">
+          <div className={`product-filter-count relative shrink-0 overflow-hidden text-center ${compact ? "rounded-full px-3 py-1.5" : "rounded-2xl px-4 py-2"}`}>
+            <Burst className="pointer-events-none absolute -right-3 -top-3 h-10 w-10 text-gold/35" />
+            <p className="relative text-[0.62rem] font-bold uppercase tracking-[0.14em] text-primary/75">
               Found
             </p>
-            <p className={`font-display font-extrabold tabular-nums text-primary ${compact ? "text-sm" : "text-xl"}`}>
+            <p className={`relative font-display font-extrabold tabular-nums text-primary ${compact ? "text-sm" : "text-xl"}`}>
               {isInitialLoad ? "…" : productsCount}
             </p>
           </div>
         </div>
 
-        <MobileCategorySelect
-          selectedCategory={selectedCategory}
-          onCategoryChange={onCategoryChange}
-          totalProducts={totalProducts}
-          shopCategories={shopCategories}
-          giftPackCategory={giftPackCategory}
-          onGiftBoxesClick={onGiftBoxesClick}
-        />
-
-        <div
-          className={`product-filter-chips hidden sm:flex ${
-            compact ? "scrollbar-thin flex-nowrap overflow-x-auto pb-1" : "flex-wrap"
-          }`}
-        >
-          <FilterChip
-            active={selectedCategory === "all"}
-            icon={getCategoryIcon("all")}
-            label="All"
-            count={totalProducts}
-            onClick={() => onCategoryChange("all")}
-          />
-          {shopCategories.map((category) => (
+        <div className={`product-filter-rail ${compact ? "is-compact" : ""}`}>
+          <div className={`product-filter-rail-track ${compact ? "product-filter-rail-track--compact" : ""}`}>
             <FilterChip
-              key={category.key}
-              active={selectedCategory === category.key}
-              icon={getCategoryIcon(category.key)}
-              label={category.label}
-              count={category.productCount}
-              onClick={() => onCategoryChange(category.key)}
+              active={selectedCategory === "all"}
+              theme="all"
+              label="All"
+              count={totalProducts}
+              compact={compact}
+              onClick={() => onCategoryChange("all")}
             />
-          ))}
-          {giftPackCategory && (
-            <button
-              type="button"
-              onClick={onGiftBoxesClick}
-              className="product-filter-chip product-filter-chip--gift inline-flex shrink-0 items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold transition"
-            >
-              <span aria-hidden>🎁</span>
-              Gift Boxes
-              <span className="rounded-full bg-white/85 px-1.5 py-0.5 text-[0.65rem] text-primary">
-                {giftPackCategory.productCount}
-              </span>
-            </button>
-          )}
+            {shopCategories.map((category) => (
+              <FilterChip
+                key={category.key}
+                active={selectedCategory === category.key}
+                theme={getCategoryTheme(category.key)}
+                label={category.label}
+                count={category.productCount}
+                compact={compact}
+                onClick={() => onCategoryChange(category.key)}
+              />
+            ))}
+            {giftPackCategory && (
+              <FilterChip
+                active={false}
+                theme="gift"
+                label="Gift Boxes"
+                count={giftPackCategory.productCount}
+                compact={compact}
+                onClick={onGiftBoxesClick}
+              />
+            )}
+          </div>
         </div>
 
         <FilterSearch
@@ -353,69 +450,6 @@ function FilterGearFab({
   );
 }
 
-function MobileCategorySelect({
-  selectedCategory,
-  onCategoryChange,
-  totalProducts,
-  shopCategories,
-  giftPackCategory,
-  onGiftBoxesClick,
-}: {
-  selectedCategory: string;
-  onCategoryChange: (key: string) => void;
-  totalProducts: number;
-  shopCategories: CategoryMetaDTO[];
-  giftPackCategory?: CategoryMetaDTO;
-  onGiftBoxesClick: () => void;
-}) {
-  return (
-    <div className="mb-4 sm:hidden">
-      <label htmlFor="product-category" className="sr-only">
-        Product category
-      </label>
-      <div className="relative">
-        <span
-          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-base"
-          aria-hidden
-        >
-          {getCategoryIcon(selectedCategory)}
-        </span>
-        <select
-          id="product-category"
-          value={selectedCategory}
-          onChange={(event) => {
-            const value = event.target.value;
-            if (value === "gift-packs") {
-              onGiftBoxesClick();
-              return;
-            }
-            onCategoryChange(value);
-          }}
-          className="product-filter-select w-full appearance-none rounded-2xl py-3 pl-10 pr-10 text-sm font-bold text-ink outline-none"
-        >
-          <option value="all">All products ({totalProducts})</option>
-          {shopCategories.map((category) => (
-            <option key={category.key} value={category.key}>
-              {category.label} ({category.productCount})
-            </option>
-          ))}
-          {giftPackCategory && (
-            <option value="gift-packs">
-              Gift Boxes ({giftPackCategory.productCount}) — go to section
-            </option>
-          )}
-        </select>
-        <span
-          className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-primary"
-          aria-hidden
-        >
-          ▾
-        </span>
-      </div>
-    </div>
-  );
-}
-
 function FilterSearch({
   search,
   onSearchChange,
@@ -433,10 +467,13 @@ function FilterSearch({
     <div className={`product-filter-search flex items-center gap-2 ${className}`}>
       <span
         className={`product-filter-search-icon flex shrink-0 items-center justify-center rounded-xl ${
-          compact ? "h-8 w-8 text-sm" : "h-9 w-9 text-base"
+          compact ? "h-8 w-8" : "h-9 w-9"
         }`}
       >
-        🔍
+        <svg viewBox="0 0 24 24" className="h-[1.05rem] w-[1.05rem] text-primary" fill="none" aria-hidden>
+          <circle cx="11" cy="11" r="6.25" stroke="currentColor" strokeWidth="2" />
+          <path d="M16 16.5 20.5 21" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+        </svg>
       </span>
       <input
         type="search"
@@ -460,36 +497,33 @@ function FilterSearch({
 
 function FilterChip({
   active,
-  icon,
+  theme,
   label,
   count,
+  compact = false,
   onClick,
 }: {
   active: boolean;
-  icon: string;
+  theme: CategoryTheme;
   label: string;
   count: number;
+  compact?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`product-filter-chip inline-flex shrink-0 items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold transition ${
-        active ? "product-filter-chip--active" : ""
-      }`}
+      aria-pressed={active}
+      data-theme={theme}
+      className={`product-filter-tile ${active ? "is-active" : ""} ${compact ? "is-compact" : ""}`}
     >
-      <span className="product-filter-chip-icon flex h-7 w-7 items-center justify-center rounded-full text-sm">
-        {icon}
+      <span className="product-filter-tile-burst" aria-hidden />
+      <span className="product-filter-tile-art">
+        <CategoryGlyph theme={theme} className={compact ? "h-6 w-6" : "h-8 w-8"} />
       </span>
-      <span>{label}</span>
-      <span
-        className={`rounded-full px-1.5 py-0.5 text-[0.65rem] font-bold ${
-          active ? "bg-white/25 text-white" : "bg-white text-ink-muted"
-        }`}
-      >
-        {count}
-      </span>
+      <span className="product-filter-tile-label">{label}</span>
+      <span className="product-filter-tile-count">{count}</span>
     </button>
   );
 }
