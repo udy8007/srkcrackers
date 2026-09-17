@@ -1,0 +1,6 @@
+# cPanel → Cron Jobs (Vercel cron in vercel.json will not run on this host)
+# Minute: */30   Hour/Day/Month/Weekday: *
+#
+# Replace YOUR_CRON_SECRET with the same CRON_SECRET as the Node.js app env.
+
+curl -fsS -H "Authorization: Bearer YOUR_CRON_SECRET" https://srkcrackers.in/api/cron/notifications

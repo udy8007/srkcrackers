@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "prisma generate && next build",
+    "build:cpanel": "node scripts/cpanel-pack.mjs",
     "start": "next start",
+    "start:cpanel": "node server.js",
     "lint": "eslint",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
@@ -15,6 +17,9 @@
     "db:sync-catalog": "tsx scripts/sync-catalog.ts",
     "db:studio": "prisma studio",
     "icons": "node scripts/generate-favicons.mjs"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

@@ -70,6 +70,7 @@ export function smtpConfigError(settings: EmailSettings): string | null {
 
 export function resolveSiteOrigin(): string {
   return (
+    process.env.AUTH_URL?.replace(/\/$/, "") ||
     process.env.NEXTAUTH_URL?.replace(/\/$/, "") ||
     process.env.VERCEL_URL?.replace(/^/, "https://") ||
     BUSINESS.url
