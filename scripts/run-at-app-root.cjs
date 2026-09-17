@@ -7,11 +7,12 @@
  */
 
 const { spawnSync } = require("node:child_process");
+const fs = require("node:fs");
 const path = require("node:path");
 
 function resolveAppRoot() {
   if (process.env.npm_package_json) {
-    return path.dirname(process.env.npm_package_json);
+    return path.dirname(fs.realpathSync(process.env.npm_package_json));
   }
   return path.join(__dirname, "..");
 }
