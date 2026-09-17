@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SRK Crackers — Website temporarily down</title>
+  <meta name="theme-color" content="#9d0208" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #d62828;
+      --dark: #9d0208;
+      --yellow: #ffc300;
+      --gold: #ffb703;
+      --orange: #f77f00;
+      --ink: #2b1f1f;
+      --wa: #25d366;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      font-family: Poppins, system-ui, sans-serif;
+      color: #fff;
+      background: radial-gradient(ellipse at 20% 0%, #c1121f 0%, #6a040f 42%, #1a0508 100%);
+      overflow-x: hidden;
+    }
+    .sparks {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        radial-gradient(2px 2px at 12% 18%, #ffc300 50%, transparent 51%),
+        radial-gradient(2px 2px at 78% 12%, #fff 50%, transparent 51%),
+        radial-gradient(1.5px 1.5px at 88% 42%, #ffb703 50%, transparent 51%),
+        radial-gradient(2px 2px at 22% 72%, #ffc300 50%, transparent 51%),
+        radial-gradient(1.5px 1.5px at 64% 84%, #fff 50%, transparent 51%),
+        radial-gradient(2px 2px at 40% 30%, #f77f00 50%, transparent 51%);
+      animation: twinkle 2.8s ease-in-out infinite alternate;
+    }
+    @keyframes twinkle { from { opacity: .45; } to { opacity: 1; } }
+    .wrap {
+      position: relative; z-index: 1;
+      max-width: 720px; margin: 0 auto; padding: 28px 18px 48px;
+    }
+    .hero {
+      text-align: center;
+      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.04));
+      border: 1px solid rgba(255,195,0,.35);
+      border-radius: 28px;
+      padding: 28px 20px 24px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.28);
+      backdrop-filter: blur(10px);
+    }
+    .logo-ring {
+      width: 168px; height: 168px; margin: 0 auto 14px;
+      border-radius: 50%;
+      padding: 8px;
+      background: conic-gradient(from 200deg, #ffc300, #f77f00, #d62828, #ffc300);
+      box-shadow: 0 0 0 6px rgba(255,195,0,.18), 0 12px 32px rgba(0,0,0,.35);
+      animation: spin 14s linear infinite;
+    }
+    .logo-inner {
+      width: 100%; height: 100%; border-radius: 50%;
+      background: #fff8f2;
+      display: grid; place-items: center;
+      animation: spin 14s linear infinite reverse;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .status {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(0,0,0,.35); border: 1px solid rgba(255,195,0,.55);
+      color: var(--yellow); font-weight: 700; font-size: .78rem; letter-spacing: .12em;
+      text-transform: uppercase; border-radius: 999px; padding: 8px 14px; margin-bottom: 14px;
+    }
+    .status i {
+      width: 9px; height: 9px; border-radius: 50%; background: #ffc300;
+      box-shadow: 0 0 0 0 rgba(255,195,0,.7); animation: pulse 1.4s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255,195,0,.55); }
+      70% { box-shadow: 0 0 0 10px rgba(255,195,0,0); }
+      100% { box-shadow: 0 0 0 0 rgba(255,195,0,0); }
+    }
+    .brand { font-family: Jost, sans-serif; font-size: 2rem; font-weight: 800; letter-spacing: .02em; }
+    .tag { margin-top: 4px; color: var(--yellow); font-weight: 600; font-size: .95rem; }
+    .msg { margin: 12px auto 0; max-width: 28rem; color: rgba(255,255,255,.9); font-size: .95rem; line-height: 1.5; }
+    .addr { margin-top: 10px; color: rgba(255,255,255,.86); font-size: .88rem; line-height: 1.45; }
+    .cta-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 16px; }
+    .cta {
+      display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+      border-radius: 999px; padding: 12px 18px; font-weight: 700; color: #fff;
+    }
+    .cta-wa { background: var(--wa); }
+    .cta-call { background: #2da815; }
+    .cta-retry { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.28); }
+    .pills { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 14px; }
+    .pill {
+      background: rgba(0,0,0,.22); border: 1px solid rgba(255,195,0,.28);
+      border-radius: 999px; padding: 6px 12px; font-size: .75rem;
+    }
+    h2 {
+      font-family: Jost, sans-serif; margin: 26px 0 12px;
+      font-size: 1.15rem; letter-spacing: .08em; text-transform: uppercase; color: var(--yellow);
+    }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } }
+    a.card, button.card {
+      display: flex; align-items: center; gap: 12px; text-decoration: none; color: #fff;
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14);
+      border-radius: 18px; padding: 14px 14px; cursor: pointer;
+      font: inherit; text-align: left; width: 100%;
+      transition: transform .15s ease, background .15s ease;
+    }
+    a.card:hover, button.card:hover { transform: translateY(-2px); background: rgba(255,255,255,.14); }
+    .icon {
+      width: 46px; height: 46px; border-radius: 14px; flex-shrink: 0;
+      display: grid; place-items: center;
+    }
+    .icon svg { width: 26px; height: 26px; fill: #fff; }
+    .wa { background: var(--wa); }
+    .call { background: #2da815; }
+    .mail { background: #ef233c; }
+    .web { background: #4361ee; }
+    .map { background: #f77f00; }
+    .dl { background: linear-gradient(135deg, #ffc300, #f77f00); }
+    .vcf { background: #9d4edd; }
+    .copy { background: #457b9d; }
+    .label { font-size: .72rem; opacity: .75; }
+    .value { font-weight: 600; font-size: .95rem; }
+    .qr-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 520px) { .qr-row { grid-template-columns: 1fr; } }
+    .qr {
+      background: #fff; color: var(--ink); border-radius: 18px; padding: 16px;
+      text-align: center;
+    }
+    .qr img { width: 168px; height: 168px; display: block; margin: 0 auto 8px; }
+    .qr strong { display: block; font-family: Jost, sans-serif; }
+    .qr span { font-size: .78rem; color: #6b5b5b; }
+    .toast {
+      position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(20px);
+      background: #111; color: #fff; padding: 10px 16px; border-radius: 999px;
+      opacity: 0; pointer-events: none; transition: .25s ease; z-index: 9;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    canvas { display: none; }
+    footer { margin-top: 28px; text-align: center; font-size: .75rem; color: rgba(255,255,255,.65); }
+  </style>
+</head>
+<body>
+  <div class="sparks"></div>
+  <main class="wrap">
+    <section class="hero">
+      <div class="logo-ring" id="logoRing">
+        <div class="logo-inner" id="logoMark"></div>
+      </div>
+      <div class="status"><i></i> Website temporarily down</div>
+      <div class="brand">SRK Crackers</div>
+      <div class="tag">Licensed Fireworks Dealer · Avadi, Chennai</div>
+      <p class="msg">The online shop is offline for a short time. You can still order — WhatsApp or call us now. We will confirm your list quickly.</p>
+      <div class="cta-row">
+        <a class="cta cta-wa" href="https://wa.me/919841916899?text=Hi%20SRK%20Crackers%2C%20the%20website%20is%20down.%20I%20want%20to%20place%20an%20order.">WhatsApp order</a>
+        <a class="cta cta-call" href="tel:+919841916899">Call 98419 16899</a>
+        <a class="cta cta-retry" href="https://www.srkcrackers.in/">Try website again</a>
+      </div>
+      <p class="addr">No 45, Sarathi Nagar, Morai Village<br />Avadi, Chennai - 600055, Tamil Nadu</p>
+      <div class="pills">
+        <span class="pill">GST 33BJBPR5461B2ZI</span>
+        <span class="pill">Licence 10439/FL/NMSB/2026</span>
+        <span class="pill">9:00 AM – 9:00 PM</span>
+      </div>
+    </section>
+
+    <h2>Contact links</h2>
+    <div class="grid">
+      <a class="card" href="https://wa.me/919841916899?text=Hi%20SRK%20Crackers%2C%20I%20want%20to%20place%20an%20order." target="_blank" rel="noopener">
+        <span class="icon wa"><svg viewBox="0 0 32 32"><path d="M16 3C8.8 3 3 8.8 3 16c0 2.3.6 4.5 1.7 6.5L3 29l6.7-1.8A13 13 0 0 0 16 29c7.2 0 13-5.8 13-13S23.2 3 16 3zm7.3 18.4c-.3.9-1.6 1.6-2.3 1.6-.6.1-1.3.1-2.1-.1-.8-.2-1.4-.4-2.2-.7-3.3-1.4-5.5-4.8-5.7-5-.2-.2-1.4-1.8-1.4-3.4s.9-2.4 1.2-2.8c.3-.3.7-.4.9-.4h.6c.2 0 .4 0 .6.5.2.6 1 2.5 1 2.6.1.2.1.4 0 .6l-.3.6c-.1.2-.2.4-.1.6.1.2.5.8 1.1 1.3 1.3 1.1 2.4 1.5 2.7 1.6.2.1.4.1.6-.1l.5-.6c.2-.2.4-.2.7-.1.2.1 1.9.9 2.3 1 .3.2.5.2.6.4.1.1.1.8-.2 1.6z"/></svg></span>
+        <span><div class="label">WhatsApp</div><div class="value">98419 16899</div></span>
+      </a>
+      <a class="card" href="tel:+919841916899">
+        <span class="icon call"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1l-2.2 2.2z"/></svg></span>
+        <span><div class="label">Call now</div><div class="value">98419 16899</div></span>
+      </a>
+      <a class="card" href="mailto:srkcrackers@gmail.com">
+        <span class="icon mail"><svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4-8 5L4 8V6l8 5 8-5v2z"/></svg></span>
+        <span><div class="label">Email</div><div class="value">srkcrackers@gmail.com</div></span>
+      </a>
+      <a class="card" href="https://www.srkcrackers.in" target="_blank" rel="noopener">
+        <span class="icon web"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm7.9 9h-3.2a15 15 0 0 0-1.3-5.3A8 8 0 0 1 19.9 11zM12 4c.9 1.4 1.6 3.2 1.9 5.1H10C10.4 7.2 11.1 5.4 12 4zM4.1 13h3.2c.2 1.9.7 3.7 1.3 5.3A8 8 0 0 1 4.1 13zm3.2-2H4.1A8 8 0 0 1 8.6 5.7 15 15 0 0 0 7.3 11zm2.8 0h4.2c-.3 1.9-1 3.7-1.9 5.1-.9-1.4-1.6-3.2-2.3-5.1zm4.2 2h-4.2c.3 1.9 1 3.7 1.9 5.1.9-1.4 1.6-3.2 2.3-5.1zm1.5 5.3A15 15 0 0 0 16.7 13h3.2a8 8 0 0 1-4.5 5.3z"/></svg></span>
+        <span><div class="label">Website</div><div class="value">srkcrackers.in</div></span>
+      </a>
+      <a class="card" href="https://maps.google.com/?q=13.1987642,80.0896457" target="_blank" rel="noopener">
+        <span class="icon map"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.3 7 13 7 13s7-7.7 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg></span>
+        <span><div class="label">Google Maps</div><div class="value">Morai, Avadi</div></span>
+      </a>
+      <button class="card" type="button" id="copyPhone">
+        <span class="icon copy"><svg viewBox="0 0 24 24"><path d="M16 1H4a2 2 0 0 0-2 2v12h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"/></svg></span>
+        <span><div class="label">Copy number</div><div class="value">98419 16899</div></span>
+      </button>
+    </div>
+
+    <h2>Download</h2>
+    <div class="grid">
+      <button class="card" type="button" id="dlLogo">
+        <span class="icon dl"><svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zm7-18-5 5h3v6h4V7h3l-5-5z"/></svg></span>
+        <span><div class="label">Brand mark</div><div class="value">Download logo PNG</div></span>
+      </button>
+      <button class="card" type="button" id="dlVcf">
+        <span class="icon vcf"><svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-3.3 0-10 1.7-10 5v1h20v-1c0-3.3-6.7-5-10-5z"/></svg></span>
+        <span><div class="label">Phone book</div><div class="value">Save contact (.vcf)</div></span>
+      </button>
+    </div>
+
+    <h2>Scan to connect</h2>
+    <div class="qr-row">
+      <div class="qr">
+        <img alt="WhatsApp QR" src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&amp;data=https%3A%2F%2Fwa.me%2F919841916899%3Ftext%3DHi%2520SRK%2520Crackers" />
+        <strong>WhatsApp</strong>
+        <span>Scan to chat instantly</span>
+      </div>
+      <div class="qr">
+        <img alt="Website QR" src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&amp;data=https%3A%2F%2Fwww.srkcrackers.in" />
+        <strong>Website</strong>
+        <span>Scan to open the shop</span>
+      </div>
+    </div>
+
+    <footer>© 2026 SRK Crackers · Licensed fireworks dealer · Min. order ₹2500</footer>
+  </main>
+  <canvas id="logoCanvas" width="1024" height="1024"></canvas>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const toast = (msg) => {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), 1800);
+    };
+
+    const svgMarkup = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#d62828"/>
+            <stop offset="1" stop-color="#9d0208"/>
+          </linearGradient>
+        </defs>
+        <circle cx="120" cy="120" r="118" fill="url(#g)"/>
+        <circle cx="120" cy="120" r="104" fill="none" stroke="#ffc300" stroke-width="6"/>
+        <g fill="#ffc300">
+          <circle cx="120" cy="38" r="4"/>
+          <circle cx="188" cy="72" r="3.2"/>
+          <circle cx="196" cy="140" r="3"/>
+          <circle cx="52" cy="68" r="3.2"/>
+          <circle cx="44" cy="148" r="3"/>
+        </g>
+        <text x="120" y="118" text-anchor="middle" font-family="Jost, Arial Black, sans-serif" font-size="58" font-weight="800" fill="#fff">SRK</text>
+        <text x="120" y="152" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="22" font-weight="700" fill="#ffc300" letter-spacing="4">CRACKERS</text>
+        <text x="120" y="176" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="11" fill="#fff8f2">MORAI · AVADI</text>
+      </svg>`;
+
+    document.getElementById("logoMark").innerHTML = svgMarkup;
+
+    function drawLogo(ctx, size) {
+      const g = ctx.createLinearGradient(0, 0, size, size);
+      g.addColorStop(0, "#d62828");
+      g.addColorStop(1, "#9d0208");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#ffc300";
+      ctx.lineWidth = size * 0.028;
+      ctx.beginPath();
+      ctx.arc(size / 2, size / 2, size * 0.43, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = "#fff";
+      ctx.font = "800 " + size * 0.24 + "px Jost, Arial Black, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("SRK", size / 2, size * 0.46);
+      ctx.fillStyle = "#ffc300";
+      ctx.font = "700 " + size * 0.09 + "px Poppins, Arial, sans-serif";
+      ctx.fillText("CRACKERS", size / 2, size * 0.62);
+      ctx.fillStyle = "#fff8f2";
+      ctx.font = "500 " + size * 0.045 + "px Poppins, Arial, sans-serif";
+      ctx.fillText("MORAI · AVADI", size / 2, size * 0.72);
+    }
+
+    document.getElementById("dlLogo").onclick = () => {
+      const canvas = document.getElementById("logoCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, 1024, 1024);
+      drawLogo(ctx, 1024);
+      const a = document.createElement("a");
+      a.href = canvas.toDataURL("image/png");
+      a.download = "srk-crackers-logo.png";
+      a.click();
+      toast("Logo downloaded");
+    };
+
+    document.getElementById("dlVcf").onclick = () => {
+      const vcf = [
+        "BEGIN:VCARD",
+        "VERSION:3.0",
+        "FN:SRK Crackers",
+        "ORG:SRK Crackers",
+        "TEL;TYPE=CELL,VOICE:+919841916899",
+        "EMAIL:srkcrackers@gmail.com",
+        "URL:https://www.srkcrackers.in",
+        "ADR;TYPE=WORK:;;No 45, Sarathi Nagar, Morai Village;Avadi;Tamil Nadu;600055;India",
+        "NOTE:Licensed Fireworks Dealer. WhatsApp https://wa.me/919841916899",
+        "END:VCARD"
+      ].join("\r\n");
+      const blob = new Blob([vcf], { type: "text/vcard" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "srk-crackers.vcf";
+      a.click();
+      toast("Contact file saved");
+    };
+
+    document.getElementById("copyPhone").onclick = async () => {
+      try {
+        await navigator.clipboard.writeText("9841916899");
+        toast("Phone number copied");
+      } catch {
+        toast("Copy 98419 16899");
+      }
+    };
+  </script>
+</body>
+</html>

@@ -1,16 +1,16 @@
 /**
  * Production pack for Hostingial / cPanel "Setup Node.js App".
  *
- * Builds Next.js standalone output, copies static + public assets, and
- * places Passenger app.js next to server.js.
+ * Produces `.next/standalone` plus static + public assets.
+ * Repo-root `server.js` is a wrapper that boots `.next/standalone/server.js`.
  *
- * Optional zip/upload path. Preferred cPanel deploy is the GitHub clone:
- *   Application root: repositories/srkcrackers
- *   Startup file: server.js
- *
- * This pack still copies standalone output + cpanel/app.js for FTP-only hosts.
+ * Upload:
+ *   - server.js  (repo root wrapper)
+ *   - .next/standalone/  (this pack, entire folder)
+ * Do not flatten standalone onto the Git root (that overwrites the wrapper).
+ * Do not upload .env / .env.local.
  */
-import { cpSync, copyFileSync, existsSync } from "node:fs";
+import { cpSync, copyFileSync, existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
 
@@ -44,11 +44,17 @@ if (existsSync(publicSrc)) {
 }
 
 const appJs = join(root, "cpanel", "app.js");
-if (!existsSync(appJs)) {
-  console.error("[cpanel-pack] Missing cpanel/app.js");
-  process.exit(1);
+if (existsSync(appJs)) {
+  copyFileSync(appJs, join(standalone, "app.js"));
 }
-copyFileSync(appJs, join(standalone, "app.js"));
+
+for (const name of [".env", ".env.local", ".env.production", ".env.development"]) {
+  const leaked = join(standalone, name);
+  if (existsSync(leaked)) {
+    rmSync(leaked);
+    console.log(`[cpanel-pack] removed ${name} from standalone (do not deploy secrets)`);
+  }
+}
 
 function copyDep(rel) {
   const src = join(root, "node_modules", ...rel.split("/"));
@@ -61,11 +67,13 @@ function copyDep(rel) {
 
 copyDep(".prisma");
 copyDep("@prisma/client");
+copyDep("@prisma/engines");
 copyDep("@prisma/adapter-libsql");
 copyDep("@libsql/client");
 copyDep("libsql");
+copyDep("next-auth");
 
 console.log("\n[cpanel-pack] Ready: .next/standalone");
-console.log("[cpanel-pack] Upload that folder's contents as the Node.js application root.");
-console.log("[cpanel-pack] Set Application startup file to: app.js");
-console.log("[cpanel-pack] Set env vars in cPanel (do not commit secrets). See .env.example");
+console.log("[cpanel-pack] cPanel startup file: server.js (repo-root wrapper)");
+console.log("[cpanel-pack] Upload repo-root server.js AND the .next/standalone folder (keep that nested path).");
+console.log("[cpanel-pack] Set env vars in cPanel. Do not upload .env files.");

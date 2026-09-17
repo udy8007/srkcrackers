@@ -5,7 +5,7 @@ generator client {
   provider      = "prisma-client-js"
   // native = machine that runs `prisma generate` (cPanel Linux or local).
   // rhel/debian targets keep Linux binaries available if generate ran on Windows.
-  binaryTargets = ["native", "rhel-openssl-3.0.x", "debian-openssl-3.0.x"]
+  binaryTargets = ["native", "rhel-openssl-3.0.x", "debian-openssl-3.0.x", "debian-openssl-1.1.x"]
 }
 
 datasource db {
