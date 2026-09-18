@@ -11,6 +11,8 @@
 # Optional secrets (used at build time; runtime env still lives in cPanel):
 #   AUTH_SECRET, NEXTAUTH_SECRET, NEXTAUTH_URL, AUTH_URL
 #   TURSO_DATABASE_URL, TURSO_AUTH_TOKEN
+# If Turso secrets are omitted, Prisma gets a local sqlite URL so `next build`
+# can finish. The live catalog still comes from cPanel env after deploy.
 #
 # Optional variables (Settings → Secrets and variables → Actions → Variables):
 #   FTP_PROTOCOL     ftps (default), ftp, or ftps-legacy
@@ -61,12 +63,21 @@ jobs:
           AUTH_URL: ${{ secrets.AUTH_URL }}
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
-          DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
         run: |
           if [ -z "$AUTH_SECRET" ] && [ -z "$NEXTAUTH_SECRET" ]; then
             export AUTH_SECRET="github-actions-build-placeholder"
             export NEXTAUTH_SECRET="$AUTH_SECRET"
             echo "AUTH_SECRET not set; using a build-only placeholder (set the cPanel env for runtime)."
+          fi
+          # Prisma schema requires a nonempty DATABASE_URL. GitHub empty secrets
+          # become "" which fails validation — never export a blank URL.
+          if [ -n "$TURSO_DATABASE_URL" ]; then
+            export DATABASE_URL="$TURSO_DATABASE_URL"
+          else
+            unset TURSO_DATABASE_URL TURSO_AUTH_TOKEN
+            export DATABASE_URL="file:$(pwd)/.github-build.db"
+            echo "No TURSO_DATABASE_URL secret; using local sqlite for Prisma generate/build."
+            echo "Set Turso URLs in cPanel for the live catalog."
           fi
           npm run build:cpanel
 
