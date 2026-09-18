@@ -1,18 +1,19 @@
 # Build Next.js on GitHub, then FTP the cPanel pack to Hostinger.
 #
-# Required repository secrets (Settings → Secrets and variables → Actions):
-#   FTP_SERVER       Hostinger FTP host (ftp.srkcrackers.in or ftp.hostinger.com)
-#   FTP_USERNAME     FTP user
-#   FTP_PASSWORD     FTP password
-#   FTP_SERVER_DIR   Remote folder, with trailing slash.
-#                    If FTP lands in the account home: ./repositories/srkcrackers/
-#                    If the FTP user is already jailed to the app folder: ./
+# Secrets and variables live on the GitHub Environment named "Production"
+# (Settings → Environments → Production), not repository secrets.
 #
-# Optional secrets (used at build time; runtime env still lives in cPanel):
+# Required environment secrets:
+#   FTP_SERVER, FTP_USERNAME, FTP_PASSWORD, FTP_SERVER_DIR
+# FTP_SERVER_DIR must have a trailing slash.
+#   If FTP lands in the account home: ./repositories/srkcrackers/
+#   If the FTP user is already jailed to the app folder: ./
+#
+# Environment variables (or secrets) used at build:
 #   AUTH_SECRET, NEXTAUTH_SECRET, NEXTAUTH_URL, AUTH_URL
-#   TURSO_DATABASE_URL, TURSO_AUTH_TOKEN
-# If Turso secrets are omitted, Prisma gets a local sqlite URL so `next build`
-# can finish. The live catalog still comes from cPanel env after deploy.
+#   TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, DATABASE_URL
+# Prefer Environment secrets for tokens — Variables are visible in the GitHub UI.
+
 #
 # Optional variables (Settings → Secrets and variables → Actions → Variables):
 #   FTP_PROTOCOL     ftps (default), ftp, or ftps-legacy
@@ -38,6 +39,7 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment: Production
     timeout-minutes: 45
 
     steps:
@@ -57,12 +59,13 @@ jobs:
         env:
           NODE_ENV: production
           AUTH_TRUST_HOST: "true"
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
-          AUTH_URL: ${{ secrets.AUTH_URL }}
-          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
-          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET || vars.AUTH_SECRET }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || vars.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || vars.NEXTAUTH_URL }}
+          AUTH_URL: ${{ secrets.AUTH_URL || vars.AUTH_URL }}
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL || vars.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN || vars.TURSO_AUTH_TOKEN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
         run: |
           if [ -z "$AUTH_SECRET" ] && [ -z "$NEXTAUTH_SECRET" ]; then
             export AUTH_SECRET="github-actions-build-placeholder"
@@ -72,11 +75,13 @@ jobs:
           # Prisma schema requires a nonempty DATABASE_URL. GitHub empty secrets
           # become "" which fails validation — never export a blank URL.
           if [ -n "$TURSO_DATABASE_URL" ]; then
-            export DATABASE_URL="$TURSO_DATABASE_URL"
+            export DATABASE_URL="${DATABASE_URL:-$TURSO_DATABASE_URL}"
+          elif [ -n "$DATABASE_URL" ]; then
+            :
           else
-            unset TURSO_DATABASE_URL TURSO_AUTH_TOKEN
+            unset TURSO_DATABASE_URL TURSO_AUTH_TOKEN DATABASE_URL
             export DATABASE_URL="file:$(pwd)/.github-build.db"
-            echo "No TURSO_DATABASE_URL secret; using local sqlite for Prisma generate/build."
+            echo "No TURSO_DATABASE_URL; using local sqlite for Prisma generate/build."
             echo "Set Turso URLs in cPanel for the live catalog."
           fi
           npm run build:cpanel
