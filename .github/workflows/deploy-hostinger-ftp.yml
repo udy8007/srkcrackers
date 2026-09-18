@@ -1,23 +1,26 @@
-# Build Next.js on GitHub, then FTP the cPanel pack to Hostinger.
+# Build Next.js on GitHub, then upload the cPanel pack to Hostinger.
 #
 # Secrets and variables live on the GitHub Environment named "Production"
 # (Settings → Environments → Production), not repository secrets.
 #
 # Required environment secrets:
-#   FTP_SERVER, FTP_USERNAME, FTP_PASSWORD, FTP_SERVER_DIR
-# FTP_SERVER_DIR must have a trailing slash.
-#   If FTP lands in the account home: ./repositories/srkcrackers/
-#   If the FTP user is already jailed to the app folder: ./
+#   FTP_SERVER       Hostname or IP only from hPanel → Files → FTP Accounts.
+#                    Examples: 185.185.185.185   or   ftp.srkcrackers.in
+#                    Do NOT put ftp://, a folder path, or FTP_SERVER_DIR here.
+#   FTP_USERNAME     FTP / SSH user from hPanel
+#   FTP_PASSWORD     FTP / SSH password
+#   FTP_SERVER_DIR   Remote folder, with trailing slash.
+#                    If FTP lands in the account home: ./repositories/srkcrackers/
+#                    If the FTP user is already jailed to the app folder: ./
 #
 # Environment variables (or secrets) used at build:
 #   AUTH_SECRET, NEXTAUTH_SECRET, NEXTAUTH_URL, AUTH_URL
 #   TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, DATABASE_URL
 # Prefer Environment secrets for tokens — Variables are visible in the GitHub UI.
-
 #
-# Optional variables (Settings → Secrets and variables → Actions → Variables):
-#   FTP_PROTOCOL     ftps (default), ftp, or ftps-legacy
-#   FTP_PORT         21 (default) or 990 for implicit FTPS
+# Optional Production environment variables:
+#   FTP_PROTOCOL     sftp (default, Hostinger shared), ftp, or ftps
+#   FTP_PORT         65002 (default Hostinger SFTP) or 21 for FTP/FTPS
 #
 # After upload, tmp/restart.txt tells Passenger / Setup Node.js App to reload.
 # Do not upload .env files; keep Turso + Auth in cPanel → Setup Node.js App → Environment.
@@ -44,12 +47,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
@@ -101,8 +104,17 @@ jobs:
           echo "Staged:"
           du -sh deploy deploy/.next/standalone
 
-      - name: Check FTP secrets
+      - name: Check and normalize FTP host
+        id: ftp
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
+          FTP_PROTOCOL: ${{ vars.FTP_PROTOCOL || 'sftp' }}
+          FTP_PORT: ${{ vars.FTP_PORT || 65002 }}
         run: |
+          set -euo pipefail
           missing=0
           for name in FTP_SERVER FTP_USERNAME FTP_PASSWORD FTP_SERVER_DIR; do
             eval "value=\${$name}"
@@ -112,46 +124,95 @@ jobs:
             fi
           done
           if [ "$missing" -ne 0 ]; then
-            echo "Add the FTP secrets in GitHub → Settings → Secrets and variables → Actions."
+            echo "Add these on GitHub → Settings → Environments → Production."
             exit 1
           fi
-        env:
-          FTP_SERVER: ${{ secrets.FTP_SERVER }}
-          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
-          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-          FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
 
-      - name: Delete old Git and build files on FTP
+          host="$(printf '%s' "$FTP_SERVER" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          host="${host#ftp://}"
+          host="${host#ftps://}"
+          host="${host#sftp://}"
+          host="${host#http://}"
+          host="${host#https://}"
+          case "$host" in
+            *@*) host="${host##*@}" ;;
+          esac
+          host="${host%%/*}"
+          port="$FTP_PORT"
+          if [[ "$host" == *:[0-9]* ]]; then
+            port="${host##*:}"
+            host="${host%:*}"
+            echo "FTP_SERVER included a port; using $port"
+          fi
+
+          if [ -z "$host" ] || [[ "$host" == .* ]] || [[ "$host" == *\\* ]]; then
+            echo "FTP_SERVER looks like a folder path, not a hostname."
+            echo "Set it to the Host / IP from hPanel → Files → FTP Accounts (no ftp://, no folder)."
+            exit 1
+          fi
+
+          echo "ftp_host=$host" >> "$GITHUB_OUTPUT"
+          echo "ftp_port=$port" >> "$GITHUB_OUTPUT"
+          echo "ftp_protocol=$FTP_PROTOCOL" >> "$GITHUB_OUTPUT"
+          echo "FTP host kind: $( [[ "$host" =~ ^[0-9.]+$ ]] && echo IP || echo hostname )"
+          echo "Protocol: $FTP_PROTOCOL  Port: $port"
+
+          if ! getent hosts "$host" >/dev/null; then
+            echo "DNS lookup failed for FTP_SERVER (ENOTFOUND)."
+            echo "Use the FTP IP or hostname from hPanel → Files → FTP Accounts."
+            echo "Hostinger shared SFTP uses that IP with protocol sftp and port 65002."
+            exit 1
+          fi
+
+      - name: Delete old files and upload pack via lftp
         env:
-          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_HOST: ${{ steps.ftp.outputs.ftp_host }}
+          FTP_PORT: ${{ steps.ftp.outputs.ftp_port }}
+          FTP_PROTOCOL: ${{ steps.ftp.outputs.ftp_protocol }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
-          FTP_PROTOCOL: ${{ vars.FTP_PROTOCOL || 'ftps' }}
-          FTP_PORT: ${{ vars.FTP_PORT || 21 }}
         run: |
           set -euo pipefail
           sudo apt-get update -qq
           sudo apt-get install -y -qq lftp
 
-          scheme="ftp"
+          scheme="$FTP_PROTOCOL"
           ssl_force="false"
-          if [ "$FTP_PROTOCOL" = "ftps" ] || [ "$FTP_PROTOCOL" = "ftps-legacy" ]; then
-            scheme="ftps"
-            ssl_force="true"
-          fi
+          extra_set=""
+          case "$FTP_PROTOCOL" in
+            sftp)
+              scheme="sftp"
+              extra_set="set sftp:auto-confirm yes"
+              ;;
+            ftps|ftps-legacy)
+              scheme="ftps"
+              ssl_force="true"
+              extra_set="set ftp:ssl-protect-data true"
+              ;;
+            ftp)
+              scheme="ftp"
+              extra_set="set ftp:ssl-allow no"
+              ;;
+            *)
+              echo "Unknown FTP_PROTOCOL=$FTP_PROTOCOL (use sftp, ftp, or ftps)"
+              exit 1
+              ;;
+          esac
 
           export LFTP_PASSWORD="$FTP_PASSWORD"
+          remote="${FTP_SERVER_DIR%/}/"
 
-          # Only remove known leftover repo/build names. Never rm -r the whole folder
-          # (that would wipe .env and cPanel files).
           lftp -c "
             set ssl:verify-certificate no
             set ftp:ssl-force $ssl_force
-            set ftp:ssl-protect-data $ssl_force
+            set net:max-retries 2
+            set net:timeout 30
+            $extra_set
+            open -u ${FTP_USERNAME} -p ${FTP_PORT} ${scheme}://${FTP_HOST}
+            mkdir -p ${remote}
+            cd ${remote}
             set cmd:fail-exit no
-            open -u ${FTP_USERNAME} -p ${FTP_PORT} ${scheme}://${FTP_SERVER}
-            cd ${FTP_SERVER_DIR}
             rm -r src
             rm -r prisma
             rm -r scripts
@@ -171,25 +232,7 @@ jobs:
             rm -f tsconfig.json eslint.config.mjs postcss.config.mjs
             rm -f vercel.json README.md package-lock.json
             rm -f next.zip server.zip
+            set cmd:fail-exit yes
+            mirror -R --verbose --parallel=4 --exclude-glob .env --exclude-glob .env.* --exclude-glob .DS_Store ./deploy/ .
             bye
           "
-
-      - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ${{ vars.FTP_PROTOCOL || 'ftps' }}
-          port: ${{ vars.FTP_PORT || 21 }}
-          local-dir: ./deploy/
-          server-dir: ${{ secrets.FTP_SERVER_DIR }}
-          dangerous-clean-slate: false
-          timeout: 600000
-          exclude: |
-            **/.env
-            **/.env.*
-            **/.DS_Store
-            **/.git*
-            **/.git*/**
-            **/.github/**
