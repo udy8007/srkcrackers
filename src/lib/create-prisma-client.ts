@@ -1,13 +1,7 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaLibSQL } from "@prisma/adapter-libsql";
-import { createClient, type Config } from "@libsql/client/http";
+import { PrismaLibSQL } from "@prisma/adapter-libsql/web";
 
-/** HTTP Turso client — no native `libsql` binary (Windows build → Linux cPanel). */
-class PrismaLibSQLHttp extends PrismaLibSQL {
-  override createClient(config: Config) {
-    return createClient(config) as ReturnType<PrismaLibSQL["createClient"]>;
-  }
-}
+/** Web/HTTP Turso adapter — no native `libsql` binary (Windows build → Linux cPanel). */
 
 function cleanEnv(value: string | undefined): string | undefined {
   if (!value) return undefined;
@@ -50,7 +44,7 @@ export function createPrismaClient(options?: { log?: ("error" | "warn" | "info" 
     options?.log ?? (process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"]);
 
   if (turso) {
-    const adapter = new PrismaLibSQLHttp({
+    const adapter = new PrismaLibSQL({
       url: turso.url,
       authToken: turso.authToken,
     });

@@ -4,8 +4,18 @@
  * Optional startup file (copied next to standalone/server.js by build:cpanel).
  * At the Git application root, prefer repo-root server.js instead.
  */
-const fs = require("node:fs");
-const path = require("node:path");
+var nodeMajor = parseInt(String(process.versions.node).split(".")[0], 10);
+if (!(nodeMajor >= 20)) {
+  console.error(
+    "[cpanel] Needs Node.js 20+. This process is Node " +
+      process.version +
+      ". Set the version in cPanel Setup Node.js App, then Restart.",
+  );
+  process.exit(1);
+}
+
+const fs = require("fs");
+const path = require("path");
 
 process.env.NODE_ENV = process.env.NODE_ENV || "production";
 

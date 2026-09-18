@@ -1,0 +1,179 @@
+# Build Next.js on GitHub, then FTP the cPanel pack to Hostinger.
+#
+# Required repository secrets (Settings → Secrets and variables → Actions):
+#   FTP_SERVER       Hostinger FTP host (ftp.srkcrackers.in or ftp.hostinger.com)
+#   FTP_USERNAME     FTP user
+#   FTP_PASSWORD     FTP password
+#   FTP_SERVER_DIR   Remote folder, with trailing slash.
+#                    If FTP lands in the account home: ./repositories/srkcrackers/
+#                    If the FTP user is already jailed to the app folder: ./
+#
+# Optional secrets (used at build time; runtime env still lives in cPanel):
+#   AUTH_SECRET, NEXTAUTH_SECRET, NEXTAUTH_URL, AUTH_URL
+#   TURSO_DATABASE_URL, TURSO_AUTH_TOKEN
+#
+# Optional variables (Settings → Secrets and variables → Actions → Variables):
+#   FTP_PROTOCOL     ftps (default), ftp, or ftps-legacy
+#   FTP_PORT         21 (default) or 990 for implicit FTPS
+#
+# After upload, tmp/restart.txt tells Passenger / Setup Node.js App to reload.
+# Do not upload .env files; keep Turso + Auth in cPanel → Setup Node.js App → Environment.
+#
+# Old Git/source files on the server are deleted on each deploy (src, prisma, root
+# node_modules, previous .next, etc.). .env, .htaccess, and tmp are kept.
+
+name: Build and deploy to Hostinger FTP
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: hostinger-ftp-deploy
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build cPanel standalone pack
+        env:
+          NODE_ENV: production
+          AUTH_TRUST_HOST: "true"
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          AUTH_URL: ${{ secrets.AUTH_URL }}
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+        run: |
+          if [ -z "$AUTH_SECRET" ] && [ -z "$NEXTAUTH_SECRET" ]; then
+            export AUTH_SECRET="github-actions-build-placeholder"
+            export NEXTAUTH_SECRET="$AUTH_SECRET"
+            echo "AUTH_SECRET not set; using a build-only placeholder (set the cPanel env for runtime)."
+          fi
+          npm run build:cpanel
+
+      - name: Stage FTP upload
+        run: |
+          set -euo pipefail
+          rm -rf deploy
+          mkdir -p deploy/.next deploy/tmp
+          cp server.js deploy/server.js
+          cp package.json deploy/package.json
+          cp -a .next/standalone deploy/.next/standalone
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > deploy/tmp/restart.txt
+
+          test -f deploy/server.js
+          test -f deploy/.next/standalone/server.js
+          echo "Staged:"
+          du -sh deploy deploy/.next/standalone
+
+      - name: Check FTP secrets
+        run: |
+          missing=0
+          for name in FTP_SERVER FTP_USERNAME FTP_PASSWORD FTP_SERVER_DIR; do
+            eval "value=\${$name}"
+            if [ -z "$value" ]; then
+              echo "Missing secret: $name"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "Add the FTP secrets in GitHub → Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
+
+      - name: Delete old Git and build files on FTP
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
+          FTP_PROTOCOL: ${{ vars.FTP_PROTOCOL || 'ftps' }}
+          FTP_PORT: ${{ vars.FTP_PORT || 21 }}
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lftp
+
+          scheme="ftp"
+          ssl_force="false"
+          if [ "$FTP_PROTOCOL" = "ftps" ] || [ "$FTP_PROTOCOL" = "ftps-legacy" ]; then
+            scheme="ftps"
+            ssl_force="true"
+          fi
+
+          export LFTP_PASSWORD="$FTP_PASSWORD"
+
+          # Only remove known leftover repo/build names. Never rm -r the whole folder
+          # (that would wipe .env and cPanel files).
+          lftp -c "
+            set ssl:verify-certificate no
+            set ftp:ssl-force $ssl_force
+            set ftp:ssl-protect-data $ssl_force
+            set cmd:fail-exit no
+            open -u ${FTP_USERNAME} -p ${FTP_PORT} ${scheme}://${FTP_SERVER}
+            cd ${FTP_SERVER_DIR}
+            rm -r src
+            rm -r prisma
+            rm -r scripts
+            rm -r cpanel
+            rm -r docs
+            rm -r node_modules
+            rm -r mobile-admin
+            rm -r .github
+            rm -r .next
+            rm -r .git
+            rm -r .vercel
+            rm -r backups
+            rm -r coverage
+            rm -r out
+            rm -r build
+            rm -f next.config.ts next.config.js next.config.mjs
+            rm -f tsconfig.json eslint.config.mjs postcss.config.mjs
+            rm -f vercel.json README.md package-lock.json
+            rm -f next.zip server.zip
+            bye
+          "
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ${{ vars.FTP_PROTOCOL || 'ftps' }}
+          port: ${{ vars.FTP_PORT || 21 }}
+          local-dir: ./deploy/
+          server-dir: ${{ secrets.FTP_SERVER_DIR }}
+          dangerous-clean-slate: false
+          timeout: 600000
+          exclude: |
+            **/.env
+            **/.env.*
+            **/.DS_Store
+            **/.git*
+            **/.git*/**
+            **/.github/**

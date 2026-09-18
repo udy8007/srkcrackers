@@ -64,6 +64,8 @@ mobile-admin/android/capacitor-cordova-android-plugins/
 
 # Local cPanel FTP pack (do not commit)
 /cpanel-standalone.zip
+/deploy/
+.ftp-deploy-sync-state.json
 
 # Turso schema push temp files
 .turso-push-temp.*
