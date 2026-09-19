@@ -28,6 +28,7 @@ var KNOWN_ROOTS = {
   "srk-contact.html": 1,
   __debug: 1,
   debug: 1,
+  images: 1,
 };
 var bootLog = [];
 var bootError = "";
@@ -141,18 +142,35 @@ function shouldRewriteBody(contentType) {
 
 function prefixAssetUrls(text, mount) {
   if (!mount || !text) return text;
-  var prefixed = mount + "/_next/";
-  text = String(text).split(prefixed).join("/_next/");
-  text = text.split("/_next/").join(prefixed);
+  text = String(text);
+  var paths = [
+    "/_next/",
+    "/images/",
+    "/shop/",
+    "/products/",
+    "/lottie/",
+    "/admin",
+    "/api/",
+    "/crackers/",
+    "/1000-wala",
+    "/favicon.ico",
+  ];
+  for (var i = 0; i < paths.length; i++) {
+    var p = paths[i];
+    var already = mount + p;
+    text = text.split(already).join(p);
+    text = text.split(p).join(already);
+  }
   text = text.replace(/"assetPrefix":""/g, '"assetPrefix":"' + mount + '"');
   text = text.replace(/"assetPrefix":null/g, '"assetPrefix":"' + mount + '"');
-  text = text.split('"' + mount + "/products/").join('"/products/');
-  text = text.split('"/products/').join('"' + mount + "/products/");
-  text = text.split('"' + mount + "/shop/").join('"/shop/');
-  text = text.split('"/shop/').join('"' + mount + "/shop/");
-  text = text.split('"' + mount + "/lottie/").join('"/lottie/');
-  text = text.split('"/lottie/').join('"' + mount + "/lottie/");
   return text;
+}
+
+function rewritePublicAliases(req) {
+  var p = pathnameOf(req);
+  if (/^\/images\/shinchan-cut-\d+\.png$/i.test(p)) {
+    req.url = "/shop/srk-hero-art.png";
+  }
 }
 
 function prefixLocation(value, mount) {
@@ -388,6 +406,7 @@ function sendHealth(res) {
 function handleRequest(req, res) {
   var mount = detectMountFromUrl(req.url);
   stripMount(req);
+  rewritePublicAliases(req);
   if (isHealth(req)) {
     sendHealth(res);
     return;
