@@ -15,8 +15,8 @@
 #
 # Optional:
 #   FTP_IP           Fallback IP if FTP_SERVER is a hostname that does not resolve
-#   FTP_PROTOCOL     ftps (default, explicit TLS on 21), ftp, or sftp
-#   FTP_PORT         21 (default) or 65002 for Hostinger SFTP
+#   FTP_PROTOCOL     ftps (default, explicit AUTH TLS on port 21) or ftp
+#   FTP_PORT         21
 #
 # After upload, tmp/restart.txt tells Passenger / Setup Node.js App to reload.
 # Do not upload .env files; keep MySQL + Auth in cPanel → Setup Node.js App.
@@ -203,7 +203,7 @@ jobs:
           echo "ftp_protocol=$FTP_PROTOCOL" >> "$GITHUB_OUTPUT"
           echo "Protocol: $FTP_PROTOCOL  Port: $port"
 
-      - name: Delete old files and upload pack via lftp
+      - name: Upload pack via explicit FTPS
         env:
           FTP_HOST: ${{ steps.ftp.outputs.ftp_host }}
           FTP_PORT: ${{ steps.ftp.outputs.ftp_port }}
@@ -211,67 +211,11 @@ jobs:
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
+          LOCAL_DIR: ./deploy
         run: |
           set -euo pipefail
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq lftp
-
-          scheme="$FTP_PROTOCOL"
-          ssl_force="false"
-          extra_set=""
-          case "$FTP_PROTOCOL" in
-            sftp)
-              scheme="sftp"
-              extra_set="set sftp:auto-confirm yes"
-              ;;
-            ftps|ftps-legacy)
-              scheme="ftps"
-              ssl_force="true"
-              extra_set="set ftp:ssl-protect-data true"
-              ;;
-            ftp)
-              scheme="ftp"
-              extra_set="set ftp:ssl-allow no"
-              ;;
-            *)
-              echo "Unknown FTP_PROTOCOL=$FTP_PROTOCOL (use sftp, ftp, or ftps)"
-              exit 1
-              ;;
-          esac
-
-          export LFTP_PASSWORD="$FTP_PASSWORD"
-          remote="${FTP_SERVER_DIR%/}/"
-
-          lftp -c "
-            set ssl:verify-certificate no
-            set ftp:ssl-force $ssl_force
-            set net:max-retries 2
-            set net:timeout 30
-            $extra_set
-            open -u \"${FTP_USERNAME}\" -p ${FTP_PORT} ${scheme}://${FTP_HOST}
-            mkdir -p ${remote}
-            cd ${remote}
-            set cmd:fail-exit no
-            rm -r src
-            rm -r prisma
-            rm -r scripts
-            rm -r cpanel
-            rm -r docs
-            rm -r node_modules
-            rm -r mobile-admin
-            rm -r .github
-            rm -r .next
-            rm -r .git
-            rm -r .vercel
-            rm -r backups
-            rm -r coverage
-            rm -r out
-            rm -r build
-            rm -f next.config.ts next.config.js next.config.mjs
-            rm -f tsconfig.json eslint.config.mjs postcss.config.mjs
-            rm -f vercel.json README.md package-lock.json
-            rm -f next.zip server.zip
-            set cmd:fail-exit yes
-            mirror -R --verbose --parallel=4 --exclude-glob .env --exclude-glob .env.* --exclude-glob .DS_Store ./deploy/ .
-            bye
-          "
+          if [ -z "${FTP_USERNAME:-}" ] || [ -z "${FTP_PASSWORD:-}" ]; then
+            echo "Missing FTP_USERNAME or FTP_PASSWORD"
+            exit 1
+          fi
+          python3 scripts/hostinger-ftp-deploy.py
