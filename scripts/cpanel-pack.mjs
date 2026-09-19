@@ -14,8 +14,6 @@ import {
   cpSync,
   copyFileSync,
   existsSync,
-  mkdirSync,
-  readdirSync,
   rmSync,
 } from "node:fs";
 import { join } from "node:path";
@@ -75,44 +73,8 @@ function copyDep(rel) {
 copyDep(".prisma");
 copyDep("@prisma/client");
 copyDep("@prisma/engines");
-copyDep("@prisma/adapter-libsql");
-copyDep("@libsql/client");
-copyDep("libsql");
+copyDep("mysql2");
 copyDep("next-auth");
-
-function unpackLinuxLibsql(version, dest) {
-  const pkgJson = join(dest, "package.json");
-  if (existsSync(pkgJson)) {
-    console.log(`[cpanel-pack] already have ${dest}`);
-    return;
-  }
-
-  const tmp = join(root, ".cpanel-pack-tmp");
-  rmSync(tmp, { recursive: true, force: true });
-  mkdirSync(tmp, { recursive: true });
-
-  execSync(`npm pack @libsql/linux-x64-gnu@${version} --pack-destination "${tmp}"`, {
-    cwd: root,
-    stdio: "inherit",
-  });
-
-  const tgz = readdirSync(tmp).find((name) => name.endsWith(".tgz"));
-  if (!tgz) {
-    throw new Error(`[cpanel-pack] npm pack did not produce @libsql/linux-x64-gnu@${version}`);
-  }
-
-  execSync(`tar -xzf "${join(tmp, tgz)}" -C "${tmp}"`, { cwd: root, stdio: "inherit" });
-  mkdirSync(join(dest, ".."), { recursive: true });
-  cpSync(join(tmp, "package"), dest, { recursive: true });
-  rmSync(tmp, { recursive: true, force: true });
-  console.log(`[cpanel-pack] unpacked @libsql/linux-x64-gnu@${version} -> ${dest}`);
-}
-
-unpackLinuxLibsql("0.5.29", join(standalone, "node_modules", "@libsql", "linux-x64-gnu"));
-unpackLinuxLibsql(
-  "0.3.19",
-  join(standalone, "node_modules", "@prisma", "adapter-libsql", "node_modules", "@libsql", "linux-x64-gnu"),
-);
 
 console.log("\n[cpanel-pack] Ready: .next/standalone");
 console.log("[cpanel-pack] cPanel startup file: server.js (repo-root wrapper)");

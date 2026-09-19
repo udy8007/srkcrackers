@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/admin/NotificationBell";
 import { AdminPushRegistrar } from "@/components/admin/AdminPushRegistrar";
+import { AdminRouteLoader } from "@/components/admin/CrackerLoader";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: "📊" },
@@ -23,6 +24,14 @@ const NAV = [
   { href: "/admin/settings", label: "Settings", icon: "⚙️" },
 ];
 
+function routeMatches(href: string, current: string) {
+  return href === "/admin" ? current === "/admin" : current === href || current.startsWith(`${href}/`);
+}
+
+function isModifiedClick(event: React.MouseEvent) {
+  return event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0;
+}
+
 export function AdminShell({
   name,
   email,
@@ -33,9 +42,19 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
   const [pendingOrders, setPendingOrders] = useState(0);
   const [pendingEnquiries, setPendingEnquiries] = useState(0);
+
+  useEffect(() => {
+    setPendingHref((current) => {
+      if (!current) return null;
+      return routeMatches(current, pathname) ? null : current;
+    });
+  }, [pathname]);
 
   useEffect(() => {
     fetch("/api/admin/overview")
@@ -69,8 +88,26 @@ export function AdminShell({
     };
   }, []);
 
-  const isActive = (href: string) =>
-    href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+  const currentHref = pendingHref ?? pathname;
+  const pendingLabel = NAV.find((item) => item.href === pendingHref)?.label;
+  const showRouteLoader = Boolean(pendingHref) || isPending;
+
+  const isActive = (href: string) => routeMatches(href, currentHref);
+
+  const goTo = (href: string) => {
+    setOpen(false);
+    if (routeMatches(href, pathname)) return;
+    setPendingHref(href);
+    startTransition(() => {
+      router.push(href);
+    });
+  };
+
+  const onNavClick = (event: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (isModifiedClick(event)) return;
+    event.preventDefault();
+    goTo(href);
+  };
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-brandbg text-ink">
@@ -85,7 +122,11 @@ export function AdminShell({
           >
             ☰
           </button>
-          <Link href="/admin" className="flex min-w-0 items-center gap-2">
+          <Link
+            href="/admin"
+            onClick={(event) => onNavClick(event, "/admin")}
+            className="flex min-w-0 items-center gap-2"
+          >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-yellow text-lg">
               🎆
             </span>
@@ -100,6 +141,7 @@ export function AdminShell({
           </div>
           <Link
             href="/admin/settings"
+            onClick={(event) => onNavClick(event, "/admin/settings")}
             className="hidden rounded-lg bg-white/15 px-3 py-1.5 text-sm font-semibold transition hover:bg-white/25 sm:inline-block"
           >
             Settings
@@ -126,7 +168,8 @@ export function AdminShell({
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={() => setOpen(false)}
+                prefetch
+                onClick={(event) => onNavClick(event, item.href)}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition",
                   isActive(item.href)
@@ -176,7 +219,14 @@ export function AdminShell({
           />
         )}
 
-        <main className="min-h-[calc(100vh-3.5rem)] min-w-0 flex-1 p-4 sm:p-6">{children}</main>
+        <main className="relative min-h-[calc(100vh-3.5rem)] min-w-0 flex-1 p-4 sm:p-6">
+          {showRouteLoader && (
+            <AdminRouteLoader
+              label={pendingLabel ? `Loading ${pendingLabel}` : "Loading..."}
+            />
+          )}
+          <div className={showRouteLoader ? "hidden" : undefined}>{children}</div>
+        </main>
       </div>
     </div>
   );

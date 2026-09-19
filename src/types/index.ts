@@ -127,6 +127,15 @@ export interface TrackOrderResult {
   customer: InvoiceCustomer;
   items: OrderItemDTO[];
   statusHistory: StatusHistoryDTO[];
+  cancelRequestedAt: string | null;
+  cancelReason: string | null;
+  cancelStatus: "PENDING" | "APPROVED" | "DECLINED" | null;
+  cancelDecidedAt: string | null;
+  cancelAdminNote: string | null;
+  paymentStatus: "UNPAID" | "INITIATED" | "FAILED" | "PAID";
+  paymentStatusLabel: string;
+  canRepay: boolean;
+  paidAt: string | null;
 }
 
 /** Public product review item (no phone / order secrets). */

@@ -34,8 +34,8 @@ export const EMAIL_PREVIEW_TRIGGERS = [
 
 export type EmailPreviewTrigger = (typeof EMAIL_PREVIEW_TRIGGERS)[number];
 
-function sampleContext(status: OrderStatus = "VERIFYING"): OrderEmailContext {
-  const origin = resolveSiteOrigin();
+async function sampleContext(status: OrderStatus = "VERIFYING"): Promise<OrderEmailContext> {
+  const origin = await resolveSiteOrigin();
   return {
     orderNumber: "SRK-20260707-0042",
     customerName: "Ravi Kumar",
@@ -89,22 +89,22 @@ function sampleInvoice(origin: string): PrintInvoiceData {
   };
 }
 
-export function getEmailPreview(trigger: EmailPreviewTrigger): { subject: string; html: string } {
-  const origin = resolveSiteOrigin();
-  const ctx = sampleContext();
+export async function getEmailPreview(trigger: EmailPreviewTrigger): Promise<{ subject: string; html: string }> {
+  const origin = await resolveSiteOrigin();
+  const ctx = await sampleContext();
 
   switch (trigger) {
     case "ORDER_PLACED_CUSTOMER":
       return buildCustomerOrderConfirmationEmail(ctx, sampleInvoice(origin));
     case "STATUS_CHANGE_CUSTOMER":
       return buildCustomerStatusChangeEmail({
-        ...sampleContext("CONFIRMED"),
+        ...(await sampleContext("CONFIRMED")),
         previousStatus: "VERIFYING",
         note: "Payment verified. Your order is confirmed!",
       });
     case "DELIVERED_CUSTOMER":
       return buildCustomerStatusChangeEmail({
-        ...sampleContext("DELIVERED"),
+        ...(await sampleContext("DELIVERED")),
         previousStatus: "DISPATCHED",
         note: "Your parcel has been delivered. Thank you for shopping with us!",
       });
@@ -112,7 +112,7 @@ export function getEmailPreview(trigger: EmailPreviewTrigger): { subject: string
       return buildAdminNewOrderEmail(ctx);
     case "STATUS_CHANGE_ADMIN":
       return buildAdminStatusChangeEmail({
-        ...sampleContext("DISPATCHED"),
+        ...(await sampleContext("DISPATCHED")),
         previousStatus: "PROCESSING",
         note: "Handed to postal — expected delivery in 3 days",
       });

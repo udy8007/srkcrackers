@@ -251,12 +251,12 @@ function tableHtml(headers: string[], rows: string[][]) {
     </table>`;
 }
 
-function buildReportEmailHtml(
+async function buildReportEmailHtml(
   settings: ReportEmailSettings,
   data: Awaited<ReturnType<typeof buildReportPayload>>,
   trigger: ReportEmailTrigger,
 ) {
-  const origin = resolveSiteOrigin();
+  const origin = await resolveSiteOrigin();
   const sections: string[] = [];
 
   sections.push(`
@@ -375,7 +375,7 @@ export async function sendBusinessReportEmail(
 
   try {
     const data = await buildReportPayload(rangeDays);
-    const html = buildReportEmailHtml(settings, data, trigger);
+    const html = await buildReportEmailHtml(settings, data, trigger);
     const freqLabel =
       settings.frequency === "DAILY"
         ? "Daily"
@@ -412,7 +412,7 @@ export async function sendBusinessReportEmail(
     });
 
     if (settings.notifyPush !== false) {
-      const reportsUrl = `${resolveSiteOrigin()}/admin/reports`;
+      const reportsUrl = `${await resolveSiteOrigin()}/admin/reports`;
       await createAdminNotification({
         type: "REPORT_READY",
         title: `${freqLabel} report ready`,

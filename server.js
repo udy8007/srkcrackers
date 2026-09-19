@@ -11,7 +11,7 @@
  * System /usr/bin/node is often v10 and cannot load Next.js 15.
  *
  * /api/health is answered HERE so Git/File Manager update of this one file
- * is enough to see env + Turso status (the old Next pack does not include that).
+ * is enough to see env + MySQL status (the old Next pack does not include that).
  */
 
 var nodeMajor = parseInt(String(process.versions.node).split(".")[0], 10);
@@ -28,7 +28,6 @@ if (!(nodeMajor >= 20)) {
 const fs = require("fs");
 const path = require("path");
 const http = require("http");
-const https = require("https");
 
 const WRAPPER = "cpanel-wrapper-2026-09-18b";
 
@@ -69,97 +68,61 @@ function isHealth(req) {
   return pathname === "/api/health" || pathname === "/api/health/";
 }
 
-function probeTurso() {
+function probeMysql() {
   return new Promise((resolve) => {
-    let url = envRaw("TURSO_DATABASE_URL") || envRaw("DATABASE_URL");
-    const token = envRaw("TURSO_AUTH_TOKEN");
+    const url = envRaw("DATABASE_URL");
     if (!url) {
-      resolve({ ok: false, error: "TURSO_DATABASE_URL / DATABASE_URL missing in Passenger env" });
+      resolve({ ok: false, error: "DATABASE_URL missing in Passenger env" });
       return;
     }
-    if (url.startsWith("libsql://")) url = `https://${url.slice("libsql://".length)}`;
-    if (!url.startsWith("https://")) {
-      resolve({ ok: false, error: "DATABASE_URL is not a Turso libsql/https URL" });
-      return;
-    }
-    if (!token) {
-      resolve({ ok: false, error: "TURSO_AUTH_TOKEN missing in Passenger env" });
+    if (!/^mysql(s)?:\/\//i.test(url)) {
+      resolve({ ok: false, error: "DATABASE_URL is not a mysql:// URL" });
       return;
     }
 
-    const endpoint = `${url.replace(/\/$/, "")}/v2/pipeline`;
     let parsed;
     try {
-      parsed = new URL(endpoint);
+      parsed = new URL(url);
     } catch (err) {
-      resolve({ ok: false, error: `invalid Turso URL: ${err instanceof Error ? err.message : "parse"}` });
+      resolve({ ok: false, error: `invalid DATABASE_URL: ${err instanceof Error ? err.message : "parse"}` });
       return;
     }
 
-    const payload = JSON.stringify({
-      requests: [{ type: "execute", stmt: { sql: "SELECT 1" } }],
+    const port = Number(parsed.port) || 3306;
+    const socket = require("net").connect({ host: parsed.hostname, port }, () => {
+      socket.end();
+      resolve({ ok: true, error: null });
     });
-
-    const req = https.request(
-      {
-        hostname: parsed.hostname,
-        port: parsed.port || 443,
-        path: parsed.pathname + parsed.search,
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-          "Content-Length": Buffer.byteLength(payload),
-        },
-      },
-      (res) => {
-        const chunks = [];
-        res.on("data", (chunk) => chunks.push(chunk));
-        res.on("end", () => {
-          const text = Buffer.concat(chunks).toString("utf8").slice(0, 240);
-          if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
-            resolve({ ok: true, error: null });
-            return;
-          }
-          resolve({ ok: false, error: `turso HTTP ${res.statusCode}: ${text}` });
-        });
-      },
-    );
-    req.on("error", (err) => {
-      resolve({ ok: false, error: `turso network: ${err.message}` });
+    socket.on("error", (err) => {
+      resolve({ ok: false, error: `mysql network: ${err.message}` });
     });
-    req.setTimeout(8000, () => {
-      req.destroy();
-      resolve({ ok: false, error: "turso timeout (8s) — host may block outbound HTTPS" });
+    socket.setTimeout(8000, () => {
+      socket.destroy();
+      resolve({ ok: false, error: "mysql timeout (8s) — host or port may be blocked" });
     });
-    req.end(payload);
   });
 }
 
 async function healthPayload() {
   const standaloneDir = path.join(__dirname, ".next", "standalone");
   const standaloneServer = path.join(standaloneDir, "server.js");
-  const turso = await probeTurso();
+  const mysql = await probeMysql();
   return {
-    status: turso.ok ? "ok" : "degraded",
-    database: turso.ok ? "up" : "down",
+    status: mysql.ok ? "ok" : "degraded",
+    database: mysql.ok ? "up" : "down",
     wrapper: WRAPPER,
     standalone: fs.existsSync(standaloneServer),
     cwd: process.cwd(),
     startupFile: __filename,
     node: process.version,
     env: {
-      TURSO_DATABASE_URL: envSet("TURSO_DATABASE_URL"),
-      TURSO_AUTH_TOKEN: envSet("TURSO_AUTH_TOKEN"),
       DATABASE_URL: envSet("DATABASE_URL"),
       AUTH_SECRET: envSet("AUTH_SECRET"),
       NEXTAUTH_SECRET: envSet("NEXTAUTH_SECRET"),
       AUTH_TRUST_HOST: envSet("AUTH_TRUST_HOST"),
-      NEXTAUTH_URL: envSet("NEXTAUTH_URL"),
-      AUTH_URL: envSet("AUTH_URL"),
       CRON_SECRET: envSet("CRON_SECRET"),
     },
-    error: turso.error,
+    error: mysql.error,
     timestamp: new Date().toISOString(),
   };
 }

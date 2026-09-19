@@ -82,7 +82,7 @@ export const NOTIFICATION_TRIGGER_META: NotificationTriggerMeta[] = [
     previewTrigger: "PENDING_REMINDER_ADMIN",
     label: "Admin — pending order reminder",
     description:
-      "Placed/Verifying email reminder, plus FCM push for incomplete checkouts (payment pending — please contact) with order deep link",
+      "Placed/Verifying email reminder, plus FCM push for incomplete checkouts and failed Razorpay payments (customer can repay from Track Order)",
     audience: "Admin",
     timing: "Repeating — every N hours via in-app scheduler until resolved/cancelled",
     icon: "⏰",

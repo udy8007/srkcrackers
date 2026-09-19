@@ -91,6 +91,8 @@ export function NotificationBell() {
         return "💾";
       case "STATUS_CHANGE":
         return "🔄";
+      case "ORDER_CANCEL_REQUEST":
+        return "🛑";
       case "REPORT_READY":
         return "📉";
       case "NEW_REVIEW":

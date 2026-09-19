@@ -6,6 +6,8 @@ import { SectionDecor } from "./FestiveDecor";
 import { useUI } from "@/store/ui";
 import { useToast } from "@/store/toast";
 import { ORDER_STATUSES } from "@/lib/constants";
+import { canCustomerRequestCancel } from "@/lib/order-status";
+import { startRazorpayCheckout } from "@/lib/razorpay-checkout";
 import { downloadOrderInvoice, trackResultToInvoice } from "@/lib/invoice";
 import { formatDateTime, formatPrice, isValidPhone } from "@/lib/utils";
 import type { TrackOrderResult } from "@/types";
@@ -23,6 +25,14 @@ export function TrackOrder() {
   const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(false);
   const [invoiceLoading, setInvoiceLoading] = useState(false);
+  const [trackedOrderNumber, setTrackedOrderNumber] = useState("");
+  const [trackedPhone, setTrackedPhone] = useState("");
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelBusy, setCancelBusy] = useState(false);
+  const [cancelError, setCancelError] = useState("");
+  const [repayBusy, setRepayBusy] = useState(false);
+  const [razorpayOn, setRazorpayOn] = useState(false);
 
   const runTrack = useCallback(
     async (id: string, mobile: string) => {
@@ -33,6 +43,8 @@ export function TrackOrder() {
       setLoading(true);
       setNotFound(false);
       setResult(null);
+      setTrackedOrderNumber(id.trim());
+      setTrackedPhone(mobile.trim());
       try {
         const response = await fetch("/api/orders/track", {
           method: "POST",
@@ -59,6 +71,13 @@ export function TrackOrder() {
   );
 
   useEffect(() => {
+    void fetch("/api/payments/status")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setRazorpayOn(Boolean(data?.razorpayEnabled)))
+      .catch(() => setRazorpayOn(false));
+  }, []);
+
+  useEffect(() => {
     if (trackPrefill) {
       setOrderNumber(trackPrefill.orderNumber);
       if (trackPrefill.phone && isValidPhone(trackPrefill.phone)) {
@@ -71,6 +90,11 @@ export function TrackOrder() {
 
   const currentIdx = result ? TIMELINE.findIndex((s) => s.key === result.status) : -1;
   const isCancelled = result?.status === "CANCELLED";
+  const canCancel =
+    !!result &&
+    canCustomerRequestCancel(result.status) &&
+    result.cancelStatus !== "PENDING" &&
+    result.cancelStatus !== "APPROVED";
 
   const handleDownloadInvoice = async () => {
     if (!result) return;
@@ -82,6 +106,72 @@ export function TrackOrder() {
       showToast("Could not download invoice. Please try again.");
     } finally {
       setInvoiceLoading(false);
+    }
+  };
+
+  const submitCancel = async () => {
+    if (!result || !trackedOrderNumber || !trackedPhone) return;
+    if (!cancelReason.trim()) {
+      setCancelError("Please tell us the reason for cancellation.");
+      return;
+    }
+    setCancelBusy(true);
+    setCancelError("");
+    try {
+      const response = await fetch("/api/orders/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderNumber: trackedOrderNumber,
+          phone: trackedPhone,
+          reason: cancelReason,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setCancelError(data.error ?? "Could not send cancellation request. Please try again.");
+        return;
+      }
+      setCancelOpen(false);
+      setCancelReason("");
+      showToast(data.message ?? "Cancellation request sent!");
+      const fresh = await fetch("/api/orders/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderNumber: trackedOrderNumber, phone: trackedPhone }),
+      });
+      if (fresh.ok) setResult((await fresh.json()) as TrackOrderResult);
+    } catch {
+      setCancelError("Network error. Please try again.");
+    } finally {
+      setCancelBusy(false);
+    }
+  };
+
+  const handleRepay = async () => {
+    if (!result || !trackedOrderNumber || !trackedPhone) return;
+    setRepayBusy(true);
+    try {
+      const pay = await startRazorpayCheckout({
+        orderNumber: trackedOrderNumber,
+        phone: trackedPhone,
+        source: "repay",
+      });
+      if (!pay.ok) {
+        showToast(pay.error);
+        return;
+      }
+      showToast(pay.alreadyPaid ? "This order is already paid." : "Payment successful!");
+      const fresh = await fetch("/api/orders/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderNumber: trackedOrderNumber, phone: trackedPhone }),
+      });
+      if (fresh.ok) setResult((await fresh.json()) as TrackOrderResult);
+    } catch {
+      showToast("Network error. If money was deducted, wait a minute and track again.");
+    } finally {
+      setRepayBusy(false);
     }
   };
 
@@ -157,6 +247,21 @@ export function TrackOrder() {
                 {formatPrice(result.total)}
               </p>
 
+              {razorpayOn && result.canRepay && (
+                <div className="mt-3 rounded-lg border border-orange-200 bg-orange-50 p-3 text-sm text-orange-950">
+                  <p className="font-semibold">Payment not completed</p>
+                  <p className="mt-1 text-xs">You can pay now with Razorpay (UPI / card).</p>
+                  <button
+                    type="button"
+                    onClick={() => void handleRepay()}
+                    disabled={repayBusy}
+                    className="btn-primary mt-3 w-full py-2 text-sm disabled:opacity-50"
+                  >
+                    {repayBusy ? "Opening payment…" : `Pay ${formatPrice(result.total)} now`}
+                  </button>
+                </div>
+              )}
+
               {result.status === "DISPATCHED" && result.expectedDeliveryAt && (
                 <p className="mt-2 rounded-lg bg-primary/5 p-3 text-xs text-ink">
                   📦 Parcel handed to postal. Expected delivery by{" "}
@@ -187,6 +292,90 @@ export function TrackOrder() {
                   ))}
                 </ul>
               </div>
+
+              {result.cancelStatus === "PENDING" && (
+                <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                  🕐 <strong>Cancellation requested.</strong> Our team is reviewing your request and
+                  will contact you shortly. If your payment has been collected, it will be refunded
+                  after approval.
+                </div>
+              )}
+
+              {result.cancelStatus === "DECLINED" && (
+                <div className="mt-4 rounded-lg bg-red/5 p-3 text-sm text-ink">
+                  <strong className="text-red">Cancellation request declined.</strong> Your order will
+                  continue as planned.
+                  {result.cancelAdminNote?.trim() && (
+                    <span className="mt-1 block text-xs text-ink-muted">
+                      Note from our team: {result.cancelAdminNote.trim()}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {canCancel && !cancelOpen && (
+                <div className="mt-5 border-t border-line pt-4">
+                  <p className="text-xs text-ink-muted">
+                    Changed your mind? You can request cancellation as long as the parcel has not been
+                    dispatched. A team member will review and confirm your refund.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCancelError("");
+                      setCancelOpen(true);
+                    }}
+                    className="btn-outline mt-3 w-full py-2 text-sm text-red"
+                  >
+                    Request Cancellation
+                  </button>
+                </div>
+              )}
+
+              {canCancel && cancelOpen && (
+                <div className="mt-5 rounded-lg border border-red/30 bg-red/5 p-4">
+                  <p className="text-sm font-semibold text-ink">Request cancellation</p>
+                  <label className="mt-3 block">
+                    <span className="mb-1 block text-xs font-semibold text-ink">
+                      Reason <span className="text-red">*</span>
+                    </span>
+                    <textarea
+                      className="input min-h-20 w-full resize-y text-sm"
+                      value={cancelReason}
+                      onChange={(e) => setCancelReason(e.target.value)}
+                      placeholder="Why do you want to cancel this order?"
+                      maxLength={500}
+                    />
+                  </label>
+                  {cancelError && (
+                    <p className="mt-2 text-xs text-red">{cancelError}</p>
+                  )}
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void submitCancel()}
+                      disabled={cancelBusy}
+                      className="btn-primary flex-1 py-2 text-sm disabled:opacity-50"
+                    >
+                      {cancelBusy ? "Sending..." : "Send Request"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCancelOpen(false);
+                        setCancelError("");
+                      }}
+                      disabled={cancelBusy}
+                      className="btn-outline flex-1 py-2 text-sm disabled:opacity-50"
+                    >
+                      Go Back
+                    </button>
+                  </div>
+                  <p className="mt-3 text-xs text-ink-muted">
+                    Your refund will be processed by phone/UPI after the team approves the cancellation.
+                  </p>
+                </div>
+              )}
 
               {isCancelled ? (
                 <p className="mt-4 rounded-lg bg-red/10 p-3 text-sm text-red">

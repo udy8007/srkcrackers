@@ -1,32 +1,27 @@
-# Build Next.js on GitHub, then upload the cPanel pack to Hostinger.
+# Build Next.js on GitHub, then deploy the cPanel standalone pack to Hostinger via FTPS.
 #
-# Secrets and variables live on the GitHub Environment named "Production"
-# (Settings → Environments → Production), not repository secrets.
+# FTP configuration (hPanel → Files → FTP Accounts):
+#   FTP_SERVER       Host or IP from hPanel (e.g. ftp.srkcrackers.in)
+#   FTP_USERNAME     FTP user, e.g. github@lively-orange-orangutan.srkcrackers.in
+#   FTP_PASSWORD     FTP password
+#   FTP_SERVER_DIR   Remote app folder, e.g. ./ (FTP account jailed to the app root)
+#   Protocol:        ftps (explicit FTPS), Port: 21
 #
-# Required environment secrets:
-#   FTP_SERVER       Hostname or IP only from hPanel → Files → FTP Accounts.
-#                    Examples: 185.185.185.185   or   ftp.srkcrackers.in
-#                    Do NOT put ftp://, a folder path, or FTP_SERVER_DIR here.
-#   FTP_USERNAME     FTP / SSH user from hPanel
-#   FTP_PASSWORD     FTP / SSH password
-#   FTP_SERVER_DIR   Remote folder, with trailing slash.
-#                    If FTP lands in the account home: ./repositories/srkcrackers/
-#                    If the FTP user is already jailed to the app folder: ./
+# Secrets live on the GitHub "Production" environment
+# (Settings → Environments → Production), never in this file.
 #
-# Environment variables (or secrets) used at build:
-#   AUTH_SECRET, NEXTAUTH_SECRET, NEXTAUTH_URL, AUTH_URL
-#   TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, DATABASE_URL
-# Prefer Environment secrets for tokens — Variables are visible in the GitHub UI.
+# The build uses the project's own production pack script (npm run build:cpanel),
+# which runs `prisma generate` + `next build` (output: "standalone") and copies
+# static + public assets plus the cPanel runtime deps into .next/standalone.
 #
-# Optional Production environment variables:
-#   FTP_PROTOCOL     sftp (default, Hostinger shared), ftp, or ftps
-#   FTP_PORT         65002 (default Hostinger SFTP) or 21 for FTP/FTPS
+# Only the generated production files are uploaded:
+#   - server.js                 cPanel/Panel startup wrapper (repo root)
+#   - package.json              so cPanel can detect the Node app
+#   - .next/standalone/         the full standalone production pack
+#   - tmp/restart.txt           triggers Passenger / Setup Node.js App reload
 #
-# After upload, tmp/restart.txt tells Passenger / Setup Node.js App to reload.
-# Do not upload .env files; keep Turso + Auth in cPanel → Setup Node.js App → Environment.
-#
-# Old Git/source files on the server are deleted on each deploy (src, prisma, root
-# node_modules, previous .next, etc.). .env, .htaccess, and tmp are kept.
+# Remote .env files and .htaccess are excluded from sync deletion so production
+# secrets/config are never touched by a deploy.
 
 name: Build and deploy to Hostinger FTP
 
@@ -52,7 +47,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -64,32 +59,24 @@ jobs:
           AUTH_TRUST_HOST: "true"
           AUTH_SECRET: ${{ secrets.AUTH_SECRET || vars.AUTH_SECRET }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || vars.NEXTAUTH_SECRET }}
-          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || vars.NEXTAUTH_URL }}
-          AUTH_URL: ${{ secrets.AUTH_URL || vars.AUTH_URL }}
-          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL || vars.TURSO_DATABASE_URL }}
-          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN || vars.TURSO_AUTH_TOKEN }}
           DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
         run: |
           if [ -z "$AUTH_SECRET" ] && [ -z "$NEXTAUTH_SECRET" ]; then
             export AUTH_SECRET="github-actions-build-placeholder"
             export NEXTAUTH_SECRET="$AUTH_SECRET"
-            echo "AUTH_SECRET not set; using a build-only placeholder (set the cPanel env for runtime)."
+            echo "AUTH_SECRET not set; using a build-only placeholder (set it in cPanel for runtime)."
           fi
-          # Prisma schema requires a nonempty DATABASE_URL. GitHub empty secrets
-          # become "" which fails validation — never export a blank URL.
-          if [ -n "$TURSO_DATABASE_URL" ]; then
-            export DATABASE_URL="${DATABASE_URL:-$TURSO_DATABASE_URL}"
-          elif [ -n "$DATABASE_URL" ]; then
-            :
-          else
-            unset TURSO_DATABASE_URL TURSO_AUTH_TOKEN DATABASE_URL
-            export DATABASE_URL="file:$(pwd)/.github-build.db"
-            echo "No TURSO_DATABASE_URL; using local sqlite for Prisma generate/build."
-            echo "Set Turso URLs in cPanel for the live catalog."
+          # Prisma generate needs a nonempty DATABASE_URL. GitHub empty secrets become ""
+          # which fails validation — never export a blank URL.
+          if [ -z "$DATABASE_URL" ]; then
+            unset DATABASE_URL
+            export DATABASE_URL="mysql://build:build@127.0.0.1:3306/build"
+            echo "No DATABASE_URL; using a placeholder for Prisma generate/build."
+            echo "Set MYSQL DATABASE_URL in cPanel for the live catalog."
           fi
           npm run build:cpanel
 
-      - name: Stage FTP upload
+      - name: Stage production build files
         run: |
           set -euo pipefail
           rm -rf deploy
@@ -102,137 +89,23 @@ jobs:
           test -f deploy/server.js
           test -f deploy/.next/standalone/server.js
           echo "Staged:"
-          du -sh deploy deploy/.next/standalone
+          du -sh deploy
 
-      - name: Check and normalize FTP host
-        id: ftp
-        env:
-          FTP_SERVER: ${{ secrets.FTP_SERVER }}
-          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
-          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-          FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
-          FTP_PROTOCOL: ${{ vars.FTP_PROTOCOL || 'sftp' }}
-          FTP_PORT: ${{ vars.FTP_PORT || 65002 }}
-        run: |
-          set -euo pipefail
-          missing=0
-          for name in FTP_SERVER FTP_USERNAME FTP_PASSWORD FTP_SERVER_DIR; do
-            eval "value=\${$name}"
-            if [ -z "$value" ]; then
-              echo "Missing secret: $name"
-              missing=1
-            fi
-          done
-          if [ "$missing" -ne 0 ]; then
-            echo "Add these on GitHub → Settings → Environments → Production."
-            exit 1
-          fi
-
-          host="$(printf '%s' "$FTP_SERVER" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-          host="${host#ftp://}"
-          host="${host#ftps://}"
-          host="${host#sftp://}"
-          host="${host#http://}"
-          host="${host#https://}"
-          case "$host" in
-            *@*) host="${host##*@}" ;;
-          esac
-          host="${host%%/*}"
-          port="$FTP_PORT"
-          if [[ "$host" == *:[0-9]* ]]; then
-            port="${host##*:}"
-            host="${host%:*}"
-            echo "FTP_SERVER included a port; using $port"
-          fi
-
-          if [ -z "$host" ] || [[ "$host" == .* ]] || [[ "$host" == *\\* ]]; then
-            echo "FTP_SERVER looks like a folder path, not a hostname."
-            echo "Set it to the Host / IP from hPanel → Files → FTP Accounts (no ftp://, no folder)."
-            exit 1
-          fi
-
-          echo "ftp_host=$host" >> "$GITHUB_OUTPUT"
-          echo "ftp_port=$port" >> "$GITHUB_OUTPUT"
-          echo "ftp_protocol=$FTP_PROTOCOL" >> "$GITHUB_OUTPUT"
-          echo "FTP host kind: $( [[ "$host" =~ ^[0-9.]+$ ]] && echo IP || echo hostname )"
-          echo "Protocol: $FTP_PROTOCOL  Port: $port"
-
-          if ! getent hosts "$host" >/dev/null; then
-            echo "DNS lookup failed for FTP_SERVER (ENOTFOUND)."
-            echo "Use the FTP IP or hostname from hPanel → Files → FTP Accounts."
-            echo "Hostinger shared SFTP uses that IP with protocol sftp and port 65002."
-            exit 1
-          fi
-
-      - name: Delete old files and upload pack via lftp
-        env:
-          FTP_HOST: ${{ steps.ftp.outputs.ftp_host }}
-          FTP_PORT: ${{ steps.ftp.outputs.ftp_port }}
-          FTP_PROTOCOL: ${{ steps.ftp.outputs.ftp_protocol }}
-          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
-          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-          FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
-        run: |
-          set -euo pipefail
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq lftp
-
-          scheme="$FTP_PROTOCOL"
-          ssl_force="false"
-          extra_set=""
-          case "$FTP_PROTOCOL" in
-            sftp)
-              scheme="sftp"
-              extra_set="set sftp:auto-confirm yes"
-              ;;
-            ftps|ftps-legacy)
-              scheme="ftps"
-              ssl_force="true"
-              extra_set="set ftp:ssl-protect-data true"
-              ;;
-            ftp)
-              scheme="ftp"
-              extra_set="set ftp:ssl-allow no"
-              ;;
-            *)
-              echo "Unknown FTP_PROTOCOL=$FTP_PROTOCOL (use sftp, ftp, or ftps)"
-              exit 1
-              ;;
-          esac
-
-          export LFTP_PASSWORD="$FTP_PASSWORD"
-          remote="${FTP_SERVER_DIR%/}/"
-
-          lftp -c "
-            set ssl:verify-certificate no
-            set ftp:ssl-force $ssl_force
-            set net:max-retries 2
-            set net:timeout 30
-            $extra_set
-            open -u ${FTP_USERNAME} -p ${FTP_PORT} ${scheme}://${FTP_HOST}
-            mkdir -p ${remote}
-            cd ${remote}
-            set cmd:fail-exit no
-            rm -r src
-            rm -r prisma
-            rm -r scripts
-            rm -r cpanel
-            rm -r docs
-            rm -r node_modules
-            rm -r mobile-admin
-            rm -r .github
-            rm -r .next
-            rm -r .git
-            rm -r .vercel
-            rm -r backups
-            rm -r coverage
-            rm -r out
-            rm -r build
-            rm -f next.config.ts next.config.js next.config.mjs
-            rm -f tsconfig.json eslint.config.mjs postcss.config.mjs
-            rm -f vercel.json README.md package-lock.json
-            rm -f next.zip server.zip
-            set cmd:fail-exit yes
-            mirror -R --verbose --parallel=4 --exclude-glob .env --exclude-glob .env.* --exclude-glob .DS_Store ./deploy/ .
-            bye
-          "
+      - name: Deploy to Hostinger via FTPS
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_SERVER_DIR }}
+          local-dir: ./deploy/
+          protocol: ftps
+          port: 21
+          timeout: 120000
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.env*
+            **/.DS_Store
+            .htaccess
+          log-level: standard

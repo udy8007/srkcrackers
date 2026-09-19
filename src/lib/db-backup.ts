@@ -101,6 +101,7 @@ export async function exportDatabase(includeScreenshots: boolean): Promise<Backu
     orders,
     orderItems,
     orderStatusHistory,
+    paymentAttempts,
     siteVisits,
     emailSettings,
     emailLogs,
@@ -114,6 +115,7 @@ export async function exportDatabase(includeScreenshots: boolean): Promise<Backu
     prisma.order.findMany(),
     prisma.orderItem.findMany(),
     prisma.orderStatusHistory.findMany(),
+    prisma.paymentAttempt.findMany(),
     prisma.siteVisit.findMany(),
     prisma.emailSettings.findMany(),
     prisma.emailLog.findMany({ orderBy: { createdAt: "desc" }, take: 500 }),
@@ -136,6 +138,7 @@ export async function exportDatabase(includeScreenshots: boolean): Promise<Backu
     orders: orderData,
     orderItems,
     orderStatusHistory,
+    paymentAttempts,
     siteVisits,
     emailSettings: safeEmailSettings,
     emailLogs,
@@ -234,7 +237,7 @@ export async function runDatabaseBackup(
       type: "DB_BACKUP",
       title: "Database backup failed",
       message: error,
-      targetUrl: `${resolveSiteOrigin()}/admin/settings`,
+      targetUrl: `${await resolveSiteOrigin()}/admin/settings`,
       skipPush: true,
     });
     return { ok: false, error };
@@ -277,7 +280,7 @@ export async function runDatabaseBackup(
     message: result.ok
       ? `${filename} (${sizeMb} MB) emailed to ${recipient}`
       : result.error ?? "Backup email failed",
-    targetUrl: `${resolveSiteOrigin()}/admin/settings`,
+    targetUrl: `${await resolveSiteOrigin()}/admin/settings`,
     skipPush: true,
   });
 

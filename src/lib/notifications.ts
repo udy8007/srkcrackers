@@ -101,7 +101,7 @@ export async function createAdminNotification(input: {
 
   if (skipPush) return;
 
-  const origin = resolveSiteOrigin();
+  const origin = await resolveSiteOrigin();
   const resolvedTargetUrl = targetUrl ?? `${origin}/admin`;
   const resolvedPushTitle = pushTitle ?? input.title;
   const resolvedPushBody = pushBody ?? input.message;
@@ -193,7 +193,7 @@ export async function notifyOrderPlaced(orderId: string) {
   if (!order) return;
 
   const settings = await getEmailSettings();
-  const origin = resolveSiteOrigin();
+  const origin = await resolveSiteOrigin();
   const ctx = buildContext(order, origin);
   const adminTo = resolveAdminNotifyEmail(settings);
 
@@ -265,6 +265,51 @@ export async function notifyOrderPlaced(orderId: string) {
   });
 }
 
+/** Admin bell + FCM for Razorpay success, failure, or payment on a cancelled order. */
+export async function notifyPaymentEvent(
+  orderId: string,
+  input: { type: string; title: string; message: string },
+) {
+  const order = await loadOrderForNotification(orderId);
+  if (!order) return;
+
+  const origin = await resolveSiteOrigin();
+  const ctx = buildContext(order, origin);
+
+  await createAdminNotification({
+    type: input.type,
+    title: input.title,
+    message: input.message,
+    orderId: order.id,
+    orderNumber: order.orderNumber,
+    targetUrl: ctx.adminOrderUrl,
+    pushTitle: input.title,
+    pushBody: input.message,
+  });
+}
+
+/** Alert admin (bell + FCM push) when a customer requests cancellation of a paid order. */
+export async function notifyOrderCancelRequested(orderId: string, reason: string) {
+  const order = await loadOrderForNotification(orderId);
+  if (!order) return;
+
+  const origin = await resolveSiteOrigin();
+  const ctx = buildContext(order, origin);
+
+  await createAdminNotification({
+    type: "ORDER_CANCEL_REQUEST",
+    title: `Cancellation requested — ${order.orderNumber}`,
+    message: `${order.customerName} requested to cancel their order for ${formatInr(order.total)}${
+      reason.trim() ? ` — "${reason.trim()}"` : ""
+    }`,
+    orderId: order.id,
+    orderNumber: order.orderNumber,
+    targetUrl: ctx.adminOrderUrl,
+    pushTitle: "Order Cancellation Request",
+    pushBody: `#${order.orderNumber} — ${order.customerName} · ${formatInr(order.total)}`,
+  });
+}
+
 /** Notify customer and optionally admin on status change. */
 export async function notifyStatusChange(
   orderId: string,
@@ -275,7 +320,7 @@ export async function notifyStatusChange(
   if (!order || order.status === previousStatus) return;
 
   const settings = await getEmailSettings();
-  const origin = resolveSiteOrigin();
+  const origin = await resolveSiteOrigin();
   const ctx = buildContext(order, origin);
 
   if (settings.enabled) {
@@ -349,7 +394,7 @@ export async function sendPendingOrderReminders(): Promise<{ reminded: number }>
 
   if (pending.length === 0) return { reminded: 0 };
 
-  const origin = resolveSiteOrigin();
+  const origin = await resolveSiteOrigin();
   const contexts = pending.map((o) => buildContext(o, origin));
   const ordersUrl = `${origin}/admin/orders`;
 
@@ -413,7 +458,7 @@ export async function sendIncompleteCheckoutReminders(): Promise<{ reminded: num
 
   if (incomplete.length === 0) return { reminded: 0 };
 
-  const origin = resolveSiteOrigin();
+  const origin = await resolveSiteOrigin();
   const now = new Date();
   let reminded = 0;
 
@@ -452,7 +497,7 @@ export async function notifyEnquiryPlaced(enquiryId: string) {
   if (!enquiry) return;
 
   const settings = await getEmailSettings();
-  const origin = resolveSiteOrigin();
+  const origin = await resolveSiteOrigin();
   const ctx = buildEnquiryContext(enquiry, origin);
   const adminTo = resolveAdminNotifyEmail(settings);
 
@@ -501,7 +546,7 @@ export async function notifyEnquiryResolved(enquiryId: string) {
   if (!enquiry || enquiry.status !== "RESOLVED") return;
 
   const settings = await getEmailSettings();
-  const origin = resolveSiteOrigin();
+  const origin = await resolveSiteOrigin();
   const ctx = buildEnquiryContext(enquiry, origin);
 
   if (settings.enabled && settings.notifyCustomerEnquiryResolved && enquiry.email?.trim()) {
@@ -554,7 +599,7 @@ export async function sendPendingEnquiryReminders(): Promise<{ reminded: number 
 
   if (pending.length === 0) return { reminded: 0 };
 
-  const origin = resolveSiteOrigin();
+  const origin = await resolveSiteOrigin();
   const contexts = pending.map((e) => buildEnquiryContext(e, origin));
   const enquiriesUrl = `${origin}/admin/enquiries`;
 
@@ -596,7 +641,7 @@ export async function notifyNewProductReview(input: {
   orderNumber: string;
   text: string;
 }) {
-  const origin = resolveSiteOrigin();
+  const origin = await resolveSiteOrigin();
   const reviewsUrl = `${origin}/admin/reviews`;
   const stars = "★".repeat(Math.min(5, Math.max(1, input.rating)));
   const snippet = input.text.trim().slice(0, 100);

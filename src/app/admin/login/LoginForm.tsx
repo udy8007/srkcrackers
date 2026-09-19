@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/admin";
 
@@ -26,16 +25,25 @@ export function LoginForm() {
       });
       if (result?.error) {
         setError("Invalid email or password");
+        setLoading(false);
         return;
       }
-      router.push(callbackUrl);
-      router.refresh();
+      window.location.assign(callbackUrl);
     } catch {
       setError("Something went wrong. Try again.");
-    } finally {
       setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center gap-3 py-6 text-center" aria-live="polite">
+        <span className="h-8 w-8 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
+        <p className="text-sm font-semibold text-ink">Signing in…</p>
+        <p className="text-xs text-ink-muted">Connecting to the database. This can take a few seconds.</p>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">

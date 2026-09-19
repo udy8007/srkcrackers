@@ -5,6 +5,7 @@ import { BackupSettingsForm } from "./BackupSettingsForm";
 import { DataArchiveSettingsForm } from "./DataArchiveSettingsForm";
 import { SchedulerSettingsForm } from "./SchedulerSettingsForm";
 import { PushTestForm } from "./PushTestForm";
+import { PaymentSettingsForm } from "./PaymentSettingsForm";
 import { ReportEmailSettingsForm } from "../reports/ReportEmailSettingsForm";
 
 export const metadata = {
@@ -16,8 +17,10 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-2xl font-bold text-ink">Settings</h1>
-        <p className="text-sm text-ink-muted">Manage account, email notifications, database backup, and SMTP</p>
+        <p className="text-sm text-ink-muted">Manage account, payments, email notifications, database backup, and SMTP</p>
       </div>
+
+      <PaymentSettingsForm />
 
       <DataArchiveSettingsForm />
 

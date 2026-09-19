@@ -9,7 +9,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -23,6 +23,19 @@ enum OrderStatus {
   DISPATCHED
   DELIVERED
   CANCELLED
+}
+
+enum CancelRequestStatus {
+  PENDING
+  APPROVED
+  DECLINED
+}
+
+enum PaymentStatus {
+  UNPAID
+  INITIATED
+  FAILED
+  PAID
 }
 
 enum UserRole {
@@ -86,8 +99,8 @@ model Product {
   pack        String
   price       Int // discounted sale price (INR, whole rupees)
   mrp         Int // maximum retail price (INR, whole rupees)
-  imageUrl    String
-  description String
+  imageUrl    String          @db.Text
+  description String          @db.Text
   active      Boolean         @default(true)
   sortOrder   Int             @default(0)
   categoryId  String
@@ -109,24 +122,36 @@ model Order {
   phone             String
   altPhone          String?
   email             String?
-  address           String
+  address           String               @db.Text
   city              String
   state             String
   pincode           String
-  notes             String?
+  notes             String?              @db.Text
   // Payment
   paymentMethod       String               @default("UPI")
+  paymentStatus       PaymentStatus        @default(UNPAID)
   upiId               String?
   upiReferenceNumber  String? // customer UPI / UTR reference from payment app
-  paymentScreenshot   String? // base64 data URL — swap for object storage (Vercel Blob / Cloudinary) in production
+  paymentScreenshot   String? @db.LongText // base64 data URL — swap for object storage in production
+  razorpayOrderId     String?              @unique
+  razorpayPaymentId   String?              @unique
+  paidAt              DateTime?
   // Totals
   subtotal          Int
   total             Int
   status            OrderStatus          @default(VERIFYING)
   expectedDeliveryAt DateTime?           // set when marked dispatched — auto DELIVERED after this time
   lastPendingReminderAt DateTime?       // last admin reminder for unactioned orders
+  // Customer cancellation request (set when customer asks to cancel a paid order)
+  cancelRequestedAt DateTime?            // when the customer requested cancellation
+  cancelReason      String?  @db.Text    // reason given by the customer
+  cancelStatus      CancelRequestStatus? // PENDING / APPROVED / DECLINED — null = no request
+  cancelDecidedAt   DateTime?            // when admin acknowledged and decided
+  cancelAdminNote   String?  @db.Text    // refund/UTR note (approve) or decline reason
+  cancelDecidedBy   String?              // admin who processed the request
   items             OrderItem[]
   statusHistory     OrderStatusHistory[]
+  paymentAttempts   PaymentAttempt[]
   reviews           ProductReview[]
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
@@ -163,7 +188,7 @@ model ProductReview {
   orderItemId  String    @unique
   orderItem    OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
   rating       Int
-  text         String
+  text         String    @db.Text
   reviewerName String
   visible      Boolean   @default(true)
   createdAt    DateTime  @default(now())
@@ -181,9 +206,9 @@ model Enquiry {
   name                  String
   phone                 String
   email                 String?
-  message               String
+  message               String        @db.Text
   status                EnquiryStatus @default(PENDING)
-  adminNote             String?
+  adminNote             String?       @db.Text
   lastPendingReminderAt DateTime?
   resolvedAt            DateTime?
   createdAt             DateTime      @default(now())
@@ -201,11 +226,34 @@ model SiteVisit {
   city      String?
   region    String?
   country   String?
-  userAgent String?
+  userAgent String?  @db.Text
   createdAt DateTime @default(now())
 
   @@index([createdAt])
   @@index([city])
+}
+
+/// Razorpay (and future gateway) payment attempts for an order.
+model PaymentAttempt {
+  id                 String   @id @default(cuid())
+  orderId            String
+  order              Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  razorpayOrderId    String
+  razorpayPaymentId  String?
+  amount             Int // paise
+  currency           String   @default("INR")
+  status             String // created | attempted | captured | failed | dismissed
+  method             String?
+  errorCode          String?
+  errorDescription   String?  @db.Text
+  source             String // checkout | repay | verify | webhook
+  payload            String?  @db.LongText
+  createdAt          DateTime @default(now())
+
+  @@index([orderId])
+  @@index([razorpayOrderId])
+  @@index([razorpayPaymentId])
+  @@index([createdAt])
 }
 
 /// Timeline of status changes for an order.
@@ -215,7 +263,7 @@ model OrderStatusHistory {
   order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
   status    OrderStatus
   label     String
-  note      String?
+  note      String?     @db.Text
   createdAt DateTime    @default(now())
 
   @@index([orderId])
@@ -253,9 +301,9 @@ model EmailLog {
   orderId   String?
   trigger   String
   recipient String
-  subject   String
+  subject   String   @db.Text
   status    String
-  error     String?
+  error     String?  @db.Text
   createdAt DateTime @default(now())
 
   @@index([orderId])
@@ -268,7 +316,7 @@ model AdminNotification {
   id            String   @id @default(cuid())
   type          String
   title         String
-  message       String
+  message       String   @db.Text
   orderId       String?
   orderNumber   String?
   enquiryId     String?
@@ -284,8 +332,8 @@ model AdminPushLog {
   id            String   @id @default(cuid())
   type          String
   title         String
-  body          String
-  targetUrl     String
+  body          String   @db.Text
+  targetUrl     String   @db.Text
   orderId       String?
   orderNumber   String?
   enquiryId     String?
@@ -294,7 +342,7 @@ model AdminPushLog {
   sent          Int      @default(0)
   failed        Int      @default(0)
   removed       Int      @default(0)
-  error         String?
+  error         String?  @db.Text
   createdAt     DateTime @default(now())
 
   @@index([createdAt])
@@ -317,7 +365,7 @@ model BackupSettings {
   includeScreenshots Boolean         @default(false)
   lastBackupAt       DateTime?
   lastBackupStatus   String?
-  lastBackupError    String?
+  lastBackupError    String?         @db.Text
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
 }
@@ -327,11 +375,11 @@ model DbBackupLog {
   id          String   @id @default(cuid())
   filename    String
   sizeBytes   Int
-  tableCounts String?
+  tableCounts String?  @db.Text
   status      String
   trigger     String
   recipient   String
-  error       String?
+  error       String?  @db.Text
   createdAt   DateTime @default(now())
 
   @@index([createdAt])
@@ -364,7 +412,7 @@ model AdminDeviceToken {
 /// Firebase service account for server-side FCM (uploaded in Admin → Settings).
 model FirebaseSettings {
   id                 String   @id @default("default")
-  serviceAccountJson String   @default("")
+  serviceAccountJson String   @default("") @db.LongText
   projectId          String   @default("")
   clientEmail        String   @default("")
   createdAt          DateTime @default(now())
@@ -380,8 +428,8 @@ model AuditLog {
   action     String // e.g. PRODUCT_CREATE, ORDER_STATUS_CHANGE
   entityType String // product | order | category | settings | account | system
   entityId   String?
-  summary    String // human-readable one-liner for the table
-  metadata   String? // JSON string of small details
+  summary    String  @db.Text // human-readable one-liner for the table
+  metadata   String? @db.Text // JSON string of small details
   createdAt  DateTime @default(now())
 
   @@index([createdAt])
@@ -406,7 +454,7 @@ model ReportEmailSettings {
   notifyPush       Boolean              @default(true) // FCM + in-app bell → /admin/reports
   lastSentAt       DateTime?
   lastStatus       String?
-  lastError        String?
+  lastError        String?              @db.Text
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
 }
@@ -429,7 +477,7 @@ model ArchiveSettings {
   includeNotificationLog Boolean          @default(true)
   lastArchiveAt          DateTime?
   lastArchiveStatus      String?
-  lastArchiveError       String?
+  lastArchiveError       String?          @db.Text
   createdAt              DateTime         @default(now())
   updatedAt              DateTime         @updatedAt
 }
@@ -439,12 +487,20 @@ model ArchiveLog {
   id           String   @id @default(cuid())
   filename     String
   sizeBytes    Int
-  recordCounts String?
+  recordCounts String?  @db.Text
   status       String
   trigger      String
   recipient    String
-  error        String?
+  error        String?  @db.Text
   createdAt    DateTime @default(now())
 
   @@index([createdAt])
+}
+
+/// Storefront payment mode. Razorpay checkout is shown only when this is on and keys exist.
+model PaymentSettings {
+  id              String   @id @default("default")
+  razorpayEnabled Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

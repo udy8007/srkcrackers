@@ -61,6 +61,7 @@ mobile-admin/android/capacitor-cordova-android-plugins/
 
 # Local database dumps (contain customer data)
 /backups/
+/tmp/
 
 # Local cPanel FTP pack (do not commit)
 /cpanel-standalone.zip

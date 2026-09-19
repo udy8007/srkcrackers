@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     const status: OrderStatus = hasPayment ? "VERIFYING" : "PLACED";
+    const paymentStatus = hasPayment ? "INITIATED" : "UNPAID";
     const history: { status: OrderStatus; label: string; createdAt: Date }[] = [
       { status: "PLACED", label: ORDER_STATUS_LABEL.PLACED, createdAt: now },
     ];
@@ -85,6 +86,7 @@ export async function POST(request: NextRequest) {
       data: {
         ...customerOrderFields(customer!),
         paymentMethod: paymentMethod?.trim() || draft.paymentMethod,
+        paymentStatus,
         upiId: BUSINESS.upiId,
         upiReferenceNumber: upiRef || null,
         paymentScreenshot: screenshotUrl,
@@ -109,6 +111,7 @@ export async function POST(request: NextRequest) {
   }
 
   const status: OrderStatus = hasPayment ? "VERIFYING" : "PLACED";
+  const paymentStatus = hasPayment ? "INITIATED" : "UNPAID";
   const history: { status: OrderStatus; label: string; createdAt: Date }[] = [
     { status: "PLACED", label: ORDER_STATUS_LABEL.PLACED, createdAt: now },
   ];
@@ -129,6 +132,7 @@ export async function POST(request: NextRequest) {
           orderNumber,
           ...customerOrderFields(customer!),
           paymentMethod: paymentMethod?.trim() || "UPI",
+          paymentStatus,
           upiId: BUSINESS.upiId,
           upiReferenceNumber: upiRef || null,
           paymentScreenshot: null,

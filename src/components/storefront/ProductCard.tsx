@@ -44,12 +44,6 @@ export function ProductCard({ product, categoryLabel, navProductIds }: ProductCa
         <WishlistButton productId={product.id} productName={product.name} size="sm" />
       </div>
 
-      {inCart && (
-        <span className="absolute bottom-3 right-3 z-20 inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-[0.65rem] font-bold text-white shadow-md">
-          🛒 {shownQty}
-        </span>
-      )}
-
       <button
         type="button"
         onClick={openDetails}

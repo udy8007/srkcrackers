@@ -432,7 +432,7 @@ export async function runDataArchive(
       type: "DATA_ARCHIVE",
       title: "Data archive failed",
       message: error,
-      targetUrl: `${resolveSiteOrigin()}/admin/settings`,
+      targetUrl: `${await resolveSiteOrigin()}/admin/settings`,
       skipPush: true,
     });
     return { ok: false, error };
@@ -479,7 +479,7 @@ export async function runDataArchive(
     message: result.ok
       ? `${filename} (${sizeMb} MB) — ${totalRecords(exportData.meta.recordCounts)} rows archived`
       : result.error ?? "Archive email failed",
-    targetUrl: `${resolveSiteOrigin()}/admin/settings`,
+    targetUrl: `${await resolveSiteOrigin()}/admin/settings`,
     skipPush: true,
   });
 

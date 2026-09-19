@@ -17,6 +17,7 @@ import { BUSINESS, INDIAN_STATES, ORDER_STATUS_LABEL } from "@/lib/constants";
 import { isCustomerComplete, loadSavedCustomer, saveCustomerDetails } from "@/lib/checkout-storage";
 import { downloadOrderInvoice } from "@/lib/invoice";
 import { bilingualProductName } from "@/lib/pdf-helpers";
+import { startRazorpayCheckout } from "@/lib/razorpay-checkout";
 import { storeTrackPhone } from "./TrackOrderDeepLink";
 import type { OrderStatus } from "@/lib/db/types";
 import type { CustomerInput, InvoiceData } from "@/types";
@@ -64,6 +65,8 @@ export function CheckoutModal() {
   const [draftOrderId, setDraftOrderId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [paymentDetailsCopied, setPaymentDetailsCopied] = useState(false);
+  const [razorpayOn, setRazorpayOn] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
   const leftForPaymentRef = useRef(false);
   const hiddenAtRef = useRef(0);
   const checkoutInitializedRef = useRef(false);
@@ -142,8 +145,21 @@ export function CheckoutModal() {
     setPaymentDetailsCopied(false);
     setPaymentMethod("UPI QR");
     setDraftOrderId(null);
+    setPayError(null);
     leftForPaymentRef.current = false;
     document.body.style.overflow = "hidden";
+
+    void fetch("/api/payments/status")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const on = Boolean(data?.razorpayEnabled);
+        setRazorpayOn(on);
+        setPaymentMethod(on ? "Razorpay" : "UPI QR");
+      })
+      .catch(() => {
+        setRazorpayOn(false);
+        setPaymentMethod("UPI QR");
+      });
 
     if (canSkipToPayment && saved) {
       window.setTimeout(() => {
@@ -281,8 +297,82 @@ export function CheckoutModal() {
   const continueToPayment = async () => {
     if (!validateDetails()) return;
     saveCustomerDetails(customer);
+    const method = razorpayOn ? "Razorpay" : "UPI QR";
+    setPaymentMethod(method);
     setStep(2);
-    await saveCheckoutDraft({ checkoutStep: "PAYMENT" });
+    await saveCheckoutDraft({ paymentMethod: method, checkoutStep: "PAYMENT" });
+  };
+
+  const finishPaidOrder = (data: {
+    orderNumber: string;
+    createdAt: string;
+    status: OrderStatus;
+    subtotal: number;
+    shipping: number;
+    total: number;
+  }) => {
+    const invoiceItems = orderItems.map((line) => ({
+      name: bilingualProductName(line.product!.name, line.product!.nameTa),
+      pack: line.product!.pack,
+      price: line.product!.price,
+      qty: line.qty,
+      amount: line.amount,
+    }));
+    setSavedTotals({ subtotal: data.subtotal, shipping: data.shipping, total: data.total });
+    setSavedInvoiceItems(invoiceItems);
+    setOrderNumber(data.orderNumber);
+    setOrderCreatedAt(data.createdAt);
+    setOrderStatus(data.status);
+    storeTrackPhone(data.orderNumber, customer.phone);
+    setStep(4);
+    clearCart();
+    void triggerInvoiceDownload(data.orderNumber, data.createdAt, data.status);
+  };
+
+  const handleRazorpayPay = async () => {
+    if (!validateDetails()) return;
+    saveCustomerDetails(customer);
+    setPaymentMethod("Razorpay");
+    setPayError(null);
+    setSubmitting(true);
+    try {
+      const draftId = (await saveCheckoutDraft({ paymentMethod: "Razorpay", checkoutStep: "PAYMENT" })) ?? draftOrderId;
+      if (!draftId) {
+        const message = "Could not save checkout. Please try again.";
+        setPayError(message);
+        showToast(message);
+        return;
+      }
+      const result = await startRazorpayCheckout({ draftOrderId: draftId, source: "checkout" });
+      if (!result.ok) {
+        setPayError(result.error);
+        showToast(result.error);
+        return;
+      }
+      if (result.alreadyPaid) {
+        showToast("This order is already paid.");
+        setOrderNumber(result.orderNumber);
+        setOrderStatus(result.status as OrderStatus);
+        setStep(4);
+        clearCart();
+        return;
+      }
+      finishPaidOrder({
+        orderNumber: result.paid.orderNumber,
+        createdAt: result.paid.createdAt,
+        status: result.paid.status as OrderStatus,
+        subtotal: result.paid.subtotal,
+        shipping: result.paid.shipping,
+        total: result.paid.total,
+      });
+      showToast("Payment successful — order confirmed!");
+    } catch {
+      const message = "Network error. If money was deducted, track your order or retry payment.";
+      setPayError(message);
+      showToast(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handlePaidViaQr = async () => {
@@ -446,6 +536,13 @@ export function CheckoutModal() {
 
   const upiLink = buildUpiPayLink(total);
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiLink)}`;
+  const stepItems = razorpayOn
+    ? [
+        { label: "Details", n: 1 },
+        { label: "Pay", n: 2 },
+        { label: "Done", n: 4 },
+      ]
+    : STEP_LABELS.map((label, index) => ({ label, n: index + 1 }));
 
   return (
     <div
@@ -471,10 +568,10 @@ export function CheckoutModal() {
           </h3>
           {step !== 4 && (
           <div className="mt-3 flex items-center gap-1.5">
-            {STEP_LABELS.map((label, index) => {
-              const n = index + 1;
+            {stepItems.map(({ label, n }, index) => {
               const active = n === step;
               const done = n < step;
+              const display = index + 1;
               return (
                 <div key={label} className="flex flex-1 items-center gap-1.5 text-[0.7rem]">
                   <span
@@ -486,7 +583,7 @@ export function CheckoutModal() {
                           : "bg-white/20 text-white"
                     }`}
                   >
-                    {done ? "✓" : n}
+                    {done ? "✓" : display}
                   </span>
                   <span className="hidden sm:inline">{label}</span>
                 </div>
@@ -628,7 +725,9 @@ export function CheckoutModal() {
           {step === 2 && (
             <div className="space-y-4">
               <div className="text-center">
-                <p className="text-sm text-ink-muted">Scan QR code to pay</p>
+                <p className="text-sm text-ink-muted">
+                  {razorpayOn ? "Pay securely with Razorpay" : "Scan QR code to pay"}
+                </p>
                 <div className="mt-1 text-2xl font-bold text-primary">{formatPrice(total)}</div>
                 <p className="mt-1 text-xs text-ink-muted">
                   {shipping > 0 ? (
@@ -642,9 +741,34 @@ export function CheckoutModal() {
                       {customer.city.trim() ? ` to ${customer.city.trim()}` : ""}
                     </>
                   )}
-                  {" · "}Pay exact amount shown
+                  {" · "}
+                  {razorpayOn ? "UPI, cards, netbanking" : "Pay exact amount shown"}
                 </p>
-                <div className="mt-2 flex items-center justify-center gap-1.5 text-xs text-ink-muted">
+              </div>
+
+              {razorpayOn ? (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-5 text-center">
+                  <div className="font-semibold text-ink">Online payment</div>
+                  <p className="mt-2 text-xs text-ink-muted">
+                    Opens Razorpay checkout. If payment fails or you close it, you can pay again here.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void handleRazorpayPay()}
+                    disabled={submitting}
+                    className="btn-primary mt-4 w-full disabled:opacity-50"
+                  >
+                    {submitting ? "Opening payment…" : `Pay ${formatPrice(total)} securely`}
+                  </button>
+                  {payError && (
+                    <p className="mt-3 rounded-lg bg-red/10 px-3 py-2 text-left text-xs font-medium text-red">
+                      {payError}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <>
+                <div className="flex items-center justify-center gap-1.5 text-xs text-ink-muted">
                   <span>
                     UPI: <strong className="text-ink">{BUSINESS.upiId}</strong>
                   </span>
@@ -674,7 +798,6 @@ export function CheckoutModal() {
                     )}
                   </button>
                 </div>
-              </div>
 
               <div className="rounded-xl border border-line bg-brandbg p-5 text-center">
                 <div className="font-semibold text-ink">Scan & Pay with any UPI app</div>
@@ -710,6 +833,8 @@ export function CheckoutModal() {
                   I Have Paid →
                 </button>
               </div>
+                </>
+              )}
 
               <div className="flex gap-3">
                 <button type="button" onClick={() => setStep(1)} className="btn-outline flex-1">
@@ -720,7 +845,7 @@ export function CheckoutModal() {
           )}
 
           {/* Step 3 */}
-          {step === 3 && (
+          {step === 3 && !razorpayOn && (
             <div className="space-y-4">
               <p className="text-sm text-ink-muted">
                 Enter your <b>UPI Reference / UTR number</b> from the payment app{" "}
@@ -785,8 +910,9 @@ export function CheckoutModal() {
               </div>
               <h4 className="mt-5 font-display text-2xl font-bold text-primary">Your Order is Confirmed!</h4>
               <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink-muted">
-                Thank you for ordering from SRK Crackers. Our team will verify your payment and call you
-                within <b>2 hours</b> to confirm availability and delivery date.
+                {orderStatus === "CONFIRMED"
+                  ? "Thank you for ordering from SRK Crackers. Payment is received. Our team will pack your order and update dispatch status."
+                  : "Thank you for ordering from SRK Crackers. Our team will verify your payment and call you within 2 hours to confirm availability and delivery date."}
               </p>
               <div className="mx-auto my-5 inline-block rounded-xl border-2 border-dashed border-primary bg-yellow/15 px-6 py-3">
                 <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-ink-muted">Order ID</p>

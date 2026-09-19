@@ -23,6 +23,6 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const preview = getEmailPreview(trigger);
+  const preview = await getEmailPreview(trigger);
   return NextResponse.json(preview);
 }

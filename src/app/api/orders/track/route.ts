@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { OrderStatus } from "@/lib/db/types";
 import { prisma } from "@/lib/prisma";
-import { ORDER_STATUS_LABEL, BUSINESS } from "@/lib/constants";
+import { ORDER_STATUS_LABEL, PAYMENT_STATUS_LABEL, BUSINESS } from "@/lib/constants";
 import { isValidPhone } from "@/lib/utils";
 import { autoDeliverDueOrders } from "@/lib/auto-deliver";
 import { notifyAutoDelivered } from "@/lib/notifications";
+import { canCustomerRepay } from "@/lib/order-status";
 import { dispatchSchedulerTick } from "@/lib/scheduler";
+import type { PaymentStatus } from "@/lib/db/types";
 import type { TrackOrderResult } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -86,6 +88,15 @@ export async function POST(request: NextRequest) {
         createdAt: entry.createdAt.toISOString(),
       }),
     ),
+    cancelRequestedAt: order.cancelRequestedAt?.toISOString() ?? null,
+    cancelReason: order.cancelReason,
+    cancelStatus: order.cancelStatus ?? null,
+    cancelDecidedAt: order.cancelDecidedAt?.toISOString() ?? null,
+    cancelAdminNote: order.cancelAdminNote,
+    paymentStatus: order.paymentStatus as PaymentStatus,
+    paymentStatusLabel: PAYMENT_STATUS_LABEL[order.paymentStatus as PaymentStatus],
+    canRepay: canCustomerRepay(status, order.paymentStatus as PaymentStatus),
+    paidAt: order.paidAt?.toISOString() ?? null,
   };
 
   return NextResponse.json(result);

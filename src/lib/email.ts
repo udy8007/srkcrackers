@@ -81,7 +81,7 @@ async function deliverMail(
   },
   settings: EmailSettings,
 ): Promise<{ ok: boolean; error?: string }> {
-  if (outboundNotificationsDisabled()) {
+  if (outboundNotificationsDisabled() && !options.force) {
     console.warn(
       `[email] Skipped (${options.trigger} → ${options.to}): DISABLE_OUTBOUND_NOTIFICATIONS=true`,
     );

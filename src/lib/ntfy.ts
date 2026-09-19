@@ -31,7 +31,7 @@ export async function sendNtfyNotification(
   input: NtfySendInput,
 ): Promise<{ ok: boolean; error?: string }> {
   const topic = resolveTopic();
-  const origin = resolveSiteOrigin();
+  const origin = await resolveSiteOrigin();
   const iconUrl = input.iconUrl ?? `${origin}/logo.png`;
 
   const headers: Record<string, string> = {

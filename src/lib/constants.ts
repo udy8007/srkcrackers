@@ -1,4 +1,4 @@
-import type { EnquiryStatus, OrderStatus } from "@/lib/db/types";
+import type { EnquiryStatus, OrderStatus, PaymentStatus } from "@/lib/db/types";
 
 /** Central business configuration for SRK Crackers. */
 export const BUSINESS = {
@@ -78,6 +78,13 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = ORDER_STATUSES.re
   },
   {} as Record<OrderStatus, string>,
 );
+
+export const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
+  UNPAID: "Unpaid",
+  INITIATED: "Payment started",
+  FAILED: "Payment failed",
+  PAID: "Paid",
+};
 
 export const ENQUIRY_STATUS_LABEL: Record<EnquiryStatus, string> = {
   PENDING: "Pending",

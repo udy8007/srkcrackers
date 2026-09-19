@@ -22,6 +22,8 @@ export type {
   AuditLog,
   ReportEmailSettings,
   OrderStatus,
+  PaymentStatus,
+  PaymentAttempt,
   EnquiryStatus,
   UserRole,
   BackupFrequency,

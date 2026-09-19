@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const origin = resolveSiteOrigin();
+  const origin = await resolveSiteOrigin();
   const result = await sendAdminPush({
     title: "Test Push — SRK Admin",
     body: "Push notifications are working. Tap to open Settings.",

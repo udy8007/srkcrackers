@@ -1,4 +1,4 @@
-/** Partial string match for Turso/SQLite (Prisma `contains`; LIKE is case-insensitive for ASCII). */
+/** Partial string match (MySQL collation is typically case-insensitive). */
 export function sqliteContains(value: string) {
   return { contains: value };
 }

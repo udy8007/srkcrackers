@@ -20,12 +20,16 @@ export async function GET(request: NextRequest) {
   const q = searchParams.get("q")?.trim() ?? "";
   const from = searchParams.get("from");
   const to = searchParams.get("to");
+  const cancelRequested = searchParams.get("cancelRequested") === "1";
   const take = Math.min(Number(searchParams.get("take")) || 50, 200);
   const skip = Math.max(Number(searchParams.get("skip")) || 0, 0);
 
   const where: Record<string, unknown> = {};
   if (statusParam && VALID_STATUSES.has(statusParam as OrderStatus)) {
     where.status = statusParam as OrderStatus;
+  }
+  if (cancelRequested) {
+    where.cancelStatus = "PENDING" as const;
   }
   if (q) {
     where.OR = [
@@ -73,6 +77,8 @@ export async function GET(request: NextRequest) {
       state: order.state,
       total: order.total,
       status: order.status,
+      paymentStatus: order.paymentStatus,
+      cancelRequested: order.cancelStatus === "PENDING",
       itemCount,
       createdAt: order.createdAt.toISOString(),
     })),

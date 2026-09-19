@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { Order, OrderItem, OrderStatus, OrderStatusHistory } from "@/lib/db/types";
+import type { Order, OrderItem, OrderStatus, OrderStatusHistory, PaymentAttempt, PaymentStatus } from "@/lib/db/types";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { actorFromSession, writeAuditLog } from "@/lib/audit-log";
-import { ORDER_STATUS_LABEL, ORDER_STATUSES } from "@/lib/constants";
+import { ORDER_STATUS_LABEL, ORDER_STATUSES, PAYMENT_STATUS_LABEL } from "@/lib/constants";
 import { canAdminEditBeforeDispatch } from "@/lib/order-status";
 import { dispatchNotification, notifyStatusChange } from "@/lib/notifications";
 import { uploadDataUrl } from "@/lib/db/storage";
@@ -16,6 +16,7 @@ const MAX_SCREENSHOT_CHARS = 3_000_000;
 type OrderWithRelations = Order & {
   items: OrderItem[];
   statusHistory: OrderStatusHistory[];
+  paymentAttempts: PaymentAttempt[];
 };
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -30,6 +31,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     include: {
       items: true,
       statusHistory: true,
+      paymentAttempts: { orderBy: { createdAt: "desc" } },
     },
   })) as OrderWithRelations | null;
 
@@ -52,6 +54,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     note?: string;
     expectedDeliveryAt?: string;
     paymentScreenshot?: string;
+    cancelAction?: "approve" | "decline";
+    cancelNote?: string;
   };
   try {
     body = await request.json();
@@ -62,6 +66,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const existing = await prisma.order.findUnique({ where: { id } });
   if (!existing) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
+  }
+
+  if (body.cancelAction === "approve" || body.cancelAction === "decline") {
+    return handleCancelDecision(session.user, existing, body.cancelAction, body.cancelNote);
   }
 
   const locked =
@@ -89,6 +97,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       include: {
         items: true,
         statusHistory: true,
+        paymentAttempts: { orderBy: { createdAt: "desc" } },
       },
     })) as OrderWithRelations;
     await writeAuditLog({
@@ -145,6 +154,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     data: {
       status,
       ...(status === "DISPATCHED" ? { expectedDeliveryAt } : {}),
+      ...(status === "CONFIRMED" && existing.paymentStatus !== "PAID"
+        ? { paymentStatus: "PAID" as PaymentStatus, paidAt: existing.paidAt ?? new Date() }
+        : {}),
       statusHistory: {
         create: {
           status,
@@ -156,6 +168,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     include: {
       items: true,
       statusHistory: true,
+      paymentAttempts: { orderBy: { createdAt: "desc" } },
     },
   })) as OrderWithRelations;
 
@@ -172,6 +185,97 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       to: status,
       note: dispatchNote,
     },
+  });
+
+  return NextResponse.json(serializeOrder(order));
+}
+
+/** Admin decision on a pending customer cancellation request. */
+async function handleCancelDecision(
+  user: { id?: string | null; email?: string | null; name?: string | null },
+  existing: Order,
+  action: "approve" | "decline",
+  note?: string,
+): Promise<NextResponse> {
+  if (existing.cancelStatus !== "PENDING") {
+    return NextResponse.json(
+      { error: "No pending cancellation request on this order" },
+      { status: 400 },
+    );
+  }
+
+  const adminNote = note?.trim().slice(0, 1000) || null;
+  const now = new Date();
+  const decidedBy = user.name || user.email || "Admin";
+
+  if (action === "approve") {
+    const order = (await prisma.order.update({
+      where: { id: existing.id },
+      data: {
+        status: "CANCELLED",
+        cancelStatus: "APPROVED",
+        cancelDecidedAt: now,
+        cancelAdminNote: adminNote,
+        cancelDecidedBy: decidedBy,
+        statusHistory: {
+          create: {
+            status: "CANCELLED",
+            label: ORDER_STATUS_LABEL["CANCELLED"],
+            note: adminNote
+              ? `Cancelled on customer request — Refund: ${adminNote}`
+              : "Cancelled on customer request",
+          },
+        },
+      },
+      include: {
+        items: true,
+        statusHistory: true,
+        paymentAttempts: { orderBy: { createdAt: "desc" } },
+      },
+    })) as OrderWithRelations;
+
+    dispatchNotification(() =>
+      notifyStatusChange(
+        order.id,
+        existing.status,
+        adminNote ? `Cancelled on customer request — Refund: ${adminNote}` : "Cancelled on customer request",
+      ),
+    );
+
+    await writeAuditLog({
+      actor: actorFromSession(user),
+      action: "ORDER_CANCEL_APPROVED",
+      entityType: "order",
+      entityId: order.id,
+      summary: `Approved cancellation for ${order.orderNumber}`,
+      metadata: { note: adminNote },
+    });
+
+    return NextResponse.json(serializeOrder(order));
+  }
+
+  const order = (await prisma.order.update({
+    where: { id: existing.id },
+    data: {
+      cancelStatus: "DECLINED",
+      cancelDecidedAt: now,
+      cancelAdminNote: adminNote,
+      cancelDecidedBy: decidedBy,
+    },
+    include: {
+      items: true,
+      statusHistory: true,
+      paymentAttempts: { orderBy: { createdAt: "desc" } },
+    },
+  })) as OrderWithRelations;
+
+  await writeAuditLog({
+    actor: actorFromSession(user),
+    action: "ORDER_CANCEL_DECLINED",
+    entityType: "order",
+    entityId: order.id,
+    summary: `Declined cancellation for ${order.orderNumber}`,
+    metadata: { note: adminNote },
   });
 
   return NextResponse.json(serializeOrder(order));
@@ -224,13 +328,37 @@ function serializeOrder(order: OrderWithRelations) {
       notes: order.notes,
     },
     paymentMethod: order.paymentMethod,
+    paymentStatus: order.paymentStatus,
+    paymentStatusLabel: PAYMENT_STATUS_LABEL[order.paymentStatus],
     upiId: order.upiId,
     upiReferenceNumber: order.upiReferenceNumber,
     paymentScreenshot: order.paymentScreenshot,
+    razorpayOrderId: order.razorpayOrderId,
+    razorpayPaymentId: order.razorpayPaymentId,
+    paidAt: order.paidAt?.toISOString() ?? null,
+    paymentAttempts: (order.paymentAttempts ?? []).map((attempt) => ({
+      id: attempt.id,
+      razorpayOrderId: attempt.razorpayOrderId,
+      razorpayPaymentId: attempt.razorpayPaymentId,
+      amount: attempt.amount,
+      currency: attempt.currency,
+      status: attempt.status,
+      method: attempt.method,
+      errorCode: attempt.errorCode,
+      errorDescription: attempt.errorDescription,
+      source: attempt.source,
+      createdAt: attempt.createdAt.toISOString(),
+    })),
     subtotal: order.subtotal,
     total: order.total,
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
+    cancelRequestedAt: order.cancelRequestedAt?.toISOString() ?? null,
+    cancelReason: order.cancelReason,
+    cancelStatus: order.cancelStatus ?? null,
+    cancelDecidedAt: order.cancelDecidedAt?.toISOString() ?? null,
+    cancelAdminNote: order.cancelAdminNote,
+    cancelDecidedBy: order.cancelDecidedBy,
     items: (order.items ?? []).map((item) => ({
       id: item.id,
       name: item.name,

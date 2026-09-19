@@ -19,9 +19,7 @@ const nextConfig: NextConfig = {
   },
   serverExternalPackages: [
     "@prisma/client",
-    "@prisma/adapter-libsql",
-    "@libsql/client",
-    "libsql",
+    "mysql2",
     "bcryptjs",
     "firebase-admin",
   ],

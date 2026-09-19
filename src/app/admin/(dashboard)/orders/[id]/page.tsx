@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import type { Order, OrderItem, OrderStatusHistory } from "@/lib/db/types";
+import type { Order, OrderItem, OrderStatusHistory, PaymentAttempt } from "@/lib/db/types";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { formatDateTime, formatPrice, getStoredShipping } from "@/lib/utils";
+import { PAYMENT_STATUS_LABEL } from "@/lib/constants";
 import { OrderActions } from "./OrderActions";
 import { StatusUpdater } from "./StatusUpdater";
 import { PaymentScreenshotEditor } from "./PaymentScreenshotEditor";
+import { CancelRequestPanel } from "./CancelRequestPanel";
 import { autoDeliverDueOrders } from "@/lib/auto-deliver";
 import { notifyAutoDelivered } from "@/lib/notifications";
 
@@ -15,6 +17,7 @@ export const dynamic = "force-dynamic";
 type OrderDetail = Order & {
   items: OrderItem[];
   statusHistory: OrderStatusHistory[];
+  paymentAttempts: PaymentAttempt[];
 };
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -26,6 +29,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     include: {
       items: true,
       statusHistory: { orderBy: { createdAt: "asc" } },
+      paymentAttempts: { orderBy: { createdAt: "desc" } },
     },
   })) as OrderDetail | null;
 
@@ -49,7 +53,13 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       {order.status === "PAYMENT_PENDING" && (
         <div className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-900">
           <strong>Incomplete checkout.</strong> Customer entered details and reached payment but did not
-          finish. Call or WhatsApp them to complete the order.
+          finish. They can repay from Track Order. Call or WhatsApp them if needed.
+        </div>
+      )}
+      {order.paymentStatus === "FAILED" && (
+        <div className="rounded-xl border border-red/20 bg-red/5 px-4 py-3 text-sm text-red">
+          <strong>Last Razorpay attempt failed.</strong> Customer can retry payment from the storefront Track Order
+          page. Check the payment log below.
         </div>
       )}
 
@@ -79,6 +89,30 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           amount: i.amount,
         }))}
       />
+
+      {order.cancelStatus && (
+        <div className="min-w-0 max-w-full overflow-hidden rounded-xl border border-amber-200 bg-white p-4 shadow-sm sm:p-5">
+          <h2 className="mb-4 font-display text-lg font-semibold text-ink">
+            Cancellation Request
+            {order.cancelStatus === "PENDING" && (
+              <span className="ml-2 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-900">
+                Needs action
+              </span>
+            )}
+          </h2>
+          <CancelRequestPanel
+            orderId={order.id}
+            orderNumber={order.orderNumber}
+            cancelStatus={order.cancelStatus}
+            cancelReason={order.cancelReason}
+            cancelRequestedAt={order.cancelRequestedAt}
+            cancelAdminNote={order.cancelAdminNote}
+            cancelDecidedAt={order.cancelDecidedAt}
+            cancelDecidedBy={order.cancelDecidedBy}
+            total={order.total}
+          />
+        </div>
+      )}
 
       <div className="grid min-w-0 gap-6 lg:grid-cols-3">
         <div className="min-w-0 space-y-6 lg:col-span-2">
@@ -172,8 +206,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1 text-sm">
                 <Row label="Method" value={order.paymentMethod} />
+                <Row label="Pay status" value={PAYMENT_STATUS_LABEL[order.paymentStatus]} />
                 <Row label="UPI ID" value={order.upiId ?? "—"} />
                 <Row label="UPI Reference" value={order.upiReferenceNumber ?? "—"} />
+                <Row label="Razorpay order" value={order.razorpayOrderId ?? "—"} />
+                <Row label="Razorpay pay" value={order.razorpayPaymentId ?? "—"} />
+                <Row label="Paid at" value={order.paidAt ? formatDateTime(order.paidAt) : "—"} />
                 <Row label="Subtotal" value={formatPrice(order.subtotal)} />
                 <Row
                   label="Shipping"
@@ -190,6 +228,29 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               </div>
             </div>
           </Card>
+
+          {order.paymentAttempts.length > 0 && (
+            <Card title="Payment log">
+              <ul className="space-y-3 text-sm">
+                {order.paymentAttempts.map((attempt) => (
+                  <li key={attempt.id} className="rounded-lg border border-line bg-brandbg/50 px-3 py-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-semibold capitalize">{attempt.status}</span>
+                      <span className="text-xs text-ink-muted">{formatDateTime(attempt.createdAt)}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-ink-muted">
+                      {attempt.source} · ₹{(attempt.amount / 100).toLocaleString("en-IN")}
+                      {attempt.method ? ` · ${attempt.method}` : ""}
+                      {attempt.razorpayPaymentId ? ` · ${attempt.razorpayPaymentId}` : ""}
+                    </p>
+                    {attempt.errorDescription && (
+                      <p className="mt-1 text-xs text-red">{attempt.errorDescription}</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
 
           {/* Timeline */}
           <Card title="Status History">
@@ -264,8 +325,8 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex gap-2">
-      <span className="w-24 shrink-0 text-ink-muted">{label}</span>
-      <span className="min-w-0 break-words font-medium text-ink">{value}</span>
+      <span className="w-28 shrink-0 text-ink-muted">{label}</span>
+      <span className="min-w-0 break-all font-medium text-ink">{value}</span>
     </div>
   );
 }

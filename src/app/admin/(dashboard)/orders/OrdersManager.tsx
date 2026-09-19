@@ -18,6 +18,8 @@ interface OrderRow {
   state: string;
   total: number;
   status: OrderStatus;
+  paymentStatus?: "UNPAID" | "INITIATED" | "FAILED" | "PAID";
+  cancelRequested?: boolean;
   itemCount: number;
   createdAt: string;
 }
@@ -44,6 +46,7 @@ export function OrdersManager() {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [total, setTotal] = useState(0);
   const [status, setStatus] = useState<string>(() => searchParams.get("status") ?? "");
+  const [cancelOnly, setCancelOnly] = useState(false);
   const [query, setQuery] = useState("");
   const [datePreset, setDatePreset] = useState<DatePreset>("");
   const [page, setPage] = useState(0);
@@ -59,6 +62,7 @@ export function OrdersManager() {
     try {
       const params = new URLSearchParams();
       if (status) params.set("status", status);
+      if (cancelOnly) params.set("cancelRequested", "1");
       if (query.trim()) params.set("q", query.trim());
       params.set("take", String(PAGE_SIZE));
       params.set("skip", String(page * PAGE_SIZE));
@@ -83,7 +87,7 @@ export function OrdersManager() {
     } finally {
       setLoading(false);
     }
-  }, [status, query, datePreset, page]);
+  }, [status, query, datePreset, page, cancelOnly]);
 
   useEffect(() => {
     const timer = setTimeout(load, 250);
@@ -93,7 +97,7 @@ export function OrdersManager() {
   useEffect(() => {
     setPage(0);
     setSelected(new Set());
-  }, [status, query, datePreset]);
+  }, [status, query, datePreset, cancelOnly]);
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
@@ -140,7 +144,7 @@ export function OrdersManager() {
     if (!res.ok) return;
     const data = await res.json();
     const rows: string[][] = [
-      ["Order", "Customer", "Phone", "City", "State", "Items", "Total", "Status", "Date"],
+      ["Order", "Customer", "Phone", "City", "State", "Items", "Total", "Status", "Payment", "Date"],
       ...data.orders.map((o: OrderRow) => [
         o.orderNumber,
         o.customerName,
@@ -150,6 +154,7 @@ export function OrdersManager() {
         String(o.itemCount),
         String(o.total),
         o.status,
+        o.paymentStatus ?? "",
         o.createdAt,
       ]),
     ];
@@ -205,7 +210,10 @@ export function OrdersManager() {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <FilterChip label="All" active={status === ""} onClick={() => setStatus("")} />
+        <FilterChip label="All" active={status === "" && !cancelOnly} onClick={() => {
+          setStatus("");
+          setCancelOnly(false);
+        }} />
         {ORDER_STATUSES.map((s) => (
           <FilterChip
             key={s.key}
@@ -214,6 +222,14 @@ export function OrdersManager() {
             onClick={() => setStatus(s.key)}
           />
         ))}
+        <FilterChip
+          label="⚠ Cancel requested"
+          active={cancelOnly}
+          onClick={() => {
+            setStatus("");
+            setCancelOnly((v) => !v);
+          }}
+        />
       </div>
 
       {selected.size > 0 && (
@@ -267,6 +283,7 @@ export function OrdersManager() {
                 <th className="px-4 py-3 font-semibold">Items</th>
                 <th className="px-4 py-3 font-semibold">Total</th>
                 <th className="px-4 py-3 font-semibold">Status</th>
+                <th className="px-4 py-3 font-semibold">Payment</th>
                 <th className="px-4 py-3 font-semibold">Date</th>
                 <th className="px-4 py-3 font-semibold">Actions</th>
               </tr>
@@ -301,6 +318,30 @@ export function OrdersManager() {
                   <td className="px-4 py-3 font-semibold">{formatPrice(order.total)}</td>
                   <td className="px-4 py-3">
                     <StatusBadge status={order.status} />
+                    {order.cancelRequested && (
+                      <span className="mt-1 block w-fit rounded-full bg-amber-100 px-2 py-0.5 text-[0.65rem] font-bold text-amber-900">
+                        ⚠ Cancel requested
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`inline-block whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${
+                        order.paymentStatus === "PAID"
+                          ? "bg-green-100 text-green-800"
+                          : order.paymentStatus === "FAILED"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-orange-100 text-orange-800"
+                      }`}
+                    >
+                      {order.paymentStatus === "PAID"
+                        ? "Paid"
+                        : order.paymentStatus === "FAILED"
+                          ? "Failed"
+                          : order.paymentStatus === "INITIATED"
+                            ? "Started"
+                            : "Unpaid"}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-ink-muted">{formatDateTime(order.createdAt)}</td>
                   <td className="px-4 py-3">
@@ -331,14 +372,14 @@ export function OrdersManager() {
               ))}
               {!loading && orders.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-ink-muted">
+                  <td colSpan={10} className="px-4 py-12 text-center text-ink-muted">
                     No orders match your filters.
                   </td>
                 </tr>
               )}
               {loading && (
                 <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-ink-muted">
+                  <td colSpan={10} className="px-4 py-12 text-center text-ink-muted">
                     Loading orders...
                   </td>
                 </tr>

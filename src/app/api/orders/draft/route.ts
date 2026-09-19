@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
       data: {
         ...customerOrderFields(customer),
         paymentMethod: paymentMethod?.trim() || existing.paymentMethod,
+        paymentStatus: "UNPAID",
         upiId: BUSINESS.upiId,
         subtotal,
         total,
@@ -97,6 +98,7 @@ export async function POST(request: NextRequest) {
           orderNumber,
           ...customerOrderFields(customer),
           paymentMethod: paymentMethod?.trim() || "UPI QR",
+          paymentStatus: "UNPAID",
           upiId: BUSINESS.upiId,
           subtotal,
           total,
