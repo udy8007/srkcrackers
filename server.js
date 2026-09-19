@@ -1,27 +1,42 @@
 "use strict";
 
 /**
- * cPanel / Passenger startup file (application root).
- *
- * Upload this file to the Node.js app root, e.g.:
- *   /home/srkcrack/srkcrackers/server.js
- * Startup file in cPanel must be: server.js  (this file, not .next/standalone/server.js)
- *
- * Node.js version MUST be 20+ (Setup Node.js App → Node.js version).
- * System /usr/bin/node is often v10 and cannot load Next.js 15.
- *
- * /api/health is answered HERE so Git/File Manager update of this one file
- * is enough to see env + MySQL status (the old Next pack does not include that).
+ * cPanel / Passenger startup file.
+ * Always binds PORT (same pattern as the smoke test), shows /__debug,
+ * then tries to boot Next.js without taking over the port.
  */
 
 var fs = require("fs");
 var path = require("path");
 var http = require("http");
-var execSync = require("child_process").execSync;
+var spawn = require("child_process").spawn;
+
+var WRAPPER = "cpanel-wrapper-2026-09-19-debug";
+var port = Number(process.env.PORT || process.env.PASSENGER_PORT || 3000);
+var bootLog = [];
+var bootError = "";
+var status = "booting";
+var nextServer = null;
+var wrapperServer = null;
+
+function log(message) {
+  var line = new Date().toISOString() + " " + message;
+  bootLog.push(line);
+  if (bootLog.length > 80) bootLog.shift();
+  console.log("[cpanel] " + message);
+}
+
+function esc(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
 
 function loadEnvFile(file) {
-  if (!fs.existsSync(file)) return;
+  if (!fs.existsSync(file)) return false;
   var lines = fs.readFileSync(file, "utf8").split(/\r?\n/);
+  var loaded = 0;
   for (var i = 0; i < lines.length; i++) {
     var line = lines[i].trim();
     if (!line || line.charAt(0) === "#") continue;
@@ -37,249 +52,244 @@ function loadEnvFile(file) {
     }
     if (process.env[key] == null || process.env[key] === "") {
       process.env[key] = val;
+      loaded += 1;
     }
   }
+  log("loaded " + loaded + " keys from " + path.basename(file));
+  return true;
 }
 
 function loadAppEnv() {
-  loadEnvFile(path.join(__dirname, ".env"));
-  loadEnvFile(path.join(__dirname, ".env.production"));
-  loadEnvFile(path.join(__dirname, ".env.local"));
-}
-
-loadAppEnv();
-
-function extractDeployPack() {
-  var pack = path.join(__dirname, "pack.tar.gz");
-  if (!fs.existsSync(pack)) return;
-  console.log("[cpanel] extracting pack.tar.gz");
-  try {
-    execSync("tar -xzf pack.tar.gz", {
-      cwd: __dirname,
-      stdio: "inherit",
-      env: Object.assign({}, process.env, {
-        PATH: (process.env.PATH || "") + ":/usr/bin:/bin",
-      }),
-    });
-    fs.unlinkSync(pack);
-    console.log("[cpanel] pack extracted");
-  } catch (err) {
-    console.error("[cpanel] pack extract failed:", err && err.message ? err.message : err);
-  }
-}
-
-function listenNeedNode20() {
-  var port = Number(process.env.PORT || process.env.PASSENGER_PORT || 3000);
-  var host = "127.0.0.1";
-  var html =
-    "<!DOCTYPE html><html><body style='font-family:sans-serif;padding:2rem;max-width:40rem'>" +
-    "<h1>SRK Crackers</h1>" +
-    "<p>This app needs <b>Node.js 20 or newer</b>. The server is running <b>" +
-    process.version +
-    "</b>.</p>" +
-    "<ol><li>hPanel → <b>Setup Node.js App</b></li>" +
-    "<li>Open this application</li>" +
-    "<li>Set <b>Node.js version</b> to 20, 22, or 24</li>" +
-    "<li>Save, then <b>Restart</b></li></ol>" +
-    "</body></html>";
-  http
-    .createServer(function (req, res) {
-      res.writeHead(503, {
-        "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "no-store",
-      });
-      res.end(html);
-    })
-    .listen(port, host, function () {
-      console.error("[cpanel] Node " + process.version + " is too old. Set Setup Node.js App to 20/22/24, then Restart.");
-    });
-}
-
-extractDeployPack();
-
-var nodeMajor = parseInt(String(process.versions.node).split(".")[0], 10);
-if (!(nodeMajor >= 20)) {
-  listenNeedNode20();
-  return;
-}
-
-const WRAPPER = "cpanel-wrapper-2026-09-19-pack";
-
-process.env.NODE_ENV = process.env.NODE_ENV || "production";
-
-if (!process.env.PORT && process.env.PASSENGER_PORT) {
-  process.env.PORT = String(process.env.PASSENGER_PORT);
-}
-
-process.env.HOSTNAME = "127.0.0.1";
-process.env.HOST = "127.0.0.1";
-
-function envRaw(name) {
-  const value = process.env[name];
-  if (!value) return "";
-  let next = String(value).trim();
-  if (
-    (next.startsWith('"') && next.endsWith('"')) ||
-    (next.startsWith("'") && next.endsWith("'"))
-  ) {
-    next = next.slice(1, -1).trim();
-  }
-  return next;
+  var found =
+    loadEnvFile(path.join(__dirname, ".env")) ||
+    loadEnvFile(path.join(__dirname, ".env.production")) ||
+    loadEnvFile(path.join(__dirname, ".env.local"));
+  if (!found) log("no .env file in app root");
 }
 
 function envSet(name) {
-  return Boolean(envRaw(name));
+  var value = process.env[name];
+  return Boolean(value && String(value).trim());
+}
+
+function pathnameOf(req) {
+  return String(req.url || "/").split("?")[0];
+}
+
+function isDebug(req) {
+  var p = pathnameOf(req);
+  return p === "/__debug" || p === "/debug" || p === "/debug/" || p === "/__debug/";
 }
 
 function isHealth(req) {
-  const pathname = String(req.url || "").split("?")[0];
-  return pathname === "/api/health" || pathname === "/api/health/";
+  var p = pathnameOf(req);
+  return p === "/api/health" || p === "/api/health/";
 }
 
-function probeMysql() {
-  return new Promise((resolve) => {
-    const url = envRaw("DATABASE_URL");
-    if (!url) {
-      resolve({ ok: false, error: "DATABASE_URL missing in Passenger env" });
-      return;
-    }
-    if (!/^mysql(s)?:\/\//i.test(url)) {
-      resolve({ ok: false, error: "DATABASE_URL is not a mysql:// URL" });
-      return;
-    }
-
-    let parsed;
-    try {
-      parsed = new URL(url);
-    } catch (err) {
-      resolve({ ok: false, error: `invalid DATABASE_URL: ${err instanceof Error ? err.message : "parse"}` });
-      return;
-    }
-
-    const port = Number(parsed.port) || 3306;
-    const socket = require("net").connect({ host: parsed.hostname, port }, () => {
-      socket.end();
-      resolve({ ok: true, error: null });
-    });
-    socket.on("error", (err) => {
-      resolve({ ok: false, error: `mysql network: ${err.message}` });
-    });
-    socket.setTimeout(8000, () => {
-      socket.destroy();
-      resolve({ ok: false, error: "mysql timeout (8s) — host or port may be blocked" });
-    });
-  });
-}
-
-async function healthPayload() {
-  const standaloneDir = path.join(__dirname, ".next", "standalone");
-  const standaloneServer = path.join(standaloneDir, "server.js");
-  const mysql = await probeMysql();
+function debugPayload() {
+  var standalone = path.join(__dirname, ".next", "standalone", "server.js");
   return {
-    status: mysql.ok ? "ok" : "degraded",
-    database: mysql.ok ? "up" : "down",
     wrapper: WRAPPER,
-    standalone: fs.existsSync(standaloneServer),
+    status: status,
+    nextReady: Boolean(nextServer),
+    error: bootError || null,
+    node: process.version,
+    port: port,
     cwd: process.cwd(),
     startupFile: __filename,
-    node: process.version,
+    standalone: fs.existsSync(standalone),
+    packWaiting: fs.existsSync(path.join(__dirname, "pack.tar.gz")),
     env: {
       DATABASE_URL: envSet("DATABASE_URL"),
       AUTH_SECRET: envSet("AUTH_SECRET"),
       NEXTAUTH_SECRET: envSet("NEXTAUTH_SECRET"),
       AUTH_TRUST_HOST: envSet("AUTH_TRUST_HOST"),
-      CRON_SECRET: envSet("CRON_SECRET"),
+      EMAIL_SMTP_HOST: envSet("EMAIL_SMTP_HOST"),
+      RAZORPAY_KEY_ID: envSet("RAZORPAY_KEY_ID"),
     },
-    error: mysql.error,
+    log: bootLog.slice(-40),
     timestamp: new Date().toISOString(),
   };
 }
 
-function sendHealth(_req, res) {
-  healthPayload()
-    .then((body) => {
-      const code = body.database === "up" ? 200 : 503;
-      res.writeHead(code, {
-        "Content-Type": "application/json; charset=utf-8",
-        "Cache-Control": "no-store",
-        "X-SRK-Health": WRAPPER,
-      });
-      res.end(JSON.stringify(body));
-    })
-    .catch((err) => {
-      res.writeHead(503, {
-        "Content-Type": "application/json; charset=utf-8",
-        "Cache-Control": "no-store",
-        "X-SRK-Health": WRAPPER,
-      });
-      res.end(
-        JSON.stringify({
-          status: "degraded",
-          database: "down",
-          wrapper: WRAPPER,
-          error: err instanceof Error ? err.message : "health failed",
-          timestamp: new Date().toISOString(),
-        }),
-      );
-    });
+function sendDebug(res) {
+  var data = debugPayload();
+  var rows =
+    "<tr><th>Status</th><td>" + esc(data.status) + "</td></tr>" +
+    "<tr><th>Next.js</th><td>" + (data.nextReady ? "ready" : "not started") + "</td></tr>" +
+    "<tr><th>Node</th><td>" + esc(data.node) + "</td></tr>" +
+    "<tr><th>PORT</th><td>" + esc(data.port) + "</td></tr>" +
+    "<tr><th>DATABASE_URL</th><td>" + (data.env.DATABASE_URL ? "set" : "MISSING") + "</td></tr>" +
+    "<tr><th>AUTH_SECRET</th><td>" + (data.env.AUTH_SECRET ? "set" : "missing") + "</td></tr>" +
+    "<tr><th>standalone/server.js</th><td>" + (data.standalone ? "found" : "MISSING") + "</td></tr>" +
+    "<tr><th>pack.tar.gz</th><td>" + (data.packWaiting ? "waiting to extract" : "not present") + "</td></tr>" +
+    "<tr><th>Error</th><td>" + esc(data.error || "none") + "</td></tr>";
+  var logs = data.log.map(function (line) {
+    return esc(line);
+  }).join("\n");
+  var html =
+    "<!DOCTYPE html><html><head><meta charset='utf-8'><title>SRK debug</title>" +
+    "<meta http-equiv='refresh' content='8'>" +
+    "<style>body{font-family:sans-serif;padding:1.5rem;max-width:52rem;color:#111}" +
+    "h1{color:#b45309}table{border-collapse:collapse;width:100%}" +
+    "th,td{border:1px solid #ddd;padding:.45rem .6rem;text-align:left}" +
+    "th{width:12rem;background:#f8fafc}pre{background:#0f172a;color:#e2e8f0;padding:1rem;overflow:auto}</style>" +
+    "</head><body>" +
+    "<h1>SRK debug</h1>" +
+    "<p>This page stays up even if the shop fails to boot. Shop: <a href='/'>/</a></p>" +
+    "<table>" + rows + "</table>" +
+    "<h2>Boot log</h2><pre>" + logs + "</pre>" +
+    "</body></html>";
+  res.writeHead(data.nextReady ? 200 : 503, {
+    "Content-Type": "text/html; charset=utf-8",
+    "Cache-Control": "no-store",
+  });
+  res.end(html);
 }
 
-function wrapRequestListener(listener) {
-  return function wrapped(req, res) {
-    if (isHealth(req)) {
-      sendHealth(req, res);
-      return;
+function sendHealth(res) {
+  var data = debugPayload();
+  res.writeHead(data.nextReady && data.env.DATABASE_URL ? 200 : 503, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store",
+  });
+  res.end(JSON.stringify(data, null, 2));
+}
+
+function handleRequest(req, res) {
+  if (isDebug(req)) {
+    sendDebug(res);
+    return;
+  }
+  if (isHealth(req)) {
+    sendHealth(res);
+    return;
+  }
+  if (nextServer) {
+    nextServer.emit("request", req, res);
+    return;
+  }
+  sendDebug(res);
+}
+
+function extractPack(done) {
+  var pack = path.join(__dirname, "pack.tar.gz");
+  if (!fs.existsSync(pack)) {
+    log("no pack.tar.gz (using files already on disk)");
+    done();
+    return;
+  }
+  log("extracting pack.tar.gz");
+  var child = spawn("tar", ["-xzf", "pack.tar.gz"], {
+    cwd: __dirname,
+    env: Object.assign({}, process.env, {
+      PATH: (process.env.PATH || "") + ":/usr/bin:/bin",
+    }),
+  });
+  child.stderr.on("data", function (chunk) {
+    log("tar: " + String(chunk).trim());
+  });
+  child.on("error", function (err) {
+    bootError = err.message || String(err);
+    log("tar failed: " + bootError);
+    done();
+  });
+  child.on("close", function (code) {
+    if (code === 0) {
+      try {
+        fs.unlinkSync(pack);
+      } catch (e) {}
+      log("pack extracted");
+    } else {
+      bootError = "tar exited " + code;
+      log(bootError);
     }
-    if (typeof listener === "function") listener.call(this, req, res);
+    loadAppEnv();
+    done();
+  });
+}
+
+function bootNext() {
+  var nodeMajor = parseInt(String(process.versions.node).split(".")[0], 10);
+  if (!(nodeMajor >= 20)) {
+    status = "failed";
+    bootError = "Node " + process.version + " is too old; set Setup Node.js App to 20/22/24";
+    log(bootError);
+    return;
+  }
+
+  process.env.NODE_ENV = process.env.NODE_ENV || "production";
+  var standalone = path.join(__dirname, ".next", "standalone", "server.js");
+  if (!fs.existsSync(standalone)) {
+    status = "failed";
+    bootError = "Missing .next/standalone/server.js";
+    log(bootError);
+    return;
+  }
+
+  try {
+    process.chdir(path.dirname(standalone));
+    log("chdir " + process.cwd());
+    require(standalone);
+    status = nextServer ? "ready" : "failed";
+    if (!nextServer) {
+      bootError = "Next.js loaded but did not create an HTTP server";
+      log(bootError);
+    } else {
+      log("Next.js ready");
+    }
+  } catch (err) {
+    status = "failed";
+    bootError = err && err.stack ? err.stack : String(err);
+    log("Next.js boot failed: " + (err && err.message ? err.message : err));
+  }
+}
+
+process.on("uncaughtException", function (err) {
+  bootError = err && err.stack ? err.stack : String(err);
+  if (status !== "ready") status = "failed";
+  log("uncaughtException: " + (err && err.message ? err.message : err));
+});
+
+process.on("unhandledRejection", function (err) {
+  var message = err && err.message ? err.message : String(err);
+  log("unhandledRejection: " + message);
+  if (status !== "ready") {
+    status = "failed";
+    bootError = String(err && err.stack ? err.stack : err);
+  }
+});
+
+loadAppEnv();
+
+var origListen = http.Server.prototype.listen;
+http.Server.prototype.listen = function () {
+  if (this._srkWrapper) {
+    return origListen.apply(this, arguments);
+  }
+  nextServer = this;
+  log("captured Next.js listen(); keeping wrapper on PORT " + port);
+  this.address = function () {
+    return { port: port, address: "127.0.0.1", family: "IPv4" };
   };
-}
+  var args = Array.prototype.slice.call(arguments);
+  var cb;
+  for (var i = 0; i < args.length; i++) {
+    if (typeof args[i] === "function") cb = args[i];
+  }
+  var self = this;
+  process.nextTick(function () {
+    self.emit("listening");
+    if (cb) cb();
+  });
+  return this;
+};
 
-function installHealthIntercept() {
-  const origCreateServer = http.createServer;
-  http.createServer = function (options, listener) {
-    if (typeof options === "function") {
-      return origCreateServer.call(this, wrapRequestListener(options));
-    }
-    if (typeof listener === "function") {
-      return origCreateServer.call(this, options, wrapRequestListener(listener));
-    }
-    return origCreateServer.call(this, options, listener);
-  };
-}
-
-const standaloneDir = path.join(__dirname, ".next", "standalone");
-const standaloneServer = path.join(standaloneDir, "server.js");
-
-if (!fs.existsSync(standaloneServer)) {
-  const htmlPath = path.join(__dirname, "public", "srk-contact.html");
-  const html = fs.existsSync(htmlPath)
-    ? fs.readFileSync(htmlPath)
-    : Buffer.from(
-        "<!DOCTYPE html><html><body style='font-family:sans-serif;padding:2rem'>" +
-          "<h1>SRK Crackers</h1><p>Website is temporarily down.</p>" +
-          "<p><a href='https://wa.me/919841916899'>WhatsApp 98419 16899</a></p>" +
-          "</body></html>",
-      );
-  const port = Number(process.env.PORT) || 3000;
-  const host = process.env.HOSTNAME || "127.0.0.1";
-  http
-    .createServer((req, res) => {
-      if (isHealth(req)) {
-        sendHealth(req, res);
-        return;
-      }
-      res.writeHead(503, {
-        "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "no-store",
-        "Retry-After": "120",
-      });
-      res.end(html);
-    })
-    .listen(port, host, () => {
-      console.error("[cpanel] Missing .next/standalone/server.js — serving site-down page on", host, port);
-    });
-} else {
-  installHealthIntercept();
-  process.chdir(standaloneDir);
-  require(standaloneServer);
-}
+wrapperServer = http.createServer(handleRequest);
+wrapperServer._srkWrapper = true;
+wrapperServer.listen(port, function () {
+  log("debug wrapper listening on PORT " + port + " Node " + process.version);
+  extractPack(function () {
+    bootNext();
+  });
+});

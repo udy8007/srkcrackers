@@ -36,43 +36,13 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     environment: Production
-    timeout-minutes: 45
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build cPanel standalone pack
-        env:
-          NODE_ENV: production
-          AUTH_TRUST_HOST: "true"
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET || vars.AUTH_SECRET }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || vars.NEXTAUTH_SECRET }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
-        run: |
-          if [ -z "$AUTH_SECRET" ] && [ -z "$NEXTAUTH_SECRET" ]; then
-            export AUTH_SECRET="github-actions-build-placeholder"
-            export NEXTAUTH_SECRET="$AUTH_SECRET"
-            echo "AUTH_SECRET not set; using a build-only placeholder (set it in cPanel for runtime)."
-          fi
-          if [ -z "$DATABASE_URL" ]; then
-            unset DATABASE_URL
-            export DATABASE_URL="mysql://build:build@127.0.0.1:3306/build"
-            echo "No DATABASE_URL; using a placeholder for Prisma generate/build."
-            echo "Set MYSQL DATABASE_URL in cPanel for the live catalog."
-          fi
-          npm run build:cpanel
-
-      - name: Stage production build files
+      - name: Stage debug wrapper
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
           AUTH_SECRET: ${{ secrets.AUTH_SECRET || vars.AUTH_SECRET }}
@@ -89,51 +59,27 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf deploy
-          mkdir -p deploy/.next deploy/tmp
+          mkdir -p deploy/tmp
           cp server.js deploy/server.js
           cp package.json deploy/package.json
-          cp cpanel/passenger.htaccess deploy/.htaccess
-          cp -a .next/standalone deploy/.next/standalone
           date -u +"%Y-%m-%dT%H:%M:%SZ" > deploy/tmp/restart.txt
           python3 - <<'PY'
           import os
-          keys = [
-              "DATABASE_URL",
-              "AUTH_SECRET",
-              "NEXTAUTH_SECRET",
-              "AUTH_TRUST_HOST",
-              "EMAIL_SMTP_HOST",
-              "EMAIL_SMTP_PORT",
-              "EMAIL_SMTP_USERNAME",
-              "EMAIL_SMTP_PASSWORD",
-              "EMAIL_ADMIN_NOTIFY",
-              "RAZORPAY_KEY_ID",
-              "RAZORPAY_KEY_SECRET",
-              "RAZORPAY_WEBHOOK_SECRET",
-          ]
+          keys = ["DATABASE_URL", "AUTH_SECRET", "NEXTAUTH_SECRET", "AUTH_TRUST_HOST", "EMAIL_SMTP_HOST", "EMAIL_SMTP_PORT", "EMAIL_SMTP_USERNAME", "EMAIL_SMTP_PASSWORD", "EMAIL_ADMIN_NOTIFY", "RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET", "RAZORPAY_WEBHOOK_SECRET"]
           lines = []
           present = []
           for key in keys:
               value = (os.environ.get(key) or "").strip()
               if not value:
                   continue
-              if "\n" in value or "\r" in value:
-                  raise SystemExit(f"{key} contains a newline")
               lines.append(f"{key}={value}\n")
               present.append(key)
-          if not lines:
-              print("No runtime secrets to write into deploy/.env")
-          else:
-              with open("deploy/.env", "w", encoding="utf-8") as handle:
-                  handle.writelines(lines)
-              print("Wrote deploy/.env with: " + ", ".join(present))
+          with open("deploy/.env", "w", encoding="utf-8") as handle:
+              handle.writelines(lines)
+          print("Wrote deploy/.env with: " + (", ".join(present) if present else "(empty)"))
           PY
+          echo "Uploading debug wrapper + .env only"
           test -f deploy/server.js
-          test -f deploy/.next/standalone/server.js
-          echo "Staged:"
-          du -sh deploy
-          tar -czf pack.tar.gz -C deploy .
-          ls -lh pack.tar.gz
 
       - name: Check and normalize FTP host
         id: ftp
@@ -260,7 +206,7 @@ jobs:
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
           LOCAL_DIR: ./deploy
-          ARCHIVE_PATH: ./pack.tar.gz
+          SKIP_ARCHIVE: "1"
         run: |
           set -euo pipefail
           if [ -z "${FTP_USERNAME:-}" ] || [ -z "${FTP_PASSWORD:-}" ]; then

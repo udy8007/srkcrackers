@@ -251,10 +251,11 @@ class HostingerFtp:
 
         self.retry(go)
 
-    def upload_pack(self, local_dir: Path, archive: Path) -> None:
+    def upload_pack(self, local_dir: Path, archive: Path | None) -> None:
         self._goto_root()
-        self.upload_file(archive, "pack.tar.gz")
-        self._goto_root()
+        if archive is not None:
+            self.upload_file(archive, "pack.tar.gz")
+            self._goto_root()
         self.upload_file(local_dir / "server.js", "server.js")
         package_json = local_dir / "package.json"
         if package_json.exists():
@@ -293,17 +294,25 @@ class HostingerFtp:
 
 def main() -> int:
     local_dir = Path(env("LOCAL_DIR") or "./deploy").resolve()
+    skip_archive = env("SKIP_ARCHIVE") in {"1", "true", "yes"}
     archive = Path(env("ARCHIVE_PATH") or str(local_dir.parent / "pack.tar.gz")).resolve()
     if not local_dir.is_dir():
         raise SystemExit(f"Local pack not found: {local_dir}")
-    if not archive.is_file():
-        raise SystemExit(f"Archive not found: {archive}")
+    if skip_archive:
+        archive_path = None
+    else:
+        if not archive.is_file():
+            raise SystemExit(f"Archive not found: {archive}")
+        archive_path = archive
 
     session = HostingerFtp()
     session.connect()
     try:
-        session.upload_pack(local_dir, archive)
-        print(f"Uploaded pack archive {archive.name} ({archive.stat().st_size / (1024 * 1024):.1f} MB)")
+        session.upload_pack(local_dir, archive_path)
+        if skip_archive:
+            print("Uploaded startup files without pack archive")
+        else:
+            print(f"Uploaded pack archive {archive.name} ({archive.stat().st_size / (1024 * 1024):.1f} MB)")
     finally:
         session.close()
     return 0
