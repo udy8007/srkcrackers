@@ -2,7 +2,8 @@ import type { MetadataRoute } from "next";
 import { resolveSiteOrigin } from "@/lib/site-url";
 import { listActiveSeoProducts, productSeoPath } from "@/lib/seo-products";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const origin = await resolveSiteOrigin();
@@ -25,6 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const products = await listActiveSeoProducts();
     for (const product of products) {
+      if (!product.slug) continue;
       entries.push({
         url: `${origin}${productSeoPath(product.slug)}`,
         lastModified: product.updatedAt,
