@@ -11,8 +11,24 @@ var path = require("path");
 var http = require("http");
 var spawn = require("child_process").spawn;
 
-var WRAPPER = "cpanel-wrapper-2026-09-19-server-btn";
+var WRAPPER = "cpanel-wrapper-2026-09-19-basepath";
 var port = Number(process.env.PORT || process.env.PASSENGER_PORT || 3000);
+var KNOWN_ROOTS = {
+  _next: 1,
+  api: 1,
+  admin: 1,
+  crackers: 1,
+  "1000-wala": 1,
+  products: 1,
+  shop: 1,
+  lottie: 1,
+  "favicon.ico": 1,
+  "robots.txt": 1,
+  "sitemap.xml": 1,
+  "srk-contact.html": 1,
+  __debug: 1,
+  debug: 1,
+};
 var bootLog = [];
 var bootError = "";
 var status = "booting";
@@ -76,6 +92,36 @@ function pathnameOf(req) {
   return String(req.url || "/").split("?")[0];
 }
 
+function passengerBase() {
+  var raw =
+    process.env.PASSENGER_BASE_URI ||
+    process.env.PASSENGER_APP_BASE_URI ||
+    process.env.BASE_PATH ||
+    "";
+  raw = String(raw).trim();
+  if (!raw || raw === "/") return "";
+  if (raw.charAt(0) !== "/") raw = "/" + raw;
+  return raw.replace(/\/+$/, "");
+}
+
+function stripMount(req) {
+  var url = String(req.url || "/");
+  var q = url.indexOf("?");
+  var pathname = q === -1 ? url : url.slice(0, q);
+  var query = q === -1 ? "" : url.slice(q);
+  var base = passengerBase();
+  if (!base) {
+    var first = pathname.split("/").filter(Boolean)[0] || "";
+    if (first && !KNOWN_ROOTS[first]) base = "/" + first;
+  }
+  if (!base) return;
+  if (pathname === base || pathname.indexOf(base + "/") === 0) {
+    var rest = pathname.slice(base.length) || "/";
+    if (rest.charAt(0) !== "/") rest = "/" + rest;
+    req.url = rest + query;
+  }
+}
+
 function isDebug(req) {
   var p = pathnameOf(req);
   return p === "/__debug" || p === "/debug" || p === "/debug/" || p === "/__debug/";
@@ -99,6 +145,7 @@ function debugPayload() {
     startupFile: __filename,
     standalone: fs.existsSync(standalone),
     packWaiting: fs.existsSync(path.join(__dirname, "pack.tar.gz")),
+    mount: passengerBase() || "(auto)",
     env: {
       DATABASE_URL: envSet("DATABASE_URL"),
       AUTH_SECRET: envSet("AUTH_SECRET"),
@@ -122,6 +169,7 @@ function debugRows(data) {
     "<tr><th>AUTH_SECRET</th><td>" + (data.env.AUTH_SECRET ? "set" : "missing") + "</td></tr>" +
     "<tr><th>standalone/server.js</th><td>" + (data.standalone ? "found" : "MISSING") + "</td></tr>" +
     "<tr><th>pack.tar.gz</th><td>" + (data.packWaiting ? "waiting to extract" : "not present") + "</td></tr>" +
+    "<tr><th>URL prefix</th><td>" + esc(data.mount || "") + "</td></tr>" +
     "<tr><th>Error</th><td>" + esc(data.error || "none") + "</td></tr>"
   );
 }
@@ -215,6 +263,7 @@ function sendHealth(res) {
 }
 
 function handleRequest(req, res) {
+  stripMount(req);
   if (isHealth(req)) {
     sendHealth(res);
     return;
@@ -382,6 +431,7 @@ wrapperServer = http.createServer(handleRequest);
 wrapperServer._srkWrapper = true;
 wrapperServer.listen(port, function () {
   log("debug wrapper listening on PORT " + port + " Node " + process.version);
+  log("application prefix " + (passengerBase() || "(none, will auto-strip unknown first path)"));
   if (fs.existsSync(standalonePath())) {
     log("standalone already present; starting shop without waiting for tar");
     bootNext();
