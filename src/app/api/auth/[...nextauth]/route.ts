@@ -4,8 +4,8 @@ import { appBasePath } from "@/lib/app-base-path";
 
 /**
  * Next.js strips `basePath` from the App Router request URL. Auth.js then
- * fails to parse `/api/auth/session` against `/abc/api/auth` and returns 400.
- * Put the mount back on the URL before Auth.js sees it.
+ * fails to parse `/api/auth/session` against that prefixed path and returns 400.
+ * Put the mount back on the URL before Auth.js sees it. No-op at domain root.
  */
 function withAuthBasePath(req: NextRequest): NextRequest {
   const mount = appBasePath();

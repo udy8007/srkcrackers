@@ -20,7 +20,8 @@
 #
 # After upload, tmp/restart.txt tells Passenger / Setup Node.js App to reload.
 # Live shop URL is hardcoded on the job env block below and baked into the build:
-#   https://lively-orange-orangutan.148-113-0-192.cpanel.site/abc
+#   https://www.srkcrackers.in
+# In hPanel → Setup Node.js App, Application URL must be / (not /abc).
 # Do not upload secret .env files from the repo; MySQL + Auth stay in cPanel.
 
 name: Build and deploy to Hostinger FTP
@@ -40,13 +41,11 @@ jobs:
     environment: Production
     timeout-minutes: 45
     env:
-      # Live shop URL on this Hostinger Node app. Baked into the client at build
-      # time so every link, email, auth redirect, and fetch stays under /abc.
-      NEXT_PUBLIC_BASE_PATH: /abc
-      NEXT_PUBLIC_SITE_URL: https://lively-orange-orangutan.148-113-0-192.cpanel.site/abc
-      APP_URL: https://lively-orange-orangutan.148-113-0-192.cpanel.site/abc
-      AUTH_URL: https://lively-orange-orangutan.148-113-0-192.cpanel.site/abc/api/auth
-      NEXTAUTH_URL: https://lively-orange-orangutan.148-113-0-192.cpanel.site/abc/api/auth
+      # Live shop on www.srkcrackers.in at the domain root (no /abc mount).
+      NEXT_PUBLIC_SITE_URL: https://www.srkcrackers.in
+      APP_URL: https://www.srkcrackers.in
+      AUTH_URL: https://www.srkcrackers.in/api/auth
+      NEXTAUTH_URL: https://www.srkcrackers.in/api/auth
 
     steps:
       - name: Checkout

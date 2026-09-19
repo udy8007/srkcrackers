@@ -4,7 +4,7 @@ import type { EnquiryStatus, OrderStatus, PaymentStatus } from "@/lib/db/types";
 export const BUSINESS = {
   name: "SRK Crackers",
   tagline: "Licensed Fireworks Dealer",
-  url: (process.env.NEXT_PUBLIC_SITE_URL || "https://www.srkcrackers.in").replace(/\/+$/, "") as string,
+  url: "https://www.srkcrackers.in" as string,
   phone: "9841916899",
   phoneDisplay: "98419 16899",
   whatsapp: "919841916899",

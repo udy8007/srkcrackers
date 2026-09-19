@@ -30,8 +30,8 @@ export function publicSiteUrlFromAbsolute(link: string): string {
 }
 
 /**
- * Public site URL for the current request: https://host or https://host/abc
- * when Hostinger mounts the Node app under an Application URL path.
+ * Public site URL: https://www.srkcrackers.in in production, or the request host
+ * when NEXT_PUBLIC_SITE_URL is not set (local dev).
  */
 export async function resolveSiteOrigin(): Promise<string> {
   const configured = configuredSiteUrl();
