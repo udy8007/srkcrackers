@@ -30,7 +30,7 @@ interface EmailSettingsFormData {
 const DEFAULTS: EmailSettingsFormData = {
   enabled: false,
   host: "",
-  port: 465,
+  port: 587,
   enableSsl: true,
   username: "",
   password: "",
@@ -191,7 +191,12 @@ export function EmailSettingsForm() {
 
       <div className="rounded-xl border border-line bg-white p-5 shadow-sm">
         <h3 className="font-display text-base font-semibold text-ink">SMTP Configuration</h3>
-        <p className="mt-1 mb-4 text-sm text-ink-muted">Advanced mail server settings (Hostinger, Gmail, etc.)</p>
+        <p className="mt-1 mb-4 text-sm text-ink-muted">
+          On Hostinger Node.js, smtp.hostinger.com:465 is blocked (Cloudflare). Use port 587
+          (STARTTLS) and host <span className="font-mono">localhost</span> or{" "}
+          <span className="font-mono">srkcrackers.in</span>. A successful test saves the working host
+          and port automatically.
+        </p>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block sm:col-span-2">
@@ -200,7 +205,7 @@ export function EmailSettingsForm() {
               className="input"
               value={form.host}
               onChange={(e) => update("host", e.target.value)}
-              placeholder="smtp.hostinger.com"
+              placeholder="localhost"
             />
           </label>
           <label className="block">
@@ -209,7 +214,14 @@ export function EmailSettingsForm() {
               type="number"
               className="input"
               value={form.port}
-              onChange={(e) => update("port", Number(e.target.value))}
+              onChange={(e) => {
+                const port = Number(e.target.value);
+                setForm((prev) => ({
+                  ...prev,
+                  port,
+                  enableSsl: port === 465 || port === 587 ? true : prev.enableSsl,
+                }));
+              }}
             />
           </label>
           <label className="flex items-center gap-2 self-end pb-2">

@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: verify.error ?? "SMTP connection failed" }, { status: 400 });
   }
 
+  const working = verify.settings ?? settings;
   const { subject, html } = buildTestEmail();
   const result = await sendEmail({
     to,
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
     html,
     trigger: "TEST",
     force: true,
-    settings,
+    settings: working,
   });
 
   if (!result.ok) {
@@ -85,23 +86,23 @@ export async function POST(request: NextRequest) {
     where: { id: EMAIL_SETTINGS_ID },
     create: {
       id: EMAIL_SETTINGS_ID,
-      host: settings.host,
-      port: settings.port,
-      enableSsl: settings.enableSsl,
-      username: settings.username,
+      host: working.host,
+      port: working.port,
+      enableSsl: working.enableSsl,
+      username: working.username,
       password,
-      fromEmail: settings.fromEmail,
-      fromName: settings.fromName,
+      fromEmail: working.fromEmail,
+      fromName: working.fromName,
       adminNotifyEmail,
     },
     update: {
-      host: settings.host,
-      port: settings.port,
-      enableSsl: settings.enableSsl,
-      username: settings.username,
+      host: working.host,
+      port: working.port,
+      enableSsl: working.enableSsl,
+      username: working.username,
       password,
-      fromEmail: settings.fromEmail,
-      fromName: settings.fromName,
+      fromEmail: working.fromEmail,
+      fromName: working.fromName,
       adminNotifyEmail,
     },
   });
@@ -110,6 +111,6 @@ export async function POST(request: NextRequest) {
     ok: true,
     to,
     adminNotifyEmail,
-    settings: serializeEmailSettings({ ...settings, password, adminNotifyEmail }),
+    settings: serializeEmailSettings({ ...working, password, adminNotifyEmail }),
   });
 }
