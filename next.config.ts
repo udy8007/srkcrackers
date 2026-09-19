@@ -1,12 +1,16 @@
 import type { NextConfig } from "next";
 
 const STATIC_ASSET_CACHE = "public, max-age=31536000, immutable";
-const appBasePath = (process.env.NEXT_PUBLIC_BASE_PATH || "").trim().replace(/\/+$/, "");
 
 const nextConfig: NextConfig = {
   output: "standalone",
   skipTrailingSlashRedirect: true,
-  ...(appBasePath ? { basePath: appBasePath.startsWith("/") ? appBasePath : `/${appBasePath}` } : {}),
+  async redirects() {
+    return [
+      { source: "/abc", destination: "/", permanent: false },
+      { source: "/abc/:path*", destination: "/:path*", permanent: false },
+    ];
+  },
   // Cap compile/static-generation workers so CloudLinux 2 GB PMEM can finish `next build`.
   experimental: {
     cpus: 1,

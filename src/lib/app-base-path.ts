@@ -18,6 +18,7 @@ export const APP_ROOT_SEGMENTS = new Set([
   "srk-contact.html",
   "__debug",
   "debug",
+  "abc",
 ]);
 
 export function stripTrailingSlash(value: string): string {
@@ -40,11 +41,9 @@ export function withBasePath(path: string, base: string): string {
   return `${base}${path}`;
 }
 
-/** Build-time Hostinger mount, e.g. `/abc`. Empty for local `next dev`. */
+/** Live shop is https://www.srkcrackers.in at the domain root — no /abc mount. */
 export function appBasePath(): string {
-  const raw = String(process.env.NEXT_PUBLIC_BASE_PATH || "").trim().replace(/\/+$/, "");
-  if (!raw || raw === "/") return "";
-  return raw.startsWith("/") ? raw : `/${raw}`;
+  return "";
 }
 
 export function withAppBase(path: string): string {

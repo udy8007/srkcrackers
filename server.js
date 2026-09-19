@@ -22,6 +22,9 @@ var KNOWN_ROOTS = {
   products: 1,
   shop: 1,
   lottie: 1,
+  videos: 1,
+  images: 1,
+  abc: 1,
   "favicon.ico": 1,
   "robots.txt": 1,
   "sitemap.xml": 1,
@@ -403,13 +406,25 @@ function sendHealth(res) {
 }
 
 function nextBasePath() {
-  var raw = String(process.env.NEXT_PUBLIC_BASE_PATH || "").trim();
-  if (!raw || raw === "/") return "";
-  if (raw.charAt(0) !== "/") raw = "/" + raw;
-  return raw.replace(/\/+$/, "");
+  return "";
+}
+
+function stripLegacyAbc(req) {
+  var url = String(req.url || "/");
+  var q = url.indexOf("?");
+  var pathname = q === -1 ? url : url.slice(0, q);
+  var query = q === -1 ? "" : url.slice(q);
+  if (pathname === "/abc" || pathname === "/abc/") {
+    req.url = "/" + query;
+    return;
+  }
+  if (pathname.indexOf("/abc/") === 0) {
+    req.url = pathname.slice(4) + query;
+  }
 }
 
 function handleRequest(req, res) {
+  stripLegacyAbc(req);
   var builtBase = nextBasePath();
   var mount = builtBase ? "" : detectMountFromUrl(req.url);
   if (!builtBase) {
