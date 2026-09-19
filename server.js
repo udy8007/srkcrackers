@@ -11,7 +11,7 @@ var path = require("path");
 var http = require("http");
 var spawn = require("child_process").spawn;
 
-var WRAPPER = "cpanel-wrapper-2026-09-19-debug";
+var WRAPPER = "cpanel-wrapper-2026-09-19-server-btn";
 var port = Number(process.env.PORT || process.env.PASSENGER_PORT || 3000);
 var bootLog = [];
 var bootError = "";
@@ -112,9 +112,8 @@ function debugPayload() {
   };
 }
 
-function sendDebug(res) {
-  var data = debugPayload();
-  var rows =
+function debugRows(data) {
+  return (
     "<tr><th>Status</th><td>" + esc(data.status) + "</td></tr>" +
     "<tr><th>Next.js</th><td>" + (data.nextReady ? "ready" : "not started") + "</td></tr>" +
     "<tr><th>Node</th><td>" + esc(data.node) + "</td></tr>" +
@@ -123,24 +122,83 @@ function sendDebug(res) {
     "<tr><th>AUTH_SECRET</th><td>" + (data.env.AUTH_SECRET ? "set" : "missing") + "</td></tr>" +
     "<tr><th>standalone/server.js</th><td>" + (data.standalone ? "found" : "MISSING") + "</td></tr>" +
     "<tr><th>pack.tar.gz</th><td>" + (data.packWaiting ? "waiting to extract" : "not present") + "</td></tr>" +
-    "<tr><th>Error</th><td>" + esc(data.error || "none") + "</td></tr>";
+    "<tr><th>Error</th><td>" + esc(data.error || "none") + "</td></tr>"
+  );
+}
+
+function sendDownPage(res, openServer) {
+  var data = debugPayload();
   var logs = data.log.map(function (line) {
     return esc(line);
   }).join("\n");
   var html =
-    "<!DOCTYPE html><html><head><meta charset='utf-8'><title>SRK debug</title>" +
-    "<meta http-equiv='refresh' content='8'>" +
-    "<style>body{font-family:sans-serif;padding:1.5rem;max-width:52rem;color:#111}" +
-    "h1{color:#b45309}table{border-collapse:collapse;width:100%}" +
-    "th,td{border:1px solid #ddd;padding:.45rem .6rem;text-align:left}" +
-    "th{width:12rem;background:#f8fafc}pre{background:#0f172a;color:#e2e8f0;padding:1rem;overflow:auto}</style>" +
-    "</head><body>" +
-    "<h1>SRK debug</h1>" +
-    "<p>This page stays up even if the shop fails to boot. Shop: <a href='/'>/</a></p>" +
-    "<table>" + rows + "</table>" +
-    "<h2>Boot log</h2><pre>" + logs + "</pre>" +
-    "</body></html>";
-  res.writeHead(data.nextReady ? 200 : 503, {
+    "<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>" +
+    "<meta name='viewport' content='width=device-width, initial-scale=1'>" +
+    "<title>SRK Crackers — Website temporarily down</title>" +
+    "<meta name='theme-color' content='#9d0208'>" +
+    "<style>" +
+    "*{box-sizing:border-box;margin:0;padding:0}" +
+    "body{font-family:Poppins,system-ui,sans-serif;color:#fff;min-height:100vh;" +
+    "background:radial-gradient(ellipse at 20% 0%,#c1121f 0%,#6a040f 42%,#1a0508 100%)}" +
+    ".wrap{max-width:720px;margin:0 auto;padding:28px 18px 48px}" +
+    ".hero{text-align:center;background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.04));" +
+    "border:1px solid rgba(255,195,0,.35);border-radius:28px;padding:28px 20px 24px;" +
+    "box-shadow:0 20px 50px rgba(0,0,0,.28)}" +
+    ".logo{width:168px;height:168px;margin:0 auto 14px;border-radius:50%;padding:8px;" +
+    "background:conic-gradient(from 200deg,#ffc300,#f77f00,#d62828,#ffc300);" +
+    "box-shadow:0 0 0 6px rgba(255,195,0,.18),0 12px 32px rgba(0,0,0,.35)}" +
+    ".logo-inner{width:100%;height:100%;border-radius:50%;background:#9d0208;display:grid;place-items:center;" +
+    "border:4px solid #fff8f2}" +
+    ".logo-inner strong{font-size:2rem;letter-spacing:.04em}" +
+    ".logo-inner small{display:block;color:#ffc300;font-weight:700;letter-spacing:.18em;font-size:.62rem}" +
+    ".status{display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,.35);" +
+    "border:1px solid rgba(255,195,0,.55);color:#ffc300;font-weight:700;font-size:.78rem;" +
+    "letter-spacing:.12em;text-transform:uppercase;border-radius:999px;padding:8px 14px;margin-bottom:14px}" +
+    ".status i{width:9px;height:9px;border-radius:50%;background:#ffc300}" +
+    ".brand{font-size:2rem;font-weight:800}" +
+    ".tag{margin-top:4px;color:#ffc300;font-weight:600}" +
+    ".msg{margin:12px auto 0;max-width:28rem;color:rgba(255,255,255,.9);line-height:1.5}" +
+    ".cta-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}" +
+    ".cta{display:inline-flex;align-items:center;border:0;cursor:pointer;text-decoration:none;" +
+    "border-radius:999px;padding:12px 18px;font-weight:700;color:#fff;font:inherit}" +
+    ".cta-wa{background:#25d366}.cta-call{background:#2da815}" +
+    ".cta-retry{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28)}" +
+    ".cta-server{background:#ffc300;color:#4a2a00}" +
+    ".addr{margin-top:10px;color:rgba(255,255,255,.86);font-size:.88rem}" +
+    ".pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}" +
+    ".pill{background:rgba(0,0,0,.22);border:1px solid rgba(255,195,0,.28);border-radius:999px;padding:6px 12px;font-size:.75rem}" +
+    ".server-box{display:none;margin-top:18px;text-align:left;background:rgba(0,0,0,.38);" +
+    "border:1px solid rgba(255,195,0,.28);border-radius:18px;padding:16px}" +
+    ".server-box.open{display:block}" +
+    ".server-box h2{color:#ffc300;font-size:1rem;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}" +
+    "table{width:100%;border-collapse:collapse;font-size:.9rem}" +
+    "th,td{border-bottom:1px solid rgba(255,255,255,.12);padding:8px;text-align:left;vertical-align:top}" +
+    "th{width:11rem;color:#ffc300}" +
+    "pre{background:#0f172a;color:#e2e8f0;padding:12px;border-radius:12px;overflow:auto;white-space:pre-wrap;margin-top:12px}" +
+    "</style></head><body><main class='wrap'><section class='hero'>" +
+    "<div class='logo'><div class='logo-inner'><div><strong>SRK</strong><small>CRACKERS</small></div></div></div>" +
+    "<div class='status'><i></i> Website temporarily down</div>" +
+    "<div class='brand'>SRK Crackers</div>" +
+    "<div class='tag'>Licensed Fireworks Dealer · Avadi, Chennai</div>" +
+    "<p class='msg'>The online shop is offline for a short time. You can still order — WhatsApp or call us now. We will confirm your list quickly.</p>" +
+    "<div class='cta-row'>" +
+    "<a class='cta cta-wa' href='https://wa.me/919841916899?text=Hi%20SRK%20Crackers%2C%20the%20website%20is%20down.%20I%20want%20to%20place%20an%20order.'>WhatsApp order</a>" +
+    "<a class='cta cta-call' href='tel:+919841916899'>Call 98419 16899</a>" +
+    "<a class='cta cta-retry' href='/'>Try website again</a>" +
+    "<button type='button' class='cta cta-server' id='serverBtn'>Server</button>" +
+    "</div>" +
+    "<p class='addr'>No 45, Sarathi Nagar, Morai Village<br>Avadi, Chennai - 600055, Tamil Nadu</p>" +
+    "<div class='pills'><span class='pill'>GST 33BJBPR5461B2ZI</span>" +
+    "<span class='pill'>Licence 10439/FL/NMSB/2026</span>" +
+    "<span class='pill'>9:00 AM – 9:00 PM</span></div>" +
+    "<section class='server-box" + (openServer ? " open" : "") + "' id='serverPanel'>" +
+    "<h2>Server status</h2><table>" + debugRows(data) + "</table>" +
+    "<pre>" + logs + "</pre></section>" +
+    "</section></main>" +
+    "<script>document.getElementById('serverBtn').onclick=function(){document.getElementById('serverPanel').classList.add('open');};" +
+    (openServer ? "document.getElementById('serverPanel').classList.add('open');" : "") +
+    "</script></body></html>";
+  res.writeHead(200, {
     "Content-Type": "text/html; charset=utf-8",
     "Cache-Control": "no-store",
   });
@@ -149,7 +207,7 @@ function sendDebug(res) {
 
 function sendHealth(res) {
   var data = debugPayload();
-  res.writeHead(data.nextReady && data.env.DATABASE_URL ? 200 : 503, {
+  res.writeHead(200, {
     "Content-Type": "application/json; charset=utf-8",
     "Cache-Control": "no-store",
   });
@@ -157,19 +215,19 @@ function sendHealth(res) {
 }
 
 function handleRequest(req, res) {
-  if (isDebug(req)) {
-    sendDebug(res);
-    return;
-  }
   if (isHealth(req)) {
     sendHealth(res);
+    return;
+  }
+  if (isDebug(req)) {
+    sendDownPage(res, true);
     return;
   }
   if (nextServer) {
     nextServer.emit("request", req, res);
     return;
   }
-  sendDebug(res);
+  sendDownPage(res, false);
 }
 
 function extractPack(done) {
