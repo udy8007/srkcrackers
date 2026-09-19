@@ -230,44 +230,79 @@ function handleRequest(req, res) {
   sendDownPage(res, false);
 }
 
+function standalonePath() {
+  return path.join(__dirname, ".next", "standalone", "server.js");
+}
+
+function packSizeMb(file) {
+  try {
+    return (fs.statSync(file).size / (1024 * 1024)).toFixed(1);
+  } catch (e) {
+    return "?";
+  }
+}
+
 function extractPack(done) {
   var pack = path.join(__dirname, "pack.tar.gz");
+  var finished = false;
+  function finish() {
+    if (finished) return;
+    finished = true;
+    done();
+  }
+
   if (!fs.existsSync(pack)) {
     log("no pack.tar.gz (using files already on disk)");
-    done();
+    finish();
     return;
   }
-  log("extracting pack.tar.gz");
+
+  log("extracting pack.tar.gz (" + packSizeMb(pack) + " MB)");
   var child = spawn("tar", ["-xzf", "pack.tar.gz"], {
     cwd: __dirname,
+    stdio: ["ignore", "pipe", "pipe"],
     env: Object.assign({}, process.env, {
       PATH: (process.env.PATH || "") + ":/usr/bin:/bin",
     }),
   });
+  child.stdout.on("data", function (chunk) {
+    log("tar: " + String(chunk).trim().slice(0, 180));
+  });
   child.stderr.on("data", function (chunk) {
-    log("tar: " + String(chunk).trim());
+    log("tar: " + String(chunk).trim().slice(0, 180));
   });
   child.on("error", function (err) {
     bootError = err.message || String(err);
     log("tar failed: " + bootError);
-    done();
+    finish();
   });
   child.on("close", function (code) {
+    clearTimeout(timer);
     if (code === 0) {
       try {
         fs.unlinkSync(pack);
       } catch (e) {}
       log("pack extracted");
     } else {
-      bootError = "tar exited " + code;
-      log(bootError);
+      log("tar exited " + code + " (keeping files already on disk)");
     }
     loadAppEnv();
-    done();
+    finish();
   });
+  var timer = setTimeout(function () {
+    log("tar still running after 90s; starting shop with files already on disk");
+    try {
+      child.kill();
+    } catch (e) {}
+    finish();
+  }, 90000);
 }
 
 function bootNext() {
+  if (nextServer) {
+    log("Next.js already running");
+    return;
+  }
   var nodeMajor = parseInt(String(process.versions.node).split(".")[0], 10);
   if (!(nodeMajor >= 20)) {
     status = "failed";
@@ -347,7 +382,11 @@ wrapperServer = http.createServer(handleRequest);
 wrapperServer._srkWrapper = true;
 wrapperServer.listen(port, function () {
   log("debug wrapper listening on PORT " + port + " Node " + process.version);
-  extractPack(function () {
+  if (fs.existsSync(standalonePath())) {
+    log("standalone already present; starting shop without waiting for tar");
     bootNext();
+  }
+  extractPack(function () {
+    if (!nextServer) bootNext();
   });
 });
