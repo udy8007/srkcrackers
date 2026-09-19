@@ -1,0 +1,2 @@
+# Use CloudLinux / Hostinger Node 20+, not /usr/bin/node (v10).
+PassengerNodejs /opt/alt/alt-nodejs22/root/usr/bin/node

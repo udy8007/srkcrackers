@@ -14,31 +14,18 @@
  * is enough to see env + MySQL status (the old Next pack does not include that).
  */
 
-var nodeMajor = parseInt(String(process.versions.node).split(".")[0], 10);
-if (!(nodeMajor >= 20)) {
-  var msg =
-    "SRK Crackers needs Node.js 20 or newer. This process is Node " +
-    process.version +
-    ". In cPanel open Setup Node.js App, set Node.js version to 20/22/24, Save, then Restart.";
-  console.error("[cpanel] " + msg);
-  process.stderr.write(msg + "\n");
-  process.exit(1);
-}
-
-const fs = require("fs");
-const path = require("path");
-const http = require("http");
-
-const WRAPPER = "cpanel-wrapper-2026-09-19-pack";
-
-process.env.NODE_ENV = process.env.NODE_ENV || "production";
+var fs = require("fs");
+var path = require("path");
+var http = require("http");
+var spawn = require("child_process").spawn;
+var execSync = require("child_process").execSync;
 
 function extractDeployPack() {
-  const pack = path.join(__dirname, "pack.tar.gz");
+  var pack = path.join(__dirname, "pack.tar.gz");
   if (!fs.existsSync(pack)) return;
   console.log("[cpanel] extracting pack.tar.gz");
   try {
-    require("child_process").execSync("tar -xzf pack.tar.gz", {
+    execSync("tar -xzf pack.tar.gz", {
       cwd: __dirname,
       stdio: "inherit",
       env: Object.assign({}, process.env, {
@@ -48,11 +35,94 @@ function extractDeployPack() {
     fs.unlinkSync(pack);
     console.log("[cpanel] pack extracted");
   } catch (err) {
-    console.error("[cpanel] pack extract failed:", err instanceof Error ? err.message : err);
+    console.error("[cpanel] pack extract failed:", err && err.message ? err.message : err);
   }
 }
 
+function findModernNode() {
+  var list = [
+    "/opt/alt/alt-nodejs22/root/usr/bin/node",
+    "/opt/alt/alt-nodejs20/root/usr/bin/node",
+    "/opt/alt/alt-nodejs24/root/usr/bin/node",
+    "/opt/cpanel/ea-nodejs22/bin/node",
+    "/opt/cpanel/ea-nodejs20/bin/node",
+  ];
+  var home = process.env.HOME || "";
+  var versions = ["24", "22", "20"];
+  if (home) {
+    var nv = path.join(home, "nodevenv");
+    try {
+      fs.readdirSync(nv).forEach(function (app) {
+        versions.forEach(function (ver) {
+          list.push(path.join(nv, app, ver, "bin", "node"));
+        });
+      });
+    } catch (e) {}
+  }
+  for (var i = 0; i < list.length; i++) {
+    try {
+      if (list[i] !== process.execPath && fs.existsSync(list[i])) return list[i];
+    } catch (e) {}
+  }
+  return null;
+}
+
+function listenNeedNode20() {
+  var port = Number(process.env.PORT || process.env.PASSENGER_PORT || 3000);
+  var host = process.env.HOSTNAME && process.env.HOSTNAME !== "localhost" ? "127.0.0.1" : "127.0.0.1";
+  var html =
+    "<!DOCTYPE html><html><body style='font-family:sans-serif;padding:2rem;max-width:40rem'>" +
+    "<h1>SRK Crackers</h1>" +
+    "<p>This app needs <b>Node.js 20 or newer</b>. The server is running <b>" +
+    process.version +
+    "</b>.</p>" +
+    "<ol><li>hPanel → <b>Setup Node.js App</b></li>" +
+    "<li>Open this application</li>" +
+    "<li>Set <b>Node.js version</b> to 20, 22, or 24</li>" +
+    "<li>Save, then <b>Restart</b></li></ol>" +
+    "</body></html>";
+  http
+    .createServer(function (req, res) {
+      res.writeHead(503, {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store",
+      });
+      res.end(html);
+    })
+    .listen(port, host, function () {
+      console.error("[cpanel] Node " + process.version + " is too old. Set Setup Node.js App to 20/22/24, then Restart.");
+    });
+}
+
 extractDeployPack();
+
+var nodeMajor = parseInt(String(process.versions.node).split(".")[0], 10);
+if (!(nodeMajor >= 20)) {
+  var modern = findModernNode();
+  if (modern && process.env.SRK_NODE_REEXEC !== "1") {
+    console.error("[cpanel] Node " + process.version + " is too old; starting " + modern);
+    var childEnv = {};
+    Object.keys(process.env).forEach(function (key) {
+      childEnv[key] = process.env[key];
+    });
+    childEnv.SRK_NODE_REEXEC = "1";
+    var child = spawn(modern, process.argv.slice(1), { stdio: "inherit", env: childEnv });
+    child.on("exit", function (code) {
+      process.exit(code || 0);
+    });
+    child.on("error", function (err) {
+      console.error("[cpanel] could not start " + modern + ":", err && err.message ? err.message : err);
+      listenNeedNode20();
+    });
+    return;
+  }
+  listenNeedNode20();
+  return;
+}
+
+const WRAPPER = "cpanel-wrapper-2026-09-19-pack";
+
+process.env.NODE_ENV = process.env.NODE_ENV || "production";
 
 if (!process.env.PORT && process.env.PASSENGER_PORT) {
   process.env.PORT = String(process.env.PASSENGER_PORT);

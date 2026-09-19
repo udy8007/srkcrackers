@@ -259,6 +259,9 @@ class HostingerFtp:
         package_json = local_dir / "package.json"
         if package_json.exists():
             self.upload_file(package_json, "package.json")
+        htaccess = local_dir / ".htaccess"
+        if htaccess.exists():
+            self.upload_file(htaccess, ".htaccess")
         self.ensure_dir("tmp")
 
         def into_tmp() -> None:

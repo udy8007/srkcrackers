@@ -79,6 +79,7 @@ jobs:
           mkdir -p deploy/.next deploy/tmp
           cp server.js deploy/server.js
           cp package.json deploy/package.json
+          cp cpanel/passenger.htaccess deploy/.htaccess
           cp -a .next/standalone deploy/.next/standalone
           date -u +"%Y-%m-%dT%H:%M:%SZ" > deploy/tmp/restart.txt
 
