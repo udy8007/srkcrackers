@@ -47,6 +47,12 @@ type CheckoutSession = {
   notes: Record<string, string>;
 };
 
+type RazorpayPaymentResponse = {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+};
+
 export async function startRazorpayCheckout(input: {
   draftOrderId?: string;
   orderNumber?: string;
@@ -104,7 +110,7 @@ export async function startRazorpayCheckout(input: {
           preferences: { show_default_blocks: true },
         },
       },
-      handler: (response) => {
+      handler: (response: RazorpayPaymentResponse) => {
         void (async () => {
           const verifyRes = await fetch("/api/payments/razorpay/verify", {
             method: "POST",
