@@ -1,8 +1,20 @@
 import { headers } from "next/headers";
 import { BUSINESS } from "@/lib/constants";
-import { basePathFromPathname, stripTrailingSlash } from "@/lib/app-base-path";
+import {
+  basePathFromPathname,
+  configuredSiteUrl,
+  stripTrailingSlash,
+} from "@/lib/app-base-path";
 
-export { basePathFromPathname, stripTrailingSlash, withBasePath, APP_ROOT_SEGMENTS } from "@/lib/app-base-path";
+export {
+  appBasePath,
+  basePathFromPathname,
+  configuredSiteUrl,
+  stripTrailingSlash,
+  withAppBase,
+  withBasePath,
+  APP_ROOT_SEGMENTS,
+} from "@/lib/app-base-path";
 
 function defaultSchemeFor(host: string): string {
   return /^(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/i.test(host) ? "http" : "https";
@@ -22,6 +34,9 @@ export function publicSiteUrlFromAbsolute(link: string): string {
  * when Hostinger mounts the Node app under an Application URL path.
  */
 export async function resolveSiteOrigin(): Promise<string> {
+  const configured = configuredSiteUrl();
+  if (configured) return configured;
+
   try {
     const requestHeaders = await headers();
     const host =
@@ -56,5 +71,5 @@ export async function resolveSiteOrigin(): Promise<string> {
   } catch {
     // Build / cron without a request.
   }
-  return stripTrailingSlash(process.env.APP_URL || BUSINESS.url);
+  return stripTrailingSlash(process.env.NEXTAUTH_URL || process.env.AUTH_URL || BUSINESS.url);
 }

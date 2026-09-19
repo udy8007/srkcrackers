@@ -19,7 +19,9 @@
 #   FTP_PORT         21
 #
 # After upload, tmp/restart.txt tells Passenger / Setup Node.js App to reload.
-# Do not upload .env files; keep MySQL + Auth in cPanel → Setup Node.js App.
+# Live shop URL is hardcoded on the job env block below and baked into the build:
+#   https://lively-orange-orangutan.148-113-0-192.cpanel.site/abc
+# Do not upload secret .env files from the repo; MySQL + Auth stay in cPanel.
 
 name: Build and deploy to Hostinger FTP
 
@@ -37,6 +39,14 @@ jobs:
     runs-on: ubuntu-latest
     environment: Production
     timeout-minutes: 45
+    env:
+      # Live shop URL on this Hostinger Node app. Baked into the client at build
+      # time so every link, email, auth redirect, and fetch stays under /abc.
+      NEXT_PUBLIC_BASE_PATH: /abc
+      NEXT_PUBLIC_SITE_URL: https://lively-orange-orangutan.148-113-0-192.cpanel.site/abc
+      APP_URL: https://lively-orange-orangutan.148-113-0-192.cpanel.site/abc
+      AUTH_URL: https://lively-orange-orangutan.148-113-0-192.cpanel.site/abc
+      NEXTAUTH_URL: https://lively-orange-orangutan.148-113-0-192.cpanel.site/abc
 
     steps:
       - name: Checkout
@@ -55,7 +65,6 @@ jobs:
         env:
           NODE_ENV: production
           AUTH_TRUST_HOST: "true"
-          NEXT_PUBLIC_BASE_PATH: "/abc"
           AUTH_SECRET: ${{ secrets.AUTH_SECRET || vars.AUTH_SECRET }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || vars.NEXTAUTH_SECRET }}
           DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
@@ -79,7 +88,6 @@ jobs:
           AUTH_SECRET: ${{ secrets.AUTH_SECRET || vars.AUTH_SECRET }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || vars.NEXTAUTH_SECRET }}
           AUTH_TRUST_HOST: "true"
-          NEXT_PUBLIC_BASE_PATH: "/abc"
           EMAIL_SMTP_HOST: ${{ secrets.EMAIL_SMTP_HOST || vars.EMAIL_SMTP_HOST }}
           EMAIL_SMTP_PORT: ${{ secrets.EMAIL_SMTP_PORT || vars.EMAIL_SMTP_PORT }}
           EMAIL_SMTP_USERNAME: ${{ secrets.EMAIL_SMTP_USERNAME || vars.EMAIL_SMTP_USERNAME }}
@@ -106,6 +114,10 @@ jobs:
               "NEXTAUTH_SECRET",
               "AUTH_TRUST_HOST",
               "NEXT_PUBLIC_BASE_PATH",
+              "NEXT_PUBLIC_SITE_URL",
+              "APP_URL",
+              "AUTH_URL",
+              "NEXTAUTH_URL",
               "EMAIL_SMTP_HOST",
               "EMAIL_SMTP_PORT",
               "EMAIL_SMTP_USERNAME",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { APP_ROOT_SEGMENTS, withBasePath } from "@/lib/app-base-path";
+import { APP_ROOT_SEGMENTS, appBasePath, withBasePath } from "@/lib/app-base-path";
 
 function detectBase(): string {
   const first = window.location.pathname.split("/").filter(Boolean)[0] || "";
@@ -27,8 +27,8 @@ function sameOriginPath(value: string): string | null {
 /** Prefixes API, assets, and in-app links with the Hostinger Application URL path. */
 export function AppBase() {
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_BASE_PATH) return;
-    const base = detectBase();
+    const envBase = appBasePath();
+    const base = envBase || detectBase();
     if (!base) return;
 
     const origFetch = window.fetch.bind(window);

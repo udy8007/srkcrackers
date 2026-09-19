@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { withAppBase } from "@/lib/app-base-path";
 
 export function LoginForm() {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/admin";
+  const rawCallback = searchParams.get("callbackUrl") ?? "/admin";
+  const callbackUrl = rawCallback.startsWith("/") ? withAppBase(rawCallback) : rawCallback;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

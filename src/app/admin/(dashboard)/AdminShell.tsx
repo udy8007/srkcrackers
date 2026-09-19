@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
+import { withAppBase } from "@/lib/app-base-path";
 import { NotificationBell } from "@/components/admin/NotificationBell";
 import { AdminPushRegistrar } from "@/components/admin/AdminPushRegistrar";
 import { AdminRouteLoader } from "@/components/admin/CrackerLoader";
@@ -148,7 +149,7 @@ export function AdminShell({
           </Link>
           <button
             type="button"
-            onClick={() => signOut({ callbackUrl: "/admin/login" })}
+            onClick={() => signOut({ callbackUrl: withAppBase("/admin/login") })}
             className="rounded-lg bg-white/15 px-3 py-1.5 text-sm font-semibold transition hover:bg-white/25"
           >
             Sign out

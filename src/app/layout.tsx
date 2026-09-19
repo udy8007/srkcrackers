@@ -4,6 +4,7 @@ import { Poppins, Jost } from "next/font/google";
 import { BUSINESS } from "@/lib/constants";
 import { resolveSiteOrigin } from "@/lib/site-url";
 import { AppBase } from "@/components/AppBase";
+import { AuthSessionProvider } from "@/components/AuthSessionProvider";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -189,7 +190,7 @@ export default async function RootLayout({
       </head>
       <body className={`${poppins.variable} ${jost.variable} antialiased`}>
         <AppBase />
-        {children}
+        <AuthSessionProvider>{children}</AuthSessionProvider>
         <Script
           src="https://www.noupe.com/embed/019f30967aa0700080c53f9bb9b8a6e42c31.js"
           strategy="afterInteractive"

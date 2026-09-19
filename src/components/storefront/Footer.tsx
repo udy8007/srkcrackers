@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { BUSINESS } from "@/lib/constants";
 import { NAV_LINKS } from "./nav";
 import { SectionDecor } from "./FestiveDecor";
@@ -78,7 +79,7 @@ export function Footer() {
         </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-white/70">
-          <a
+          <Link
             href="/admin/login"
             className="inline-flex items-center gap-1.5 transition hover:text-yellow"
           >
@@ -97,7 +98,7 @@ export function Footer() {
               <circle cx="12" cy="15.5" r="1.3" fill="currentColor" stroke="none" />
             </svg>
             Admin Portal
-          </a>
+          </Link>
 
           <a
             href="https://udy8007.github.io/udyilangovan/index.html"

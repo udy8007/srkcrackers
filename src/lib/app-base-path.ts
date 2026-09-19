@@ -38,3 +38,19 @@ export function withBasePath(path: string, base: string): string {
   if (path === base || path.startsWith(`${base}/`)) return path;
   return `${base}${path}`;
 }
+
+/** Build-time Hostinger mount, e.g. `/abc`. Empty for local `next dev`. */
+export function appBasePath(): string {
+  const raw = String(process.env.NEXT_PUBLIC_BASE_PATH || "").trim().replace(/\/+$/, "");
+  if (!raw || raw === "/") return "";
+  return raw.startsWith("/") ? raw : `/${raw}`;
+}
+
+export function withAppBase(path: string): string {
+  return withBasePath(path, appBasePath());
+}
+
+/** Production shop URL from GitHub YAML (`NEXT_PUBLIC_SITE_URL`). */
+export function configuredSiteUrl(): string {
+  return stripTrailingSlash(process.env.NEXT_PUBLIC_SITE_URL || process.env.APP_URL || "");
+}
