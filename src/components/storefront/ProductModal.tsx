@@ -76,7 +76,7 @@ function MagicProductZoom({ src, alt }: { src: string; alt: string }) {
       />
 
       <div
-        className="absolute inset-0 flex items-center justify-center p-6 transition-transform duration-200 ease-out will-change-transform sm:p-10"
+        className="absolute inset-0 p-6 transition-transform duration-200 ease-out will-change-transform sm:p-10"
         style={{
           transform: active ? `scale(${ZOOM})` : "scale(1)",
           transformOrigin: `${pos.x}% ${pos.y}%`,
@@ -85,9 +85,9 @@ function MagicProductZoom({ src, alt }: { src: string; alt: string }) {
         <SafeImage
           src={src}
           alt={alt}
-          width={720}
-          height={720}
-          className="h-full max-h-[420px] w-full object-contain drop-shadow-[0_18px_35px_rgba(157,2,8,0.18)] sm:max-h-none"
+          fill
+          sizes="(max-width: 640px) 90vw, 40vw"
+          className="object-contain object-center drop-shadow-[0_18px_35px_rgba(157,2,8,0.18)]"
           priority
         />
       </div>

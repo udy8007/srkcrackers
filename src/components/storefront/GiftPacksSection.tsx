@@ -50,15 +50,14 @@ function GiftPackCard({
       <button
         type="button"
         onClick={openDetails}
-        className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-gradient-to-b from-[#fff8ef] to-[#ffe9d4] p-3"
+        className="relative aspect-[4/3] w-full overflow-hidden bg-gradient-to-b from-[#fff8ef] to-[#ffe9d4]"
       >
         <SafeImage
           src={product.imageUrl}
           alt={product.name}
-          width={720}
-          height={540}
+          fill
           sizes="(max-width: 768px) 100vw, 33vw"
-          className="h-full w-full object-contain drop-shadow-md"
+          className="object-contain object-center p-3 drop-shadow-md"
         />
       </button>
 
