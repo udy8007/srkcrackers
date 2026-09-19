@@ -97,6 +97,7 @@ jobs:
           FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
           FTP_PROTOCOL: ${{ vars.FTP_PROTOCOL || 'ftps' }}
           FTP_PORT: ${{ vars.FTP_PORT || 21 }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
         run: |
           set -euo pipefail
           missing=0
@@ -155,6 +156,13 @@ jobs:
             printf '%s' "$ip"
           }
 
+          db_host="$(
+            python3 -c 'import os, urllib.parse; print(urllib.parse.urlparse(os.environ.get("DATABASE_URL") or "").hostname or "")' 2>/dev/null || true
+          )"
+          if [ -z "$db_host" ] || [[ "$db_host" == "localhost" ]] || [[ "$db_host" == "127.0.0.1" ]] || [[ "$db_host" == *turso* ]]; then
+            db_host=""
+          fi
+
           target="$host"
           if [[ "$host" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "FTP host kind: IP"
@@ -167,7 +175,21 @@ jobs:
             elif [ -n "$fallback_ip" ] && [[ "$fallback_ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               echo "FTP_SERVER has no DNS record; using FTP_IP"
               target="$fallback_ip"
-            else
+            elif [ -n "$db_host" ]; then
+              db_ip="$(resolve_ipv4 "$db_host")"
+              if [ -n "$db_ip" ]; then
+                echo "FTP_SERVER has no DNS record; using Hostinger DB host IP"
+                target="$db_ip"
+              fi
+            fi
+            if [[ "$target" == "$host" ]]; then
+              extra_ip="$(resolve_ipv4 "cloud-xent.crazzydns.com")"
+              if [ -n "$extra_ip" ]; then
+                echo "FTP_SERVER has no DNS record; using Hostinger server IP"
+                target="$extra_ip"
+              fi
+            fi
+            if [[ "$target" == "$host" ]] && ! [[ "$host" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               echo "DNS lookup failed for FTP_SERVER (ENOTFOUND)."
               echo "Hostinger FTP host is the numeric IP in hPanel → Files → FTP Accounts."
               echo "ftp.yourdomain.in often has no DNS record — do not use it."
@@ -226,7 +248,7 @@ jobs:
             set net:max-retries 2
             set net:timeout 30
             $extra_set
-            open -u ${FTP_USERNAME} -p ${FTP_PORT} ${scheme}://${FTP_HOST}
+            open -u \"${FTP_USERNAME}\" -p ${FTP_PORT} ${scheme}://${FTP_HOST}
             mkdir -p ${remote}
             cd ${remote}
             set cmd:fail-exit no
