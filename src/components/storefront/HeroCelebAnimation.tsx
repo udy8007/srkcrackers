@@ -2,12 +2,13 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { withAppBase } from "@/lib/app-base-path";
 
 const SHINCHAN_FRAMES = [
-  "/images/shinchan-cut-1.png",
-  "/images/shinchan-cut-2.png",
-  "/images/shinchan-cut-3.png",
-  "/images/shinchan-cut-4.png",
+  "/shop/srk-hero-art.png",
+  "/shop/srk-hero-art.png",
+  "/shop/srk-hero-art.png",
+  "/shop/srk-hero-art.png",
 ];
 
 type CastSide = "left" | "right";
@@ -19,7 +20,7 @@ export function HeroCastSide({ side, className = "" }: { side: CastSide; classNa
   useEffect(() => {
     SHINCHAN_FRAMES.forEach((src) => {
       const img = new window.Image();
-      img.src = src;
+      img.src = withAppBase(src);
     });
     const id = window.setInterval(() => {
       setFrame((n) => (n + 1) % SHINCHAN_FRAMES.length);

@@ -42,6 +42,12 @@ export function AppBase() {
       return origFetch(input as RequestInfo, init);
     };
 
+    if (envBase) {
+      return () => {
+        window.fetch = origFetch;
+      };
+    }
+
     const origPush = history.pushState.bind(history);
     const origReplace = history.replaceState.bind(history);
     const redirectIfUnprefixed = (url: string) => {

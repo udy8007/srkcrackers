@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { BUSINESS } from "@/lib/constants";
+import { withAppBase } from "@/lib/app-base-path";
 import "@/app/crackro-hero.css";
 
 const SHINCHAN_FRAMES = [
-  "/images/shinchan-cut-1.png",
-  "/images/shinchan-cut-2.png",
-  "/images/shinchan-cut-3.png",
-  "/images/shinchan-cut-4.png",
+  "/shop/srk-hero-art.png",
+  "/shop/srk-hero-art.png",
+  "/shop/srk-hero-art.png",
+  "/shop/srk-hero-art.png",
 ];
 
 export function Hero() {
@@ -17,7 +18,7 @@ export function Hero() {
   useEffect(() => {
     SHINCHAN_FRAMES.forEach((src) => {
       const img = new window.Image();
-      img.src = src;
+      img.src = withAppBase(src);
     });
     const id = window.setInterval(() => {
       setFrame((n) => (n + 1) % SHINCHAN_FRAMES.length);
@@ -225,7 +226,7 @@ export function Hero() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 className="celeb-cast__frame"
-                src={SHINCHAN_FRAMES[frame]}
+                src={withAppBase(SHINCHAN_FRAMES[frame])}
                 alt=""
                 width={420}
                 height={480}
