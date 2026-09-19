@@ -4,9 +4,12 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { withAppBase } from "@/lib/app-base-path";
 
+const authBasePath = withAppBase("/api/auth");
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   secret: process.env["AUTH_SECRET"] ?? process.env["NEXTAUTH_SECRET"],
+  basePath: authBasePath,
   session: { strategy: "jwt" },
   pages: {
     signIn: withAppBase("/admin/login"),

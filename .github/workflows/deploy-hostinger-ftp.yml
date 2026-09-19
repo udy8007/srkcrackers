@@ -45,8 +45,8 @@ jobs:
       NEXT_PUBLIC_BASE_PATH: /abc
       NEXT_PUBLIC_SITE_URL: https://lively-orange-orangutan.148-113-0-192.cpanel.site/abc
       APP_URL: https://lively-orange-orangutan.148-113-0-192.cpanel.site/abc
-      AUTH_URL: https://lively-orange-orangutan.148-113-0-192.cpanel.site/abc
-      NEXTAUTH_URL: https://lively-orange-orangutan.148-113-0-192.cpanel.site/abc
+      AUTH_URL: https://lively-orange-orangutan.148-113-0-192.cpanel.site/abc/api/auth
+      NEXTAUTH_URL: https://lively-orange-orangutan.148-113-0-192.cpanel.site/abc/api/auth
 
     steps:
       - name: Checkout
