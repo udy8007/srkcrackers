@@ -12,7 +12,7 @@ function esc(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function emailLayout(title: string, bodyHtml: string, siteUrl = BUSINESS.url): string {
+function emailLayout(title: string, bodyHtml: string, siteUrl: string = BUSINESS.url): string {
   const origin = siteUrl.replace(/\/+$/, "");
   const logoUrl = `${origin}/logo.png`;
   return `<!DOCTYPE html>
