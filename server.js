@@ -17,7 +17,6 @@
 var fs = require("fs");
 var path = require("path");
 var http = require("http");
-var spawn = require("child_process").spawn;
 var execSync = require("child_process").execSync;
 
 function loadEnvFile(file) {
@@ -69,37 +68,9 @@ function extractDeployPack() {
   }
 }
 
-function findModernNode() {
-  var list = [
-    "/opt/alt/alt-nodejs22/root/usr/bin/node",
-    "/opt/alt/alt-nodejs20/root/usr/bin/node",
-    "/opt/alt/alt-nodejs24/root/usr/bin/node",
-    "/opt/cpanel/ea-nodejs22/bin/node",
-    "/opt/cpanel/ea-nodejs20/bin/node",
-  ];
-  var home = process.env.HOME || "";
-  var versions = ["24", "22", "20"];
-  if (home) {
-    var nv = path.join(home, "nodevenv");
-    try {
-      fs.readdirSync(nv).forEach(function (app) {
-        versions.forEach(function (ver) {
-          list.push(path.join(nv, app, ver, "bin", "node"));
-        });
-      });
-    } catch (e) {}
-  }
-  for (var i = 0; i < list.length; i++) {
-    try {
-      if (list[i] !== process.execPath && fs.existsSync(list[i])) return list[i];
-    } catch (e) {}
-  }
-  return null;
-}
-
 function listenNeedNode20() {
   var port = Number(process.env.PORT || process.env.PASSENGER_PORT || 3000);
-  var host = process.env.HOSTNAME && process.env.HOSTNAME !== "localhost" ? "127.0.0.1" : "127.0.0.1";
+  var host = "127.0.0.1";
   var html =
     "<!DOCTYPE html><html><body style='font-family:sans-serif;padding:2rem;max-width:40rem'>" +
     "<h1>SRK Crackers</h1>" +
@@ -128,24 +99,6 @@ extractDeployPack();
 
 var nodeMajor = parseInt(String(process.versions.node).split(".")[0], 10);
 if (!(nodeMajor >= 20)) {
-  var modern = findModernNode();
-  if (modern && process.env.SRK_NODE_REEXEC !== "1") {
-    console.error("[cpanel] Node " + process.version + " is too old; starting " + modern);
-    var childEnv = {};
-    Object.keys(process.env).forEach(function (key) {
-      childEnv[key] = process.env[key];
-    });
-    childEnv.SRK_NODE_REEXEC = "1";
-    var child = spawn(modern, process.argv.slice(1), { stdio: "inherit", env: childEnv });
-    child.on("exit", function (code) {
-      process.exit(code || 0);
-    });
-    child.on("error", function (err) {
-      console.error("[cpanel] could not start " + modern + ":", err && err.message ? err.message : err);
-      listenNeedNode20();
-    });
-    return;
-  }
   listenNeedNode20();
   return;
 }
@@ -158,14 +111,8 @@ if (!process.env.PORT && process.env.PASSENGER_PORT) {
   process.env.PORT = String(process.env.PASSENGER_PORT);
 }
 
-if (
-  process.env.HOSTNAME &&
-  process.env.HOSTNAME !== "127.0.0.1" &&
-  process.env.HOSTNAME !== "0.0.0.0" &&
-  process.env.HOSTNAME !== "localhost"
-) {
-  process.env.HOSTNAME = "127.0.0.1";
-}
+process.env.HOSTNAME = "127.0.0.1";
+process.env.HOST = "127.0.0.1";
 
 function envRaw(name) {
   const value = process.env[name];
@@ -293,17 +240,11 @@ function installHealthIntercept() {
     if (typeof options === "function") {
       return origCreateServer.call(this, wrapRequestListener(options));
     }
-    return origCreateServer.call(this, options, wrapRequestListener(listener));
-  };
-
-  const origOn = http.Server.prototype.on;
-  http.Server.prototype.on = function (event, listener) {
-    if (event === "request" && typeof listener === "function") {
-      return origOn.call(this, event, wrapRequestListener(listener));
+    if (typeof listener === "function") {
+      return origCreateServer.call(this, options, wrapRequestListener(listener));
     }
-    return origOn.apply(this, arguments);
+    return origCreateServer.call(this, options, listener);
   };
-  http.Server.prototype.addListener = http.Server.prototype.on;
 }
 
 const standaloneDir = path.join(__dirname, ".next", "standalone");
