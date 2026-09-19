@@ -47,7 +47,7 @@ export function ProductCard({ product, categoryLabel, navProductIds }: ProductCa
       <button
         type="button"
         onClick={openDetails}
-        className="product-card-media relative flex aspect-square w-full items-center justify-center overflow-hidden p-5"
+        className="product-card-media relative flex aspect-square w-full items-center justify-center overflow-hidden p-2 sm:p-3"
       >
         <div className="product-card-glow pointer-events-none absolute inset-0" aria-hidden />
         <span className="product-card-spark product-card-spark--1 pointer-events-none absolute" aria-hidden>
@@ -80,6 +80,7 @@ export function ProductCard({ product, categoryLabel, navProductIds }: ProductCa
           width={400}
           height={400}
           sizes="(max-width: 640px) 88vw, (max-width: 1024px) 45vw, 25vw"
+          unoptimized
           className="relative z-[1] h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(157,2,8,0.15)] transition duration-500 group-hover:scale-[1.06]"
         />
 

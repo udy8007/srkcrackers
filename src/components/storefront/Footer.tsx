@@ -19,6 +19,7 @@ export function Footer() {
                 width={48}
                 height={48}
                 className="h-12 w-12 rounded-full ring-2 ring-yellow/60"
+                unoptimized
               />
               <h4 className="font-display text-xl font-bold">{BUSINESS.name}</h4>
             </div>

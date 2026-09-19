@@ -6,10 +6,10 @@ import { withAppBase } from "@/lib/app-base-path";
 import "@/app/crackro-hero.css";
 
 const SHINCHAN_FRAMES = [
-  "/shop/srk-hero-art.png",
-  "/shop/srk-hero-art.png",
-  "/shop/srk-hero-art.png",
-  "/shop/srk-hero-art.png",
+  "/images/shinchan-cut-1.png",
+  "/images/shinchan-cut-2.png",
+  "/images/shinchan-cut-3.png",
+  "/images/shinchan-cut-4.png",
 ];
 
 export function Hero() {

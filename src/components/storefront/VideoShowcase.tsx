@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { withAppBase } from "@/lib/app-base-path";
 import { SectionDecor } from "./FestiveDecor";
 import { SectionHead } from "./SectionHead";
 
@@ -43,7 +44,7 @@ function VideoCard({ src, title }: { src: string; title: string }) {
           onEnded={() => setIsPlaying(false)}
           aria-label={title}
         >
-          <source src={src} type="video/mp4" />
+          <source src={withAppBase(src)} type="video/mp4" />
           Your browser does not support HTML video.
         </video>
 

@@ -38,13 +38,40 @@ export function AppBase() {
         if (path) input = withBasePath(path, base);
       } else if (input instanceof URL && input.origin === window.location.origin) {
         input = new URL(withBasePath(`${input.pathname}${input.search}`, base), input.origin);
+      } else if (typeof Request !== "undefined" && input instanceof Request) {
+        const path = sameOriginPath(input.url);
+        if (path) {
+          const next = withBasePath(path, base);
+          if (next !== path) input = new Request(new URL(next, window.location.origin), input);
+        }
       }
       return origFetch(input as RequestInfo, init);
     };
 
+    const prefixMedia = () => {
+      document.querySelectorAll("img[src], source[src], script[src], link[href], video[src], audio[src]").forEach((node) => {
+        const el = node as HTMLElement & { src?: string; href?: string };
+        const attr = el.tagName === "LINK" ? "href" : "src";
+        const value = el.getAttribute(attr);
+        const path = value ? sameOriginPath(value) : null;
+        if (!path) return;
+        const next = withBasePath(path, base);
+        if (next !== value) el.setAttribute(attr, next);
+      });
+    };
+    prefixMedia();
+    const observer = new MutationObserver(prefixMedia);
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["src", "href"],
+    });
+
     if (envBase) {
       return () => {
         window.fetch = origFetch;
+        observer.disconnect();
       };
     }
 
@@ -83,21 +110,6 @@ export function AppBase() {
       window.location.assign(next);
     };
     document.addEventListener("click", onClick, true);
-
-    const prefixMedia = () => {
-      document.querySelectorAll("img[src], source[src], script[src], link[href], video[src], audio[src]").forEach((node) => {
-        const el = node as HTMLElement & { src?: string; href?: string };
-        const attr = el.tagName === "LINK" ? "href" : "src";
-        const value = el.getAttribute(attr);
-        const path = value ? sameOriginPath(value) : null;
-        if (!path) return;
-        const next = withBasePath(path, base);
-        if (next !== value) el.setAttribute(attr, next);
-      });
-    };
-    prefixMedia();
-    const observer = new MutationObserver(prefixMedia);
-    observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["src", "href"] });
 
     return () => {
       window.fetch = origFetch;

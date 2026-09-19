@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
     return config;
   },
   images: {
+    unoptimized: true,
     remotePatterns: [{ protocol: "https", hostname: "api.qrserver.com" }],
   },
   serverExternalPackages: [

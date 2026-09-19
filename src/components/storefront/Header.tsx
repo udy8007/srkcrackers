@@ -36,7 +36,8 @@ export function Header() {
               width={48}
               height={48}
               priority
-              className="h-full w-full rounded-full bg-black object-cover"
+              unoptimized
+          className="h-full w-full rounded-full bg-black object-cover"
             />
           </span>
           <span className="min-w-0">

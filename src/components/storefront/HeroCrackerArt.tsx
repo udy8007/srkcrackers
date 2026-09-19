@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import Lottie from "lottie-react";
+import { withAppBase } from "@/lib/app-base-path";
 
 type LottieData = Record<string, unknown>;
 
@@ -10,7 +11,7 @@ function useOptionalLottie(src: string) {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(src)
+    fetch(withAppBase(src))
       .then((res) => (res.ok ? res.json() : null))
       .then((json) => {
         if (!cancelled && json && typeof json === "object") setData(json as LottieData);

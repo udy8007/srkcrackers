@@ -8,6 +8,7 @@ export const APP_ROOT_SEGMENTS = new Set([
   "products",
   "shop",
   "lottie",
+  "videos",
   "images",
   "fonts",
   "logo.png",

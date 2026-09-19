@@ -149,11 +149,13 @@ function prefixAssetUrls(text, mount) {
     "/shop/",
     "/products/",
     "/lottie/",
+    "/videos/",
     "/admin",
     "/api/",
     "/crackers/",
     "/1000-wala",
     "/favicon.ico",
+    "/logo.png",
   ];
   for (var i = 0; i < paths.length; i++) {
     var p = paths[i];
@@ -167,11 +169,7 @@ function prefixAssetUrls(text, mount) {
 }
 
 function rewritePublicAliases(req) {
-  var p = pathnameOf(req);
-  if (/\/images\/shinchan-cut-\d+\.png$/i.test(p)) {
-    var base = nextBasePath();
-    req.url = (base || "") + "/shop/srk-hero-art.png";
-  }
+  // Public files are served by Next under NEXT_PUBLIC_BASE_PATH.
 }
 
 function prefixLocation(value, mount) {

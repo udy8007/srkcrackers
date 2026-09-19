@@ -60,10 +60,10 @@ export async function generateMetadata(): Promise<Metadata> {
   category: "shopping",
   icons: {
     icon: [
-      { url: "/logo.png", type: "image/png", sizes: "512x512" },
+      { url: `${siteUrl}/logo.png`, type: "image/png", sizes: "512x512" },
     ],
-    shortcut: "/logo.png",
-    apple: [{ url: "/logo.png", sizes: "180x180", type: "image/png" }],
+    shortcut: `${siteUrl}/logo.png`,
+    apple: [{ url: `${siteUrl}/logo.png`, sizes: "180x180", type: "image/png" }],
   },
   openGraph: {
     title: TITLE,
@@ -74,7 +74,7 @@ export async function generateMetadata(): Promise<Metadata> {
     type: "website",
     images: [
       {
-        url: "/logo.png",
+        url: `${siteUrl}/logo.png`,
         width: 1024,
         height: 1024,
         alt: `${BUSINESS.name} logo`,
@@ -85,7 +85,7 @@ export async function generateMetadata(): Promise<Metadata> {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
-    images: ["/logo.png"],
+    images: [`${siteUrl}/logo.png`],
   },
   robots: {
     index: true,

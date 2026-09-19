@@ -35,6 +35,7 @@ export function SafeImage({ src, fallbackSrc = DEFAULT_FALLBACK, alt, ...props }
   return (
     <Image
       {...props}
+      unoptimized
       src={current}
       alt={alt}
       onError={() => {
