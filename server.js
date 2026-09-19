@@ -1,36 +1,285 @@
 "use strict";
 
 /**
- * TEMPORARY Hostinger Node.js smoke test.
- * Revert this commit after the page loads.
+ * cPanel / Passenger startup file (application root).
+ *
+ * Upload this file to the Node.js app root, e.g.:
+ *   /home/srkcrack/srkcrackers/server.js
+ * Startup file in cPanel must be: server.js  (this file, not .next/standalone/server.js)
+ *
+ * Node.js version MUST be 20+ (Setup Node.js App → Node.js version).
+ * System /usr/bin/node is often v10 and cannot load Next.js 15.
+ *
+ * /api/health is answered HERE so Git/File Manager update of this one file
+ * is enough to see env + MySQL status (the old Next pack does not include that).
  */
 
+var fs = require("fs");
+var path = require("path");
 var http = require("http");
+var execSync = require("child_process").execSync;
 
-var port = Number(process.env.PORT || process.env.PASSENGER_PORT || 3000);
+function loadEnvFile(file) {
+  if (!fs.existsSync(file)) return;
+  var lines = fs.readFileSync(file, "utf8").split(/\r?\n/);
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i].trim();
+    if (!line || line.charAt(0) === "#") continue;
+    var eq = line.indexOf("=");
+    if (eq <= 0) continue;
+    var key = line.slice(0, eq).trim();
+    var val = line.slice(eq + 1).trim();
+    if (
+      (val.charAt(0) === '"' && val.charAt(val.length - 1) === '"') ||
+      (val.charAt(0) === "'" && val.charAt(val.length - 1) === "'")
+    ) {
+      val = val.slice(1, -1);
+    }
+    if (process.env[key] == null || process.env[key] === "") {
+      process.env[key] = val;
+    }
+  }
+}
 
-var server = http.createServer(function (req, res) {
-  var url = String(req.url || "/").split("?")[0];
-  var body =
-    "<!DOCTYPE html><html><head><meta charset='utf-8'><title>SRK Node test</title></head>" +
-    "<body style='font-family:sans-serif;padding:2rem;max-width:40rem'>" +
-    "<h1 style='color:#15803d'>SRK Node.js test OK</h1>" +
-    "<p>If you see this, Hostinger Node is running.</p>" +
-    "<ul>" +
-    "<li>Node <b>" + process.version + "</b></li>" +
-    "<li>PORT <b>" + port + "</b></li>" +
-    "<li>Request <b>" + url + "</b></li>" +
-    "<li>DATABASE_URL <b>" + (process.env.DATABASE_URL ? "set" : "missing") + "</b></li>" +
-    "<li>Time <b>" + new Date().toISOString() + "</b></li>" +
-    "</ul>" +
+function loadAppEnv() {
+  loadEnvFile(path.join(__dirname, ".env"));
+  loadEnvFile(path.join(__dirname, ".env.production"));
+  loadEnvFile(path.join(__dirname, ".env.local"));
+}
+
+loadAppEnv();
+
+function extractDeployPack() {
+  var pack = path.join(__dirname, "pack.tar.gz");
+  if (!fs.existsSync(pack)) return;
+  console.log("[cpanel] extracting pack.tar.gz");
+  try {
+    execSync("tar -xzf pack.tar.gz", {
+      cwd: __dirname,
+      stdio: "inherit",
+      env: Object.assign({}, process.env, {
+        PATH: (process.env.PATH || "") + ":/usr/bin:/bin",
+      }),
+    });
+    fs.unlinkSync(pack);
+    console.log("[cpanel] pack extracted");
+  } catch (err) {
+    console.error("[cpanel] pack extract failed:", err && err.message ? err.message : err);
+  }
+}
+
+function listenNeedNode20() {
+  var port = Number(process.env.PORT || process.env.PASSENGER_PORT || 3000);
+  var host = "127.0.0.1";
+  var html =
+    "<!DOCTYPE html><html><body style='font-family:sans-serif;padding:2rem;max-width:40rem'>" +
+    "<h1>SRK Crackers</h1>" +
+    "<p>This app needs <b>Node.js 20 or newer</b>. The server is running <b>" +
+    process.version +
+    "</b>.</p>" +
+    "<ol><li>hPanel → <b>Setup Node.js App</b></li>" +
+    "<li>Open this application</li>" +
+    "<li>Set <b>Node.js version</b> to 20, 22, or 24</li>" +
+    "<li>Save, then <b>Restart</b></li></ol>" +
     "</body></html>";
-  res.writeHead(200, {
-    "Content-Type": "text/html; charset=utf-8",
-    "Cache-Control": "no-store",
-  });
-  res.end(body);
-});
+  http
+    .createServer(function (req, res) {
+      res.writeHead(503, {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store",
+      });
+      res.end(html);
+    })
+    .listen(port, host, function () {
+      console.error("[cpanel] Node " + process.version + " is too old. Set Setup Node.js App to 20/22/24, then Restart.");
+    });
+}
 
-server.listen(port, function () {
-  console.log("[srk-test] listening on PORT " + port + " with Node " + process.version);
-});
+extractDeployPack();
+
+var nodeMajor = parseInt(String(process.versions.node).split(".")[0], 10);
+if (!(nodeMajor >= 20)) {
+  listenNeedNode20();
+  return;
+}
+
+const WRAPPER = "cpanel-wrapper-2026-09-19-pack";
+
+process.env.NODE_ENV = process.env.NODE_ENV || "production";
+
+if (!process.env.PORT && process.env.PASSENGER_PORT) {
+  process.env.PORT = String(process.env.PASSENGER_PORT);
+}
+
+process.env.HOSTNAME = "127.0.0.1";
+process.env.HOST = "127.0.0.1";
+
+function envRaw(name) {
+  const value = process.env[name];
+  if (!value) return "";
+  let next = String(value).trim();
+  if (
+    (next.startsWith('"') && next.endsWith('"')) ||
+    (next.startsWith("'") && next.endsWith("'"))
+  ) {
+    next = next.slice(1, -1).trim();
+  }
+  return next;
+}
+
+function envSet(name) {
+  return Boolean(envRaw(name));
+}
+
+function isHealth(req) {
+  const pathname = String(req.url || "").split("?")[0];
+  return pathname === "/api/health" || pathname === "/api/health/";
+}
+
+function probeMysql() {
+  return new Promise((resolve) => {
+    const url = envRaw("DATABASE_URL");
+    if (!url) {
+      resolve({ ok: false, error: "DATABASE_URL missing in Passenger env" });
+      return;
+    }
+    if (!/^mysql(s)?:\/\//i.test(url)) {
+      resolve({ ok: false, error: "DATABASE_URL is not a mysql:// URL" });
+      return;
+    }
+
+    let parsed;
+    try {
+      parsed = new URL(url);
+    } catch (err) {
+      resolve({ ok: false, error: `invalid DATABASE_URL: ${err instanceof Error ? err.message : "parse"}` });
+      return;
+    }
+
+    const port = Number(parsed.port) || 3306;
+    const socket = require("net").connect({ host: parsed.hostname, port }, () => {
+      socket.end();
+      resolve({ ok: true, error: null });
+    });
+    socket.on("error", (err) => {
+      resolve({ ok: false, error: `mysql network: ${err.message}` });
+    });
+    socket.setTimeout(8000, () => {
+      socket.destroy();
+      resolve({ ok: false, error: "mysql timeout (8s) — host or port may be blocked" });
+    });
+  });
+}
+
+async function healthPayload() {
+  const standaloneDir = path.join(__dirname, ".next", "standalone");
+  const standaloneServer = path.join(standaloneDir, "server.js");
+  const mysql = await probeMysql();
+  return {
+    status: mysql.ok ? "ok" : "degraded",
+    database: mysql.ok ? "up" : "down",
+    wrapper: WRAPPER,
+    standalone: fs.existsSync(standaloneServer),
+    cwd: process.cwd(),
+    startupFile: __filename,
+    node: process.version,
+    env: {
+      DATABASE_URL: envSet("DATABASE_URL"),
+      AUTH_SECRET: envSet("AUTH_SECRET"),
+      NEXTAUTH_SECRET: envSet("NEXTAUTH_SECRET"),
+      AUTH_TRUST_HOST: envSet("AUTH_TRUST_HOST"),
+      CRON_SECRET: envSet("CRON_SECRET"),
+    },
+    error: mysql.error,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+function sendHealth(_req, res) {
+  healthPayload()
+    .then((body) => {
+      const code = body.database === "up" ? 200 : 503;
+      res.writeHead(code, {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": "no-store",
+        "X-SRK-Health": WRAPPER,
+      });
+      res.end(JSON.stringify(body));
+    })
+    .catch((err) => {
+      res.writeHead(503, {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": "no-store",
+        "X-SRK-Health": WRAPPER,
+      });
+      res.end(
+        JSON.stringify({
+          status: "degraded",
+          database: "down",
+          wrapper: WRAPPER,
+          error: err instanceof Error ? err.message : "health failed",
+          timestamp: new Date().toISOString(),
+        }),
+      );
+    });
+}
+
+function wrapRequestListener(listener) {
+  return function wrapped(req, res) {
+    if (isHealth(req)) {
+      sendHealth(req, res);
+      return;
+    }
+    if (typeof listener === "function") listener.call(this, req, res);
+  };
+}
+
+function installHealthIntercept() {
+  const origCreateServer = http.createServer;
+  http.createServer = function (options, listener) {
+    if (typeof options === "function") {
+      return origCreateServer.call(this, wrapRequestListener(options));
+    }
+    if (typeof listener === "function") {
+      return origCreateServer.call(this, options, wrapRequestListener(listener));
+    }
+    return origCreateServer.call(this, options, listener);
+  };
+}
+
+const standaloneDir = path.join(__dirname, ".next", "standalone");
+const standaloneServer = path.join(standaloneDir, "server.js");
+
+if (!fs.existsSync(standaloneServer)) {
+  const htmlPath = path.join(__dirname, "public", "srk-contact.html");
+  const html = fs.existsSync(htmlPath)
+    ? fs.readFileSync(htmlPath)
+    : Buffer.from(
+        "<!DOCTYPE html><html><body style='font-family:sans-serif;padding:2rem'>" +
+          "<h1>SRK Crackers</h1><p>Website is temporarily down.</p>" +
+          "<p><a href='https://wa.me/919841916899'>WhatsApp 98419 16899</a></p>" +
+          "</body></html>",
+      );
+  const port = Number(process.env.PORT) || 3000;
+  const host = process.env.HOSTNAME || "127.0.0.1";
+  http
+    .createServer((req, res) => {
+      if (isHealth(req)) {
+        sendHealth(req, res);
+        return;
+      }
+      res.writeHead(503, {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store",
+        "Retry-After": "120",
+      });
+      res.end(html);
+    })
+    .listen(port, host, () => {
+      console.error("[cpanel] Missing .next/standalone/server.js — serving site-down page on", host, port);
+    });
+} else {
+  installHealthIntercept();
+  process.chdir(standaloneDir);
+  require(standaloneServer);
+}
