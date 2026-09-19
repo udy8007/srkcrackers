@@ -33,9 +33,11 @@ export async function resolveSiteOrigin(): Promise<string> {
         requestHeaders.get("x-forwarded-scheme")?.trim() ||
         defaultSchemeFor(host);
       const origin = stripTrailingSlash(`${proto}://${host}`);
+      const envBase = (process.env.NEXT_PUBLIC_BASE_PATH || "").trim().replace(/\/+$/, "");
       const prefix = (
         requestHeaders.get("x-forwarded-prefix") ||
         requestHeaders.get("x-base-path") ||
+        envBase ||
         ""
       )
         .trim()

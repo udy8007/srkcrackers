@@ -168,8 +168,9 @@ function prefixAssetUrls(text, mount) {
 
 function rewritePublicAliases(req) {
   var p = pathnameOf(req);
-  if (/^\/images\/shinchan-cut-\d+\.png$/i.test(p)) {
-    req.url = "/shop/srk-hero-art.png";
+  if (/\/images\/shinchan-cut-\d+\.png$/i.test(p)) {
+    var base = nextBasePath();
+    req.url = (base || "") + "/shop/srk-hero-art.png";
   }
 }
 
@@ -264,13 +265,13 @@ function forwardToNext(req, res, mount) {
 }
 
 function isDebug(req) {
-  var p = pathnameOf(req);
-  return p === "/__debug" || p === "/debug" || p === "/debug/" || p === "/__debug/";
+  var p = pathnameOf(req).replace(/\/+$/, "") || "/";
+  return /(^|\/)(__debug|debug)$/.test(p);
 }
 
 function isHealth(req) {
-  var p = pathnameOf(req);
-  return p === "/api/health" || p === "/api/health/";
+  var p = pathnameOf(req).replace(/\/+$/, "") || "/";
+  return /(^|\/)api\/health$/.test(p);
 }
 
 function debugPayload() {
@@ -403,13 +404,23 @@ function sendHealth(res) {
   res.end(JSON.stringify(data, null, 2));
 }
 
+function nextBasePath() {
+  var raw = String(process.env.NEXT_PUBLIC_BASE_PATH || "").trim();
+  if (!raw || raw === "/") return "";
+  if (raw.charAt(0) !== "/") raw = "/" + raw;
+  return raw.replace(/\/+$/, "");
+}
+
 function handleRequest(req, res) {
-  var mount = detectMountFromUrl(req.url);
-  stripMount(req);
+  var builtBase = nextBasePath();
+  var mount = builtBase ? "" : detectMountFromUrl(req.url);
+  if (!builtBase) {
+    stripMount(req);
+  }
   rewritePublicAliases(req);
-  if (mount) {
-    req.headers["x-forwarded-prefix"] = mount;
-    req.headers["x-base-path"] = mount;
+  if (mount || builtBase) {
+    req.headers["x-forwarded-prefix"] = builtBase || mount;
+    req.headers["x-base-path"] = builtBase || mount;
   }
   if (isHealth(req)) {
     sendHealth(res);

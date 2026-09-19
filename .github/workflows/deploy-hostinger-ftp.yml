@@ -55,6 +55,7 @@ jobs:
         env:
           NODE_ENV: production
           AUTH_TRUST_HOST: "true"
+          NEXT_PUBLIC_BASE_PATH: "/abc"
           AUTH_SECRET: ${{ secrets.AUTH_SECRET || vars.AUTH_SECRET }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || vars.NEXTAUTH_SECRET }}
           DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
@@ -78,6 +79,7 @@ jobs:
           AUTH_SECRET: ${{ secrets.AUTH_SECRET || vars.AUTH_SECRET }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || vars.NEXTAUTH_SECRET }}
           AUTH_TRUST_HOST: "true"
+          NEXT_PUBLIC_BASE_PATH: "/abc"
           EMAIL_SMTP_HOST: ${{ secrets.EMAIL_SMTP_HOST || vars.EMAIL_SMTP_HOST }}
           EMAIL_SMTP_PORT: ${{ secrets.EMAIL_SMTP_PORT || vars.EMAIL_SMTP_PORT }}
           EMAIL_SMTP_USERNAME: ${{ secrets.EMAIL_SMTP_USERNAME || vars.EMAIL_SMTP_USERNAME }}
@@ -103,6 +105,7 @@ jobs:
               "AUTH_SECRET",
               "NEXTAUTH_SECRET",
               "AUTH_TRUST_HOST",
+              "NEXT_PUBLIC_BASE_PATH",
               "EMAIL_SMTP_HOST",
               "EMAIL_SMTP_PORT",
               "EMAIL_SMTP_USERNAME",

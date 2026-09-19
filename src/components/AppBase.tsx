@@ -27,6 +27,7 @@ function sameOriginPath(value: string): string | null {
 /** Prefixes API, assets, and in-app links with the Hostinger Application URL path. */
 export function AppBase() {
   useEffect(() => {
+    if (process.env.NEXT_PUBLIC_BASE_PATH) return;
     const base = detectBase();
     if (!base) return;
 
