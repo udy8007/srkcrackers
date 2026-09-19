@@ -66,6 +66,6 @@ export function productSeoPath(slug: string): string {
   return `/crackers/${slug}`;
 }
 
-export function productSeoUrl(slug: string): string {
-  return `${BUSINESS.url}${productSeoPath(slug)}`;
+export function productSeoUrl(slug: string, origin = BUSINESS.url): string {
+  return `${origin.replace(/\/+$/, "")}${productSeoPath(slug)}`;
 }

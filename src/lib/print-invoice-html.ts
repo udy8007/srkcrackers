@@ -310,7 +310,7 @@ export function buildPrintInvoiceHtml(
           <p class="brand-meta">
             Government Licensed Fireworks Dealer &nbsp;|&nbsp; Premium Sivakasi Quality<br />
             ${esc(BUSINESS.addressLine)}, ${esc(BUSINESS.state)}<br />
-            Ph: ${esc(BUSINESS.phoneDisplay)} &nbsp;|&nbsp; ${esc(BUSINESS.url.replace("https://", ""))} &nbsp;|&nbsp; GST: ${esc(BUSINESS.gstin)}<br />
+            Ph: ${esc(BUSINESS.phoneDisplay)} &nbsp;|&nbsp; ${esc(data.origin.replace(/^https?:\/\//, "").replace(/\/$/, ""))} &nbsp;|&nbsp; GST: ${esc(BUSINESS.gstin)}<br />
             Licence No: ${esc(LICENSE_INFO.licenceNo)}
           </p>
         </div>
@@ -380,7 +380,7 @@ export function buildPrintInvoiceHtml(
     </div>
 
     <p class="footer">
-      Thank you for choosing ${esc(BUSINESS.name)}! Track your order at ${esc(BUSINESS.url.replace("https://", ""))}
+      Thank you for choosing ${esc(BUSINESS.name)}! Track your order at ${esc(data.origin.replace(/^https?:\/\//, "").replace(/\/$/, ""))}
     </p>
   </div>
 </body>

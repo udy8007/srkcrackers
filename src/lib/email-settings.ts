@@ -1,7 +1,8 @@
-import { headers } from "next/headers";
 import type { EmailSettings } from "@/lib/db/types";
 import { prisma } from "@/lib/prisma";
 import { BUSINESS } from "@/lib/constants";
+
+export { resolveSiteOrigin } from "@/lib/site-url";
 
 export const EMAIL_SETTINGS_ID = "default";
 export const PASSWORD_MASK = "••••••••";
@@ -69,40 +70,6 @@ export function smtpConfigError(settings: EmailSettings): string | null {
   return null;
 }
 
-function stripTrailingSlash(value: string): string {
-  return value.trim().replace(/\/+$/, "");
-}
-
-/** Default scheme for a host when no proxy proto header is present. */
-function defaultSchemeFor(host: string): string {
-  return /^(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/i.test(host) ? "http" : "https";
-}
-
-/**
- * Resolve the public site origin dynamically from the incoming request
- * (no AUTH_URL / NEXTAUTH_URL needed). Falls back to BUSINESS.url when called
- * outside a request scope (e.g. build time).
- */
-export async function resolveSiteOrigin(): Promise<string> {
-  try {
-    const requestHeaders = await headers();
-    const host =
-      requestHeaders.get("x-forwarded-host")?.trim() ||
-      requestHeaders.get("host")?.trim();
-    if (host) {
-      const proto =
-        (requestHeaders.get("x-forwarded-proto") ?? "").split(",")[0]?.trim() ||
-        requestHeaders.get("x-forwarded-scheme")?.trim() ||
-        defaultSchemeFor(host);
-      return stripTrailingSlash(`${proto}://${host}`);
-    }
-  } catch {
-    // No active request scope — fall through to the default origin.
-  }
-  return stripTrailingSlash(BUSINESS.url);
-}
-
-/** Admin alert recipient — falls back when adminNotifyEmail was not saved. */
 export function resolveAdminNotifyEmail(settings: EmailSettings): string {
   return (
     settings.adminNotifyEmail.trim() ||

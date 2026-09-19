@@ -407,6 +407,10 @@ function handleRequest(req, res) {
   var mount = detectMountFromUrl(req.url);
   stripMount(req);
   rewritePublicAliases(req);
+  if (mount) {
+    req.headers["x-forwarded-prefix"] = mount;
+    req.headers["x-base-path"] = mount;
+  }
   if (isHealth(req)) {
     sendHealth(res);
     return;

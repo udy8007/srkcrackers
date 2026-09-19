@@ -1,5 +1,6 @@
 import type { OrderStatus } from "@/lib/db/types";
 import { BUSINESS, ORDER_STATUS_LABEL } from "@/lib/constants";
+import { publicSiteUrlFromAbsolute } from "@/lib/site-url";
 import { buildPrintInvoiceHtml, type PrintInvoiceData } from "@/lib/print-invoice-html";
 import { formatPrice } from "@/lib/utils";
 
@@ -11,8 +12,9 @@ function esc(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function emailLayout(title: string, bodyHtml: string): string {
-  const logoUrl = `${BUSINESS.url}/logo.png`;
+function emailLayout(title: string, bodyHtml: string, siteUrl = BUSINESS.url): string {
+  const origin = siteUrl.replace(/\/+$/, "");
+  const logoUrl = `${origin}/logo.png`;
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -48,7 +50,7 @@ function emailLayout(title: string, bodyHtml: string): string {
     </div>
     <p class="footer">
       ${esc(BUSINESS.name)} &nbsp;|&nbsp; ${esc(BUSINESS.phoneDisplay)} &nbsp;|&nbsp;
-      <a href="${esc(BUSINESS.url)}" style="color:#9d0208">${esc(BUSINESS.url.replace("https://", ""))}</a>
+      <a href="${esc(origin)}" style="color:#9d0208">${esc(origin.replace(/^https?:\/\//, ""))}</a>
     </p>
   </div>
 </body>
@@ -95,7 +97,7 @@ export function buildCustomerOrderConfirmationEmail(
 
   return {
     subject: `Order Confirmed — ${ctx.orderNumber} | ${BUSINESS.name}`,
-    html: emailLayout(`Order ${ctx.orderNumber}`, body),
+    html: emailLayout(`Order ${ctx.orderNumber}`, body, publicSiteUrlFromAbsolute(ctx.trackUrl || ctx.adminOrderUrl)),
   };
 }
 
@@ -122,7 +124,7 @@ export function buildAdminNewOrderEmail(ctx: OrderEmailContext): { subject: stri
 
   return {
     subject: `🔔 New Order ${ctx.orderNumber} — ${formatPrice(ctx.total)}`,
-    html: emailLayout(`New Order ${ctx.orderNumber}`, body),
+    html: emailLayout(`New Order ${ctx.orderNumber}`, body, publicSiteUrlFromAbsolute(ctx.adminOrderUrl)),
   };
 }
 
@@ -145,7 +147,7 @@ export function buildCustomerStatusChangeEmail(
 
   return {
     subject: `Order ${ctx.orderNumber} — ${ORDER_STATUS_LABEL[ctx.status]}`,
-    html: emailLayout(`Status Update ${ctx.orderNumber}`, body),
+    html: emailLayout(`Status Update ${ctx.orderNumber}`, body, publicSiteUrlFromAbsolute(ctx.trackUrl)),
   };
 }
 
@@ -177,7 +179,7 @@ export function buildAdminStatusChangeEmail(
 
   return {
     subject: `[Admin] ${ctx.orderNumber} — ${ORDER_STATUS_LABEL[ctx.previousStatus]} → ${ORDER_STATUS_LABEL[ctx.status]}`,
-    html: emailLayout(`Admin Status Update ${ctx.orderNumber}`, body),
+    html: emailLayout(`Admin Status Update ${ctx.orderNumber}`, body, publicSiteUrlFromAbsolute(ctx.adminOrderUrl)),
   };
 }
 
@@ -224,7 +226,7 @@ export function buildAdminPendingReminderEmail(
 
   return {
     subject: `⏰ Reminder: ${orders.length} pending order(s) need action`,
-    html: emailLayout("Pending Orders Reminder", body),
+    html: emailLayout("Pending Orders Reminder", body, publicSiteUrlFromAbsolute(adminOrdersUrl)),
   };
 }
 
@@ -262,7 +264,7 @@ export function buildAdminNewEnquiryEmail(ctx: EnquiryEmailContext): { subject: 
 
   return {
     subject: `📩 New Enquiry ${ctx.enquiryNumber} — ${ctx.name}`,
-    html: emailLayout(`New Enquiry ${ctx.enquiryNumber}`, body),
+    html: emailLayout(`New Enquiry ${ctx.enquiryNumber}`, body, publicSiteUrlFromAbsolute(ctx.adminEnquiryUrl)),
   };
 }
 
@@ -277,13 +279,13 @@ export function buildCustomerEnquiryResolvedEmail(ctx: EnquiryEmailContext): { s
     </div>
     <p>If you have any further questions, please call us at ${esc(BUSINESS.phoneDisplay)} or WhatsApp us anytime.</p>
     <p style="text-align:center">
-      <a class="btn" href="${esc(BUSINESS.url)}">Visit Our Store</a>
+      <a class="btn" href="${esc(publicSiteUrlFromAbsolute(ctx.adminEnquiryUrl))}">Visit Our Store</a>
     </p>
   `;
 
   return {
     subject: `Enquiry Resolved — ${ctx.enquiryNumber} | ${BUSINESS.name}`,
-    html: emailLayout(`Enquiry Resolved ${ctx.enquiryNumber}`, body),
+    html: emailLayout(`Enquiry Resolved ${ctx.enquiryNumber}`, body, publicSiteUrlFromAbsolute(ctx.adminEnquiryUrl)),
   };
 }
 
@@ -328,7 +330,7 @@ export function buildAdminEnquiryPendingReminderEmail(
 
   return {
     subject: `⏰ Reminder: ${enquiries.length} pending enquiry(ies) need action`,
-    html: emailLayout("Pending Enquiries Reminder", body),
+    html: emailLayout("Pending Enquiries Reminder", body, publicSiteUrlFromAbsolute(adminEnquiriesUrl)),
   };
 }
 

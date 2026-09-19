@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BUSINESS } from "@/lib/constants";
+import { resolveSiteOrigin } from "@/lib/site-url";
 import { getGiftPackContents } from "@/lib/gift-pack-contents";
 import { getSeoProductBySlug, listActiveSeoProducts, productSeoUrl } from "@/lib/seo-products";
 import { discountPercent, formatPrice } from "@/lib/utils";
@@ -28,6 +29,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: "Product not found" };
   }
 
+  const origin = await resolveSiteOrigin();
   const title = `Buy ${product.name} Online | ${product.categoryLabel} | ${BUSINESS.name} Avadi Chennai`;
   const description =
     product.description?.trim() ||
@@ -53,7 +55,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title,
       description,
-      url: productSeoUrl(product.slug),
+      url: productSeoUrl(product.slug, origin),
       siteName: BUSINESS.name,
       locale: "en_IN",
       type: "website",
@@ -72,6 +74,7 @@ export default async function CrackerProductPage({ params }: PageProps) {
   const product = await getSeoProductBySlug(slug);
   if (!product) notFound();
 
+  const origin = await resolveSiteOrigin();
   const off = discountPercent(product.mrp, product.price);
   const packItems = getGiftPackContents(product.slug);
   const imageSrc = product.imageUrl.startsWith("http") || product.imageUrl.startsWith("data:")
@@ -84,20 +87,20 @@ export default async function CrackerProductPage({ params }: PageProps) {
     "@type": "Product",
     name: product.name,
     description: product.description,
-    image: imageSrc.startsWith("http") ? imageSrc : `${BUSINESS.url}${imageSrc}`,
+    image: imageSrc.startsWith("http") ? imageSrc : `${origin}${imageSrc}`,
     sku: product.slug,
     brand: { "@type": "Brand", name: BUSINESS.name },
     category: product.categoryLabel,
     offers: {
       "@type": "Offer",
-      url: productSeoUrl(product.slug),
+      url: productSeoUrl(product.slug, origin),
       priceCurrency: "INR",
       price: product.price,
       availability: "https://schema.org/InStock",
       seller: {
         "@type": "Organization",
         name: BUSINESS.name,
-        url: BUSINESS.url,
+        url: origin,
       },
     },
   };

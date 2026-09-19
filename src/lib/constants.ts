@@ -4,7 +4,7 @@ import type { EnquiryStatus, OrderStatus, PaymentStatus } from "@/lib/db/types";
 export const BUSINESS = {
   name: "SRK Crackers",
   tagline: "Licensed Fireworks Dealer",
-  url: "https://www.srkcrackers.in",
+  url: "https://www.srkcrackers.in", // fallback only when no request host is available
   phone: "9841916899",
   phoneDisplay: "98419 16899",
   whatsapp: "919841916899",

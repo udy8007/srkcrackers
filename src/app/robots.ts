@@ -1,14 +1,15 @@
 import type { MetadataRoute } from "next";
-import { BUSINESS } from "@/lib/constants";
+import { resolveSiteOrigin } from "@/lib/site-url";
 
-export default function robots(): MetadataRoute.Robots {
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const origin = await resolveSiteOrigin();
   return {
     rules: {
       userAgent: "*",
       allow: "/",
       disallow: ["/admin", "/api/"],
     },
-    sitemap: `${BUSINESS.url}/sitemap.xml`,
-    host: BUSINESS.url,
+    sitemap: `${origin}/sitemap.xml`,
+    host: origin,
   };
 }

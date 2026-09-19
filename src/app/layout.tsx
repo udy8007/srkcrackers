@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Poppins, Jost } from "next/font/google";
 import { BUSINESS } from "@/lib/constants";
+import { resolveSiteOrigin } from "@/lib/site-url";
+import { AppBase } from "@/components/AppBase";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -18,12 +20,13 @@ const jost = Jost({
   display: "swap",
 });
 
-const SITE_URL = BUSINESS.url;
 const TITLE = `${BUSINESS.name} — 1000 Wala, Gift Boxes & Sivakasi Crackers Online | Avadi, Chennai`;
 const DESCRIPTION = `Buy 1000 Wala crackers, festival gift boxes and Sivakasi fireworks online from ${BUSINESS.name}, Avadi, Chennai. Licensed dealer · up to 80% off · Free 1000 Wala above ₹${BUSINESS.freeWalaGiftMinAmount.toLocaleString("en-IN")}. Call ${BUSINESS.phoneDisplay}.`;
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
+export async function generateMetadata(): Promise<Metadata> {
+  const siteUrl = await resolveSiteOrigin();
+  return {
+  metadataBase: new URL(siteUrl),
   title: {
     default: TITLE,
     template: `%s | ${BUSINESS.name}`,
@@ -47,7 +50,7 @@ export const metadata: Metadata = {
     "crackers price list",
     "buy crackers online Avadi",
   ],
-  authors: [{ name: BUSINESS.name, url: SITE_URL }],
+  authors: [{ name: BUSINESS.name, url: siteUrl }],
   creator: BUSINESS.name,
   publisher: BUSINESS.name,
   alternates: {
@@ -64,7 +67,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,
-    url: SITE_URL,
+    url: siteUrl,
     siteName: BUSINESS.name,
     locale: "en_IN",
     type: "website",
@@ -95,6 +98,7 @@ export const metadata: Metadata = {
     },
   },
 };
+}
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -102,15 +106,21 @@ export const viewport: Viewport = {
   themeColor: "#d62828",
 };
 
-const jsonLd = {
+export default async function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const siteUrl = await resolveSiteOrigin();
+  const jsonLd = {
   "@context": "https://schema.org",
   "@type": ["Store", "LocalBusiness"],
-  "@id": `${SITE_URL}/#store`,
+  "@id": `${siteUrl}/#store`,
   name: BUSINESS.name,
   description: DESCRIPTION,
-  url: SITE_URL,
-  image: `${SITE_URL}/logo.png`,
-  logo: `${SITE_URL}/logo.png`,
+  url: siteUrl,
+  image: `${siteUrl}/logo.png`,
+  logo: `${siteUrl}/logo.png`,
   telephone: `+91${BUSINESS.phone}`,
   email: BUSINESS.email,
   priceRange: "₹₹",
@@ -150,7 +160,7 @@ const jsonLd = {
         itemOffered: {
           "@type": "Product",
           name: "1000 Wala Crackers",
-          url: `${SITE_URL}/1000-wala`,
+          url: `${siteUrl}/1000-wala`,
         },
       },
       {
@@ -158,18 +168,13 @@ const jsonLd = {
         itemOffered: {
           "@type": "Product",
           name: "Festival Gift Boxes",
-          url: `${SITE_URL}/#gift-packs`,
+          url: `${siteUrl}/#gift-packs`,
         },
       },
     ],
   },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
   return (
     <html lang="en">
       <head>
@@ -183,6 +188,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${poppins.variable} ${jost.variable} antialiased`}>
+        <AppBase />
         {children}
         <Script
           src="https://www.noupe.com/embed/019f30967aa0700080c53f9bb9b8a6e42c31.js"

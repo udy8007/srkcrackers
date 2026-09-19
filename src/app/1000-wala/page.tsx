@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BUSINESS } from "@/lib/constants";
+import { resolveSiteOrigin } from "@/lib/site-url";
 import { formatPrice } from "@/lib/utils";
 
 const TITLE = `1000 Wala Crackers Online | Buy 1000 Wala in Avadi, Chennai | ${BUSINESS.name}`;
 const DESCRIPTION = `Buy 1000 Wala crackers online from ${BUSINESS.name}, Avadi, Chennai. Sivakasi-quality 1000 wala / 1000 வாலா garland at wholesale rates. Free 1000 Wala gift on orders above ${formatPrice(BUSINESS.freeWalaGiftMinAmount)}. Order online & pay via UPI.`;
 
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  const origin = await resolveSiteOrigin();
+  return {
   title: TITLE,
   description: DESCRIPTION,
   keywords: [
@@ -27,7 +30,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,
-    url: `${BUSINESS.url}/1000-wala`,
+    url: `${origin}/1000-wala`,
     siteName: BUSINESS.name,
     locale: "en_IN",
     type: "website",
@@ -40,55 +43,57 @@ export const metadata: Metadata = {
     images: ["/logo.png"],
   },
 };
+}
 
-const faqLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: [
-    {
-      "@type": "Question",
-      name: "Where can I buy 1000 Wala crackers in Avadi, Chennai?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: `Buy 1000 Wala crackers online from ${BUSINESS.name}, Morai Village, Avadi, Chennai. Order on ${BUSINESS.url} and pay via UPI.`,
+export default async function ThousandWalaPage() {
+  const origin = await resolveSiteOrigin();
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Where can I buy 1000 Wala crackers in Avadi, Chennai?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `Buy 1000 Wala crackers online from ${BUSINESS.name}, Morai Village, Avadi, Chennai. Order on ${origin} and pay via UPI.`,
+        },
       },
-    },
-    {
-      "@type": "Question",
-      name: "Do you give free 1000 Wala on orders?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: `Yes. ${BUSINESS.name} gives a complimentary Free 1000 Wala gift on orders above ${formatPrice(BUSINESS.freeWalaGiftMinAmount)}.`,
+      {
+        "@type": "Question",
+        name: "Do you give free 1000 Wala on orders?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `Yes. ${BUSINESS.name} gives a complimentary Free 1000 Wala gift on orders above ${formatPrice(BUSINESS.freeWalaGiftMinAmount)}.`,
+        },
       },
-    },
-    {
-      "@type": "Question",
-      name: "What is the minimum order amount?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: `Minimum order is ${formatPrice(BUSINESS.minOrderAmount)}. Delivery across ${BUSINESS.deliveryArea} is ${formatPrice(BUSINESS.shippingCost)}, free above ${formatPrice(BUSINESS.freeShippingMinAmount)}.`,
+      {
+        "@type": "Question",
+        name: "What is the minimum order amount?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `Minimum order is ${formatPrice(BUSINESS.minOrderAmount)}. Delivery across ${BUSINESS.deliveryArea} is ${formatPrice(BUSINESS.shippingCost)}, free above ${formatPrice(BUSINESS.freeShippingMinAmount)}.`,
+        },
       },
-    },
-  ],
-};
+    ],
+  };
 
-const productLd = {
-  "@context": "https://schema.org",
-  "@type": "Product",
-  name: "1000 Wala Crackers",
-  description: DESCRIPTION,
-  brand: { "@type": "Brand", name: BUSINESS.name },
-  category: "Fireworks / Garland Crackers",
-  offers: {
-    "@type": "Offer",
-    url: `${BUSINESS.url}/1000-wala`,
-    priceCurrency: "INR",
-    availability: "https://schema.org/InStock",
-    seller: { "@type": "Organization", name: BUSINESS.name },
-  },
-};
+  const productLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: "1000 Wala Crackers",
+    description: DESCRIPTION,
+    brand: { "@type": "Brand", name: BUSINESS.name },
+    category: "Fireworks / Garland Crackers",
+    offers: {
+      "@type": "Offer",
+      url: `${origin}/1000-wala`,
+      priceCurrency: "INR",
+      availability: "https://schema.org/InStock",
+      seller: { "@type": "Organization", name: BUSINESS.name },
+    },
+  };
 
-export default function ThousandWalaPage() {
   return (
     <main className="min-h-screen bg-[#fff8f2] px-4 py-10 sm:py-14">
       <script
