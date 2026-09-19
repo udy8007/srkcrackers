@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useCart, selectCartCount } from "@/store/cart";
 import { useWishlist, selectWishlistCount } from "@/store/wishlist";
 import { useUI } from "@/store/ui";
@@ -30,14 +29,13 @@ export function Header() {
           className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden text-white lg:flex-initial"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-yellow via-gold to-orange p-[2.5px] shadow-[0_0_14px_rgba(255,195,0,0.55)] sm:h-12 sm:w-12">
-            <Image
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src="/logo.png"
               alt={`${BUSINESS.name} logo`}
               width={48}
               height={48}
-              priority
-              unoptimized
-          className="h-full w-full rounded-full bg-black object-cover"
+              className="h-full w-full rounded-full bg-black object-cover"
             />
           </span>
           <span className="min-w-0">

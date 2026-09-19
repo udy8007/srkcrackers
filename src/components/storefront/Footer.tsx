@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { BUSINESS } from "@/lib/constants";
 import { NAV_LINKS } from "./nav";
@@ -13,13 +12,13 @@ export function Footer() {
         <div className="grid gap-8 md:grid-cols-3">
           <div>
             <div className="flex items-center gap-3">
-              <Image
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src="/logo.png"
                 alt={`${BUSINESS.name} logo`}
                 width={48}
                 height={48}
-                className="h-12 w-12 rounded-full ring-2 ring-yellow/60"
-                unoptimized
+                className="h-12 w-12 rounded-full object-cover ring-2 ring-yellow/60"
               />
               <h4 className="font-display text-xl font-bold">{BUSINESS.name}</h4>
             </div>

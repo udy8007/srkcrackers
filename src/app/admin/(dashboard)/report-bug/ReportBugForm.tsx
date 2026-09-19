@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 
 const AREAS = [
@@ -65,12 +64,13 @@ export function ReportBugForm() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-start gap-4">
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src="/logo.png"
           alt="SRK Crackers"
           width={48}
           height={48}
-          className="h-12 w-12 shrink-0 rounded-full ring-2 ring-primary/20"
+          className="h-12 w-12 shrink-0 rounded-full object-cover ring-2 ring-primary/20"
         />
         <div>
           <h1 className="font-display text-2xl font-bold text-ink">Report a Bug</h1>

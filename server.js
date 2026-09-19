@@ -25,6 +25,7 @@ var KNOWN_ROOTS = {
   videos: 1,
   images: 1,
   abc: 1,
+  "logo.png": 1,
   "favicon.ico": 1,
   "robots.txt": 1,
   "sitemap.xml": 1,
@@ -113,7 +114,7 @@ function detectMountFromUrl(url) {
   var base = passengerBase();
   if (!base) {
     var first = pathname.split("/").filter(Boolean)[0] || "";
-    if (first && !KNOWN_ROOTS[first]) base = "/" + first;
+    if (first && !KNOWN_ROOTS[first] && first.indexOf(".") === -1) base = "/" + first;
   }
   if (!base) return "";
   if (pathname === base || pathname.indexOf(base + "/") === 0) return base;
