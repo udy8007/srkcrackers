@@ -1,5 +1,9 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
+  if (!process.env.DATABASE_URL) {
+    console.warn("[master-data-cache] DATABASE_URL is not set; skip startup warmup");
+    return;
+  }
 
   try {
     const { warmMasterDataCache } = await import("@/lib/master-data-cache");

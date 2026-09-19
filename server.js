@@ -20,6 +20,36 @@ var http = require("http");
 var spawn = require("child_process").spawn;
 var execSync = require("child_process").execSync;
 
+function loadEnvFile(file) {
+  if (!fs.existsSync(file)) return;
+  var lines = fs.readFileSync(file, "utf8").split(/\r?\n/);
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i].trim();
+    if (!line || line.charAt(0) === "#") continue;
+    var eq = line.indexOf("=");
+    if (eq <= 0) continue;
+    var key = line.slice(0, eq).trim();
+    var val = line.slice(eq + 1).trim();
+    if (
+      (val.charAt(0) === '"' && val.charAt(val.length - 1) === '"') ||
+      (val.charAt(0) === "'" && val.charAt(val.length - 1) === "'")
+    ) {
+      val = val.slice(1, -1);
+    }
+    if (process.env[key] == null || process.env[key] === "") {
+      process.env[key] = val;
+    }
+  }
+}
+
+function loadAppEnv() {
+  loadEnvFile(path.join(__dirname, ".env"));
+  loadEnvFile(path.join(__dirname, ".env.production"));
+  loadEnvFile(path.join(__dirname, ".env.local"));
+}
+
+loadAppEnv();
+
 function extractDeployPack() {
   var pack = path.join(__dirname, "pack.tar.gz");
   if (!fs.existsSync(pack)) return;
