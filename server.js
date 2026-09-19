@@ -11,7 +11,7 @@ var path = require("path");
 var http = require("http");
 var spawn = require("child_process").spawn;
 
-var WRAPPER = "cpanel-wrapper-2026-09-19-basepath";
+var WRAPPER = "cpanel-wrapper-2026-09-19-assets";
 var port = Number(process.env.PORT || process.env.PASSENGER_PORT || 3000);
 var KNOWN_ROOTS = {
   _next: 1,
@@ -104,22 +104,145 @@ function passengerBase() {
   return raw.replace(/\/+$/, "");
 }
 
-function stripMount(req) {
-  var url = String(req.url || "/");
-  var q = url.indexOf("?");
-  var pathname = q === -1 ? url : url.slice(0, q);
-  var query = q === -1 ? "" : url.slice(q);
+function detectMountFromUrl(url) {
+  var pathname = String(url || "/").split("?")[0];
   var base = passengerBase();
   if (!base) {
     var first = pathname.split("/").filter(Boolean)[0] || "";
     if (first && !KNOWN_ROOTS[first]) base = "/" + first;
   }
+  if (!base) return "";
+  if (pathname === base || pathname.indexOf(base + "/") === 0) return base;
+  return "";
+}
+
+function stripMount(req) {
+  var url = String(req.url || "/");
+  var q = url.indexOf("?");
+  var pathname = q === -1 ? url : url.slice(0, q);
+  var query = q === -1 ? "" : url.slice(q);
+  var base = detectMountFromUrl(url);
   if (!base) return;
-  if (pathname === base || pathname.indexOf(base + "/") === 0) {
-    var rest = pathname.slice(base.length) || "/";
-    if (rest.charAt(0) !== "/") rest = "/" + rest;
-    req.url = rest + query;
+  var rest = pathname.slice(base.length) || "/";
+  if (rest.charAt(0) !== "/") rest = "/" + rest;
+  req.url = rest + query;
+}
+
+function shouldRewriteBody(contentType) {
+  var ct = String(contentType || "").toLowerCase();
+  return (
+    ct.indexOf("text/html") !== -1 ||
+    ct.indexOf("javascript") !== -1 ||
+    ct.indexOf("text/css") !== -1 ||
+    ct.indexOf("json") !== -1 ||
+    ct.indexOf("text/x-component") !== -1
+  );
+}
+
+function prefixAssetUrls(text, mount) {
+  if (!mount || !text) return text;
+  var prefixed = mount + "/_next/";
+  text = String(text).split(prefixed).join("/_next/");
+  text = text.split("/_next/").join(prefixed);
+  text = text.replace(/"assetPrefix":""/g, '"assetPrefix":"' + mount + '"');
+  text = text.replace(/"assetPrefix":null/g, '"assetPrefix":"' + mount + '"');
+  text = text.split('"' + mount + "/products/").join('"/products/');
+  text = text.split('"/products/').join('"' + mount + "/products/");
+  text = text.split('"' + mount + "/shop/").join('"/shop/');
+  text = text.split('"/shop/').join('"' + mount + "/shop/");
+  text = text.split('"' + mount + "/lottie/").join('"/lottie/');
+  text = text.split('"/lottie/').join('"' + mount + "/lottie/");
+  return text;
+}
+
+function prefixLocation(value, mount) {
+  var loc = String(value || "");
+  if (!loc || loc.charAt(0) !== "/" || loc.indexOf("//") === 0) return loc;
+  if (loc === mount || loc.indexOf(mount + "/") === 0) return loc;
+  return mount + loc;
+}
+
+function forwardToNext(req, res, mount) {
+  if (!mount) {
+    nextServer.emit("request", req, res);
+    return;
   }
+
+  req.headers["accept-encoding"] = "identity";
+
+  var chunks = [];
+  var statusCode = 200;
+  var buffering = null;
+  var origSetHeader = res.setHeader.bind(res);
+  var origGetHeader = res.getHeader.bind(res);
+  var origWriteHead = res.writeHead.bind(res);
+  var origWrite = res.write.bind(res);
+  var origEnd = res.end.bind(res);
+
+  function contentType() {
+    return origGetHeader("content-type") || "";
+  }
+
+  function decideBuffer() {
+    if (buffering !== null) return buffering;
+    buffering = shouldRewriteBody(contentType());
+    return buffering;
+  }
+
+  res.setHeader = function (name, value) {
+    if (String(name).toLowerCase() === "location") {
+      value = prefixLocation(value, mount);
+    }
+    return origSetHeader(name, value);
+  };
+
+  res.writeHead = function (code, a, b) {
+    statusCode = code;
+    var hd = b;
+    if (typeof a === "object") hd = a;
+    if (hd) {
+      Object.keys(hd).forEach(function (key) {
+        res.setHeader(key, hd[key]);
+      });
+    }
+    decideBuffer();
+    if (!buffering) {
+      return origWriteHead.call(res, code);
+    }
+    return res;
+  };
+
+  res.write = function (chunk, enc, cb) {
+    decideBuffer();
+    if (buffering) {
+      if (chunk) {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk, typeof enc === "string" ? enc : "utf8"));
+      }
+      if (typeof enc === "function") enc();
+      else if (typeof cb === "function") cb();
+      return true;
+    }
+    if (!res.headersSent) origWriteHead.call(res, statusCode);
+    return origWrite.apply(res, arguments);
+  };
+
+  res.end = function (chunk, enc, cb) {
+    if (chunk && (typeof chunk !== "function")) {
+      res.write(chunk, typeof enc === "string" ? enc : undefined);
+    }
+    var done = typeof enc === "function" ? enc : cb;
+    decideBuffer();
+    if (buffering) {
+      var body = prefixAssetUrls(Buffer.concat(chunks).toString("utf8"), mount);
+      var buf = Buffer.from(body, "utf8");
+      origSetHeader("content-length", String(buf.length));
+      origWriteHead.call(res, statusCode);
+      return origEnd.call(res, buf, done);
+    }
+    return origEnd.apply(res, arguments);
+  };
+
+  nextServer.emit("request", req, res);
 }
 
 function isDebug(req) {
@@ -263,6 +386,7 @@ function sendHealth(res) {
 }
 
 function handleRequest(req, res) {
+  var mount = detectMountFromUrl(req.url);
   stripMount(req);
   if (isHealth(req)) {
     sendHealth(res);
@@ -273,7 +397,7 @@ function handleRequest(req, res) {
     return;
   }
   if (nextServer) {
-    nextServer.emit("request", req, res);
+    forwardToNext(req, res, mount);
     return;
   }
   sendDownPage(res, false);
