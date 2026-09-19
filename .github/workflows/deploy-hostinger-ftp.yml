@@ -73,6 +73,19 @@ jobs:
           npm run build:cpanel
 
       - name: Stage production build files
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET || vars.AUTH_SECRET }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || vars.NEXTAUTH_SECRET }}
+          AUTH_TRUST_HOST: "true"
+          EMAIL_SMTP_HOST: ${{ secrets.EMAIL_SMTP_HOST || vars.EMAIL_SMTP_HOST }}
+          EMAIL_SMTP_PORT: ${{ secrets.EMAIL_SMTP_PORT || vars.EMAIL_SMTP_PORT }}
+          EMAIL_SMTP_USERNAME: ${{ secrets.EMAIL_SMTP_USERNAME || vars.EMAIL_SMTP_USERNAME }}
+          EMAIL_SMTP_PASSWORD: ${{ secrets.EMAIL_SMTP_PASSWORD || vars.EMAIL_SMTP_PASSWORD }}
+          EMAIL_ADMIN_NOTIFY: ${{ secrets.EMAIL_ADMIN_NOTIFY || vars.EMAIL_ADMIN_NOTIFY }}
+          RAZORPAY_KEY_ID: ${{ secrets.RAZORPAY_KEY_ID || vars.RAZORPAY_KEY_ID }}
+          RAZORPAY_KEY_SECRET: ${{ secrets.RAZORPAY_KEY_SECRET || vars.RAZORPAY_KEY_SECRET }}
+          RAZORPAY_WEBHOOK_SECRET: ${{ secrets.RAZORPAY_WEBHOOK_SECRET || vars.RAZORPAY_WEBHOOK_SECRET }}
         run: |
           set -euo pipefail
           rm -rf deploy
@@ -82,7 +95,39 @@ jobs:
           cp cpanel/passenger.htaccess deploy/.htaccess
           cp -a .next/standalone deploy/.next/standalone
           date -u +"%Y-%m-%dT%H:%M:%SZ" > deploy/tmp/restart.txt
-
+          python3 - <<'PY'
+          import os
+          keys = [
+              "DATABASE_URL",
+              "AUTH_SECRET",
+              "NEXTAUTH_SECRET",
+              "AUTH_TRUST_HOST",
+              "EMAIL_SMTP_HOST",
+              "EMAIL_SMTP_PORT",
+              "EMAIL_SMTP_USERNAME",
+              "EMAIL_SMTP_PASSWORD",
+              "EMAIL_ADMIN_NOTIFY",
+              "RAZORPAY_KEY_ID",
+              "RAZORPAY_KEY_SECRET",
+              "RAZORPAY_WEBHOOK_SECRET",
+          ]
+          lines = []
+          present = []
+          for key in keys:
+              value = (os.environ.get(key) or "").strip()
+              if not value:
+                  continue
+              if "\n" in value or "\r" in value:
+                  raise SystemExit(f"{key} contains a newline")
+              lines.append(f"{key}={value}\n")
+              present.append(key)
+          if not lines:
+              print("No runtime secrets to write into deploy/.env")
+          else:
+              with open("deploy/.env", "w", encoding="utf-8") as handle:
+                  handle.writelines(lines)
+              print("Wrote deploy/.env with: " + ", ".join(present))
+          PY
           test -f deploy/server.js
           test -f deploy/.next/standalone/server.js
           echo "Staged:"

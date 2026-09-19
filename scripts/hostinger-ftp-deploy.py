@@ -259,6 +259,10 @@ class HostingerFtp:
         package_json = local_dir / "package.json"
         if package_json.exists():
             self.upload_file(package_json, "package.json")
+        env_file = local_dir / ".env"
+        if env_file.exists():
+            self.upload_file(env_file, ".env")
+            print("uploaded runtime .env from GitHub secrets")
         htaccess = local_dir / ".htaccess"
         if htaccess.exists():
             self.upload_file(htaccess, ".htaccess")
