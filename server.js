@@ -29,9 +29,30 @@ const fs = require("fs");
 const path = require("path");
 const http = require("http");
 
-const WRAPPER = "cpanel-wrapper-2026-09-18b";
+const WRAPPER = "cpanel-wrapper-2026-09-19-pack";
 
 process.env.NODE_ENV = process.env.NODE_ENV || "production";
+
+function extractDeployPack() {
+  const pack = path.join(__dirname, "pack.tar.gz");
+  if (!fs.existsSync(pack)) return;
+  console.log("[cpanel] extracting pack.tar.gz");
+  try {
+    require("child_process").execSync("tar -xzf pack.tar.gz", {
+      cwd: __dirname,
+      stdio: "inherit",
+      env: Object.assign({}, process.env, {
+        PATH: (process.env.PATH || "") + ":/usr/bin:/bin",
+      }),
+    });
+    fs.unlinkSync(pack);
+    console.log("[cpanel] pack extracted");
+  } catch (err) {
+    console.error("[cpanel] pack extract failed:", err instanceof Error ? err.message : err);
+  }
+}
+
+extractDeployPack();
 
 if (!process.env.PORT && process.env.PASSENGER_PORT) {
   process.env.PORT = String(process.env.PASSENGER_PORT);

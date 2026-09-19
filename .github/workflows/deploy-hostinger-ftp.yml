@@ -86,6 +86,8 @@ jobs:
           test -f deploy/.next/standalone/server.js
           echo "Staged:"
           du -sh deploy
+          tar -czf pack.tar.gz -C deploy .
+          ls -lh pack.tar.gz
 
       - name: Check and normalize FTP host
         id: ftp
@@ -212,6 +214,7 @@ jobs:
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
           LOCAL_DIR: ./deploy
+          ARCHIVE_PATH: ./pack.tar.gz
         run: |
           set -euo pipefail
           if [ -z "${FTP_USERNAME:-}" ] || [ -z "${FTP_PASSWORD:-}" ]; then

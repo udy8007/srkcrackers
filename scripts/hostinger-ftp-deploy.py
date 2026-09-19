@@ -67,12 +67,12 @@ class HostingerFtp:
                 pass
         if self.protocol == "ftp":
             ftp: FTP = FTP()
-            ftp.connect(self.host, self.port, timeout=60)
+            ftp.connect(self.host, self.port, timeout=300)
             ftp.login(self.user, self.password)
         else:
             context = ssl._create_unverified_context()
             ftp = FTP_TLS(context=context)
-            ftp.connect(self.host, self.port, timeout=60)
+            ftp.connect(self.host, self.port, timeout=300)
             ftp.auth()
             ftp.login(self.user, self.password)
             ftp.prot_p()
@@ -215,40 +215,61 @@ class HostingerFtp:
             self.delete_file(name)
 
     def upload_file(self, local: Path, remote_name: str) -> None:
+        size = local.stat().st_size
+        print(f"uploading {remote_name} ({size / (1024 * 1024):.1f} MB)")
+
         def go() -> None:
+            sent = 0
+            last_mark = 0
+
+            def progress(chunk: bytes) -> None:
+                nonlocal sent, last_mark
+                sent += len(chunk)
+                if size < 1024 * 1024:
+                    return
+                if sent - last_mark >= 5 * 1024 * 1024 or sent >= size:
+                    last_mark = sent
+                    pct = min(sent, size) / size * 100
+                    print(f"  {remote_name} {pct:.0f}%")
+
             with local.open("rb") as handle:
-                self.client().storbinary(f"STOR {remote_name}", handle)
+                self.client().storbinary(
+                    f"STOR {remote_name}",
+                    handle,
+                    blocksize=256 * 1024,
+                    callback=progress,
+                )
 
         self.retry(go)
 
-    def upload_tree(self, local_root: Path) -> int:
-        count = 0
-        for dirpath, dirnames, filenames in os.walk(local_root):
-            rel = Path(dirpath).relative_to(local_root)
-            dirnames[:] = [name for name in dirnames if name not in SKIP_NAMES]
+    def ensure_dir(self, name: str) -> None:
+        def go() -> None:
+            try:
+                self.client().mkd(name)
+            except error_perm:
+                pass
 
-            def at_dir() -> None:
-                self._goto_root()
-                if not rel.parts:
-                    return
-                ftp = self.client()
-                for part in rel.parts:
-                    try:
-                        ftp.mkd(part)
-                    except error_perm:
-                        pass
-                    ftp.cwd(part)
+        self.retry(go)
 
-            self.retry(at_dir)
-            for name in filenames:
-                if name in SKIP_NAMES or name.startswith(".env"):
-                    continue
-                self.upload_file(Path(dirpath) / name, name)
-                count += 1
-                if count % 25 == 0:
-                    print(f"uploaded {count} files...")
-                    self.alive()
-        return count
+    def upload_pack(self, local_dir: Path, archive: Path) -> None:
+        self._goto_root()
+        self.upload_file(archive, "pack.tar.gz")
+        self._goto_root()
+        self.upload_file(local_dir / "server.js", "server.js")
+        package_json = local_dir / "package.json"
+        if package_json.exists():
+            self.upload_file(package_json, "package.json")
+        self.ensure_dir("tmp")
+
+        def into_tmp() -> None:
+            self._goto_root()
+            self.client().cwd("tmp")
+
+        self.retry(into_tmp)
+        restart = local_dir / "tmp" / "restart.txt"
+        if restart.exists():
+            self.upload_file(restart, "restart.txt")
+        self._goto_root()
 
     def close(self) -> None:
         if not self.ftp:
@@ -265,15 +286,17 @@ class HostingerFtp:
 
 def main() -> int:
     local_dir = Path(env("LOCAL_DIR") or "./deploy").resolve()
+    archive = Path(env("ARCHIVE_PATH") or str(local_dir.parent / "pack.tar.gz")).resolve()
     if not local_dir.is_dir():
         raise SystemExit(f"Local pack not found: {local_dir}")
+    if not archive.is_file():
+        raise SystemExit(f"Archive not found: {archive}")
 
     session = HostingerFtp()
     session.connect()
     try:
-        session.cleanup()
-        count = session.upload_tree(local_dir)
-        print(f"Uploaded {count} files from {local_dir}")
+        session.upload_pack(local_dir, archive)
+        print(f"Uploaded pack archive {archive.name} ({archive.stat().st_size / (1024 * 1024):.1f} MB)")
     finally:
         session.close()
     return 0
